@@ -7,8 +7,8 @@ export const signup = async (req, res) => {
   try {
     const { username, email, password, grade, role } = req.body;
     const adminId = req.user._id;
-    console.log("adminId", adminId);
-    console.log("req.userId", req.user._id);
+    // console.log("adminId", adminId);
+    // console.log("req.userId", req.user._id);
 
     //validate email format
     const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -53,16 +53,21 @@ export const signup = async (req, res) => {
       role,
       createdBy: adminId,
     });
-    await newUser.save();
 
-    //send response
-    res.status(201).json({
-      message: "User created successfully",
-      _id: newUser._id,
-      username: newUser.username,
-      email: newUser.email,
-      role: newUser.role,
-    });
+    if (newUser) {
+      //send response
+      generateTokenAndSetCookie(newUser._id, res);
+      await newUser.save();
+      res.status(201).json({
+        message: "User created successfully",
+        _id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+      });
+    } else {
+      res.status(400).json({ error: "User not created" });
+    }
   } catch (error) {
     console.error("error in signup controller", error.message);
 
@@ -80,13 +85,12 @@ export const login = async (req, res) => {
       return res.status(400).json({ error: "Invalid Email" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user?.password || "");
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid Password" });
     }
 
     generateTokenAndSetCookie(user._id, res);
-    console.log("Login successful", user._id);
 
     res.status(200).json({
       message: "Login successful",
@@ -103,5 +107,23 @@ export const login = async (req, res) => {
 
 // funtion logout
 export const logout = async (req, res) => {
-  res.json({ message: "you hit the logout endpoint" });
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({
+      message: "Logout successful",
+    });
+  } catch (error) {
+    console.log("Error in logout controller", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+//getMe
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    res.status(200).json(user);
+  } catch (error) {
+    console.log("Error in getMe controller", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
