@@ -5,12 +5,24 @@ import bcrypt from "bcryptjs";
 // funtion signup
 export const signup = async (req, res) => {
   try {
-    const { username, email, password, grade } = req.body;
+    const { username, email, password, grade, role } = req.body;
+    const adminId = req.user._id;
+    console.log("adminId", adminId);
+    console.log("req.userId", req.user._id);
+
     //validate email format
     const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-    if (!emailRegex.test(email)) {
+    if (!email || !emailRegex.test(email)) {
       return res.status(400).json({ error: "Invalid email address" });
     }
+    // Check if admin exists and has REPI role
+    const adminUser = await User.findById(adminId);
+    if (!adminUser || adminUser.role !== "REPI") {
+      return res
+        .status(403)
+        .json({ error: "Only REPI admins can create users" });
+    }
+
     //check if user or email already exists
     const existingUser = await User.findOne({
       $or: [{ username }, { email }],
@@ -38,30 +50,57 @@ export const signup = async (req, res) => {
       email,
       password: hashedPassword,
       grade,
+      role,
+      createdBy: adminId,
     });
     await newUser.save();
-    // generate token and set cookie
-    generateTokenAndSetCookie(newUser._id, res);
+
     //send response
     res.status(201).json({
+      message: "User created successfully",
       _id: newUser._id,
       username: newUser.username,
       email: newUser.email,
-      grade: newUser.grade,
-      followers: newUser.followers,
-      following: newUser.following,
-      profileImg: newUser.profileImg,
+      role: newUser.role,
     });
   } catch (error) {
     console.error("error in signup controller", error.message);
-    res.status(500).json({ error: "Internal server error" });
+
+    res.status(500).json({ error: "Internal" });
   }
 };
 
 // funtion login
 export const login = async (req, res) => {
-  res.json({ message: "you hit the login endpoint" });
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: "Invalid Email" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid Password" });
+    }
+
+    generateTokenAndSetCookie(user._id, res);
+    console.log("Login successful", user._id);
+
+    res.status(200).json({
+      message: "Login successful",
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (error) {
+    console.error("Error in login controller:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
+
 // funtion logout
 export const logout = async (req, res) => {
   res.json({ message: "you hit the logout endpoint" });
