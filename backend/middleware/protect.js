@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.modal.js";
+
 export const protect = async (req, res, next) => {
   try {
     const token = req.cookies.jwt;

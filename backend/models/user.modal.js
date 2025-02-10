@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    // Additional email field for user identification and communication
+    // Email field for user identification and communication
     email: {
       type: String,
       required: true,
@@ -31,10 +31,7 @@ const userSchema = new mongoose.Schema(
         /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
         "Invalid email address",
       ],
-      // You can add a match validator for email pattern if needed:
-      // match: [/.+\@.+\..+/, 'Please fill a valid email address'],
     },
-
     grade: {
       type: String,
       required: true,
@@ -59,11 +56,45 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    // New Fields
+    phoneUsersCount: {
+      type: Number,
+      default: 0, // Initialize as 0
+    },
+    officeUsersCount: {
+      type: Number,
+      default: 0, // Initialize as 0
+    },
+    isOnline: {
+      type: Boolean,
+      default: false, // Default to offline
+    },
+    availability: {
+      type: String,
+      enum: ["available", "on vacation"],
+      default: "available",
+    },
+    returnDate: {
+      type: Date, // Stores when the user will return from vacation
+      default: null,
+    },
+    alternativeUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // Reference to another user who will take their place
+      default: null,
+    },
+    mission: {
+      type: String, // Description of the user's mission
+      default: "",
+      trim: true,
+    },
   },
   {
     timestamps: true,
   }
 );
+
 const User = mongoose.model("User", userSchema);
 
 export default User;
