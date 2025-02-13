@@ -2,16 +2,24 @@ import User from "../models/user.modal.js";
 
 export const authorizeAdmin = async (req, res, next) => {
   try {
-    // Access the user object from req.user set in the protect middleware
-    const user = await User.findById(req.user._id); // Change req.userId to req.user._id
+    if (!req.user || !req.user._id) {
+      return res.status(403).json({ error: "Not authorized, no user found." });
+    }
 
-    if (!user || user.role !== "REPI") {
-      console.log(user ? user.role : "No user found"); // More precise debug logging
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(403).json({ error: "User not found." });
+    }
+
+    if (user.role !== "REPI") {
+      console.log(`Access denied for role: ${user.role}`);
       return res.status(403).json({ error: "Access denied. Admins only." });
     }
-    next(); // Proceed to the next middleware or route handler
+
+    next(); // Proceed if user is REPI
   } catch (error) {
-    console.error("Error in authorizeAdmin middleware:", error); // More detailed logging
+    console.error("Error in authorizeAdmin middleware:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

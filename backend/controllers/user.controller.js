@@ -2,7 +2,6 @@ import User from "../models/user.modal.js";
 import bcrypt from "bcryptjs";
 import { generateTokenAndSetCookie } from "../lib/utils/generateToken.js";
 
-// funtion signup
 export const signup = async (req, res) => {
   try {
     const { username, email, password, grade, role } = req.body;
@@ -44,7 +43,7 @@ export const signup = async (req, res) => {
     /// hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    //create and save a new user
+    //create and save a new user modifying req.user
     const newUser = new User({
       username,
       email,
@@ -54,28 +53,25 @@ export const signup = async (req, res) => {
       createdBy: adminId,
       createdAt: new Date(),
     });
-
-    if (newUser) {
-      //send response
-      generateTokenAndSetCookie(newUser._id, res);
-      await newUser.save();
-      res.status(201).json({
-        message: "User created successfully",
-        _id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
-        role: newUser.role,
-      });
-    } else {
-      res.status(400).json({ error: "User not created" });
-    }
+    await newUser.save();
+    // Do NOT generate a new token for the new user (keep the original REPI logged in)
+    res.status(201).json({
+      message: "User created successfully",
+      _id: newUser._id,
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role,
+      grade: newUser.grade,
+      createdBy: newUser.createdBy,
+      createdAt: newUser.createdAt,
+      isOnline: newUser.isOnline,
+    });
   } catch (error) {
     console.error("error in signup controller", error.message);
 
     res.status(500).json({ error: "Internal" });
   }
 };
-
 //getuserProfile
 export const getUserProfile = async (req, res) => {
   const { username } = req.params;

@@ -1,12 +1,12 @@
 import {
   AiOutlineCalendar,
-  AiOutlineShoppingCart,
+  AiOutlineAudit,
   AiOutlineAreaChart,
   AiOutlineBarChart,
   AiOutlineStock,
 } from "react-icons/ai";
 import {
-  FiShoppingBag,
+  FiUmbrella,
   FiEdit,
   FiPieChart,
   FiBarChart,
@@ -22,6 +22,7 @@ import {
   BsShield,
   BsChatLeft,
 } from "react-icons/bs";
+import { CiLogout } from "react-icons/ci";
 import { BiColorFill } from "react-icons/bi";
 import { IoMdContacts } from "react-icons/io";
 import { RiContactsLine, RiStockLine } from "react-icons/ri";
@@ -513,8 +514,8 @@ export const links = [
     title: "Dashboard",
     links: [
       {
-        name: "somthing1",
-        icon: <FiShoppingBag />,
+        name: "Home",
+        icon: <FiUmbrella />,
       },
     ],
   },
@@ -523,8 +524,8 @@ export const links = [
     title: "Pages",
     links: [
       {
-        name: "somthing2",
-        icon: <AiOutlineShoppingCart />,
+        name: "signup",
+        icon: <AiOutlineAudit />,
       },
       {
         name: "somthing3",
@@ -539,6 +540,10 @@ export const links = [
   {
     title: "Apps",
     links: [
+      {
+        name: "Chat-App",
+        icon: <BiColorFill />,
+      },
       {
         name: "calendar",
         icon: <AiOutlineCalendar />,
@@ -890,6 +895,13 @@ export const userProfileData = [
     desc: "To-do and Daily Tasks",
     iconColor: "rgb(255, 244, 229)",
     iconBg: "rgb(254, 201, 15)",
+  },
+  {
+    icon: <CiLogout />,
+    title: "Logout",
+    desc: "To-do and Daily Tasks",
+    iconColor: "rgb(255, 244, 229)",
+    iconBg: "red",
   },
 ];
 

@@ -1,3 +1,4 @@
+import daisyui from "daisyui";
 module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   darkMode: "class",
@@ -43,5 +44,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [daisyui],
 };
