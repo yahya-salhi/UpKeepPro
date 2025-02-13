@@ -3,7 +3,7 @@ import { useState } from "react";
 import AuthImagePattern from "../../../components/AuthImagePattern";
 import { Mail, MessageSquare, Eye, EyeOff, Lock, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 const LoginPage = () => {
@@ -12,6 +12,8 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
+
+  const queryClient = useQueryClient();
 
   const {
     mutate: loginMutation,
@@ -44,7 +46,9 @@ const LoginPage = () => {
       }
     },
     onSuccess: () => {
-      toast.success("Logged in successfully");
+      //redirect to dashboard
+      queryClient.invalidateQueries({ querykey: ["authUser"] });
+      toast.success("logged in successfully");
     },
     onError: (error) => {
       toast.error(error.message);
@@ -53,7 +57,6 @@ const LoginPage = () => {
 
   const handlesubmit = (e) => {
     e.preventDefault();
-
     loginMutation(formData);
   };
 
@@ -143,7 +146,7 @@ const LoginPage = () => {
 
           <div className="text-center">
             <p className="text-base-content/60">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link to="/signup" className="link link-primary">
                 Create account
               </Link>

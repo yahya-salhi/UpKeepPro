@@ -1,6 +1,6 @@
 import "./App.css";
 
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { FiSettings } from "react-icons/fi";
 import { TooltipComponent } from "@syncfusion/ej2-react-popups";
 import { Loader } from "lucide-react";
@@ -30,10 +30,37 @@ import {
 import { useStateContext } from "./contexts/ContextProvider";
 
 import { Toaster } from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 
 function App() {
-  // const activeMenu = true;
   const { activeMenu } = useStateContext();
+  const { data: authUser, isLoading } = useQuery({
+    // we use queryKey to give a unique name to our query and refer to it later
+    queryKey: ["authUser"],
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (data.error) return null;
+        if (!res.ok) {
+          throw new Error(data.error || "Something went wrong");
+        }
+        console.log("authUser is here:", data);
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    retry: false,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex justify-center items-center">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -51,11 +78,11 @@ function App() {
         </div>
         {activeMenu ? (
           <div className="w-72 fixed sidebar dark:bg-secondary-dark-bg bg-white">
-            <Sidebar />
+            {authUser && <Sidebar />}
           </div>
         ) : (
           <div className="w-0 dark:bg-secondary-dark-bg">
-            <Sidebar />
+            {authUser && <Sidebar />}
           </div>
         )}
         <div
@@ -66,21 +93,36 @@ function App() {
           }
         >
           <div className="fixed md:static bg-main-bg dark:bg-main-dark-bg navbars w-full ">
-            <NavBar />
+            {authUser && <NavBar />}
           </div>
 
           <div>
             <Routes>
               {/* Dashboard HOMEPage  */}
-              <Route path="/" element={<Dashboard />} />
+              <Route
+                path="/"
+                element={authUser ? <Dashboard /> : <Navigate to="/login" />}
+              />
 
               {/* {login  and homepages} */}
-              <Route path="/login" element={<Login />} />
+              <Route
+                path="/login"
+                element={!authUser ? <Login /> : <Navigate to="/" />}
+              />
               {/* Dashboard  */}
-              <Route path="/Home" element={<Dashboard />} />
+              <Route
+                path="/dashboard"
+                element={authUser ? <Dashboard /> : <Navigate to="/login" />}
+              />
               {/* Create Users */}
-              <Route path="/signup" element={<SingUp />} />
-              <Route path="/profile/:username" element={<Profile />} />
+              <Route
+                path="/signup"
+                element={authUser ? <SingUp /> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/profile/:username"
+                element={authUser ? <Profile /> : <Navigate to="/login" />}
+              />
               {/* <Route
                 path="/somthing3"
                 element={authUser ? <Employees /> : <Navigate to="/login" />}
