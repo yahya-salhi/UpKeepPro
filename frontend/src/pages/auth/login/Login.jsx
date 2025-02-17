@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import AuthImagePattern from "../../../components/AuthImagePattern";
 import { Mail, MessageSquare, Eye, EyeOff, Lock, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -147,9 +147,9 @@ const LoginPage = () => {
           <div className="text-center">
             <p className="text-base-content/60">
               Don&apos;t have an account?{" "}
-              <Link to="/signup" className="link link-primary">
-                Create account
-              </Link>
+              <a to="tel:68310" className="link link-primary">
+                REPI Administrator 68310
+              </a>
             </p>
           </div>
         </div>
@@ -159,7 +159,7 @@ const LoginPage = () => {
       <AuthImagePattern
         title={"Welcome back!"}
         subtitle={
-          "Sign in to continue your conversations and catch up with your messages."
+          "  Sign in to continue your conversations, catch up with your messages, and manage your maintenance."
         }
       />
     </div>

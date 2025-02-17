@@ -7,6 +7,9 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
+import UserStatus from "../pages/auth/login/UserStatus ";
+import { useRef } from "react";
+
 const UserProfile = () => {
   const { currentColor, setActivePanel } = useStateContext();
   const queryClient = useQueryClient();
@@ -63,15 +66,20 @@ const UserProfile = () => {
           alt="user-profile"
         />
         <div>
-          <p className="font-semibold text-xl dark:text-gray-200">
+          <p className="font-semibold text-xl dark:text-gray-200 first:capitalize">
+            <span>
+              {authUser?.grade}
+              {""}
+            </span>{" "}
             {authUser?.username}
           </p>
-          <p className="text-gray-500 text-sm dark:text-gray-400">
+          <p className="text-gray-500 text-sm dark:text-gray-400 text-center ">
             {authUser?.role}
           </p>
           <p className="text-gray-500 text-sm font-semibold dark:text-gray-400">
             {authUser?.email}
           </p>
+          <UserStatus isOnline={authUser?.isOnline} />
         </div>
       </div>
 

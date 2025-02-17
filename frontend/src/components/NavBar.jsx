@@ -1,5 +1,4 @@
 import { AiOutlineMenu } from "react-icons/ai";
-import { FiShoppingCart } from "react-icons/fi";
 import { BsChatLeft } from "react-icons/bs";
 import { RiNotification3Line } from "react-icons/ri";
 import { MdKeyboardArrowDown } from "react-icons/md";
@@ -7,8 +6,9 @@ import { TooltipComponent } from "@syncfusion/ej2-react-popups";
 import { useEffect } from "react";
 
 import avatar from "../data/avatar.jpg";
-import { Cart, Chat, Notification, UserProfile } from ".";
+import { Chat, Notification, UserProfile } from ".";
 import { useStateContext } from "../contexts/ContextProvider";
+import { useQuery } from "@tanstack/react-query";
 
 const NavButton = ({ title, customFunc, icon, color, dotColor }) => (
   <TooltipComponent content={title} position="BottomCenter">
@@ -46,7 +46,7 @@ const Navbar = () => {
     handleResize();
 
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [setScreenSize]);
 
   useEffect(() => {
     if (screenSize <= 900) {
@@ -54,10 +54,12 @@ const Navbar = () => {
     } else {
       setActiveMenu(true);
     }
-  }, [screenSize]);
+  }, [screenSize, setActiveMenu]);
 
   const handleActiveMenu = () => setActiveMenu(!activeMenu);
-
+  const { data: authUser } = useQuery({
+    queryKey: ["authUser"],
+  });
   return (
     <div className="flex justify-between p-2 md:ml-6 md:mr-6 relative">
       <NavButton
@@ -66,13 +68,12 @@ const Navbar = () => {
         color={currentColor}
         icon={<AiOutlineMenu />}
       />
-      <div className="flex">
-        <NavButton
-          title="Cart"
-          customFunc={() => handleClick("cart")}
-          color={currentColor}
-          icon={<FiShoppingCart />}
-        />
+      <div className="flex justify-center items-center gap-4">
+        {authUser?.isOnline ? (
+          <span className="badge badge-success text-center  ">OnLine</span>
+        ) : (
+          <span className="badge badge-error">OffLine</span>
+        )}
         <NavButton
           title="Chat"
           dotColor="#03C9D7"
@@ -94,20 +95,19 @@ const Navbar = () => {
           >
             <img
               className="rounded-full w-8 h-8"
-              src={avatar}
+              src={authUser?.profileImg || avatar}
               alt="user-profile"
             />
             <p>
               <span className="text-gray-400 text-14">Hi,</span>{" "}
               <span className="text-gray-400 font-bold ml-1 text-14">
-                Michael
+                {authUser?.username}
               </span>
             </p>
             <MdKeyboardArrowDown className="text-gray-400 text-14" />
           </div>
         </TooltipComponent>
 
-        {isClicked.cart && <Cart />}
         {isClicked.chat && <Chat />}
         {isClicked.notification && <Notification />}
         {isClicked.userProfile && <UserProfile />}
