@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import RightPanelSkeleton from "../../pages/profile/RightPanelSkeleton";
 // import { USERS_FOR_RIGHT_PANEL } from "../../utils/db/dummy";
 import { useQuery } from "@tanstack/react-query";
+import useFollow from "../../hooks/useFollow";
+import { Loader2 } from "lucide-react";
 
 const RightPanel = () => {
   const { data: suggestedUsers, isLoading } = useQuery({
@@ -26,7 +28,8 @@ const RightPanel = () => {
       }
     },
   });
-
+  const { follow, isPending } = useFollow();
+  if (suggestedUsers?.length === 0) return <div className="md:w-64 w-0"></div>;
   return (
     <div className="hidden lg:block my-4 mx-2">
       <div className="bg-white  p-1 rounded-md sticky top-2">
@@ -70,9 +73,11 @@ const RightPanel = () => {
                     className="btn bg-white text-black hover:bg-white hover:opacity-90 rounded-full btn-sm"
                     onClick={(e) => {
                       e.preventDefault();
+                      follow(user._id);
                     }}
                   >
-                    follow
+                    {/* {isPending(user._id) ? <Loader2 /> : "Follow"} */}
+                    {isPending ? <Loader2 /> : "Follow"}
                   </button>
                 </div>
               </Link>
@@ -83,6 +88,3 @@ const RightPanel = () => {
   );
 };
 export default RightPanel;
-
-//
-// 6h51m
