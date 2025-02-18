@@ -60,7 +60,8 @@ const Dashboard = () => {
             />
           </div>
         </div>
-        <div className="flex m-3 flex-wrap justify-center gap-1 items-center">
+
+        <div className="flex m-3 flex-wrap justify-center gap-5 items-center">
           {earningData.map((item) => (
             <div
               key={item.title}

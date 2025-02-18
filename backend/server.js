@@ -12,7 +12,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cookieParser());
-app.use(express.json()); //parsing request body
+app.use(express.json({ limit: "5mb" })); //parsing request body
 app.use(express.urlencoded({ extended: true })); //parsing form data encoded
 app.use(
   cors({

@@ -148,17 +148,31 @@ export const updateUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    // Ensure only REPI (admin) can access this
-    if (req.user.role !== "REPI") {
-      return res.status(403).json({ error: "Access denied. Admins only." });
-    }
+    const userId = req.user._id;
 
-    const users = await User.find().select("-password"); // Exclude passwords for security
+    const usersFollowedByMe = await User.findById(userId).select("following");
 
-    res.status(200).json(users);
+    const users = await User.aggregate([
+      {
+        $match: {
+          _id: { $ne: userId },
+        },
+      },
+      { $sample: { size: 10 } },
+    ]);
+
+    // 1,2,3,4,5,6,
+    const filteredUsers = users.filter(
+      (user) => !usersFollowedByMe.following.includes(user._id)
+    );
+    const suggestedUsers = filteredUsers.slice(0, 4);
+
+    suggestedUsers.forEach((user) => (user.password = null));
+
+    res.status(200).json(suggestedUsers);
   } catch (error) {
-    console.error("Error in getAllUsers:", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    console.log("Error in getSuggestedUsers: ", error.message);
+    res.status(500).json({ error: error.message });
   }
 };
 export const getOnlineUsers = async (req, res) => {

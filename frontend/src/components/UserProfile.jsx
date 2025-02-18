@@ -8,7 +8,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
 import UserStatus from "../pages/auth/login/UserStatus ";
-import { useRef } from "react";
 
 const UserProfile = () => {
   const { currentColor, setActivePanel } = useStateContext();
@@ -44,6 +43,7 @@ const UserProfile = () => {
   const { data: authUser } = useQuery({
     queryKey: ["authUser"],
   });
+  //getUserProfile
 
   const menuItems = userProfileData(mutate);
   return (

@@ -881,7 +881,7 @@ export const userProfileData = (mutate) => [
     desc: "Account Settings",
     iconColor: "#03C9D7",
     iconBg: "#E5FAFB",
-    link: "/profile/:user",
+    link: "/profile/:username",
   },
   {
     icon: <BsShield />,
