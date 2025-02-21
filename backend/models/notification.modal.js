@@ -19,7 +19,7 @@ const notificationSchema = new mongoose.Schema(
     },
     read: {
       type: Boolean,
-      default: false,
+      default: false, // track if the notification has been read
     },
   },
   { timestamps: true }

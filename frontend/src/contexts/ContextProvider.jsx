@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 
 const stateContext = createContext();
 
@@ -15,10 +15,30 @@ export const ContextProvider = ({ children }) => {
   const [isClicked, setIsClicked] = useState(initialState);
   const [screenSize, setScreenSize] = useState(undefined);
   const [activePanel, setActivePanel] = useState(null);
+  const panelRef = useRef(null);
 
   const handleClick = (clicked) => {
-    setIsClicked({ ...initialState, [clicked]: true });
+    setIsClicked((prev) => ({
+      chat: clicked === "chat" ? !prev.chat : false,
+      notification: clicked === "notification" ? !prev.notification : false,
+      userProfile: clicked === "userProfile" ? !prev.userProfile : false,
+    }));
   };
+  // Function to close panels when clicking outside
+  // Close when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
+        setIsClicked(initialState);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
   return (
     <stateContext.Provider
       value={{
@@ -31,6 +51,7 @@ export const ContextProvider = ({ children }) => {
         setScreenSize,
         activePanel,
         setActivePanel,
+        panelRef,
       }}
     >
       {children}

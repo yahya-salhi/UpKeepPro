@@ -60,8 +60,19 @@ const Navbar = () => {
   }, [screenSize, setActiveMenu]);
 
   const handleActiveMenu = () => setActiveMenu(!activeMenu);
+
   const { data: authUser } = useQuery({
     queryKey: ["authUser"],
+  });
+  // Fetch unread notifications count
+  const { data: unreadData, refetch } = useQuery({
+    queryKey: ["unreadNotifications"],
+    queryFn: async () => {
+      const res = await fetch("/api/notifications/unread");
+      const data = await res.json();
+      return data.unreadCount; // Return unread count
+    },
+    refetchInterval: 5000, // Auto-refresh every 5 seconds
   });
   return (
     <div className="flex justify-between p-2 md:ml-6 md:mr-6 relative">
@@ -73,7 +84,7 @@ const Navbar = () => {
       />
       <div className="flex justify-center items-center gap-4">
         {authUser?.isOnline ? (
-          <span className="badge badge-success text-center  ">OnLine</span>
+          <span className="badge badge-success text-center   "></span>
         ) : (
           <span className="badge badge-error">OffLine</span>
         )}
@@ -84,13 +95,27 @@ const Navbar = () => {
           color={currentColor}
           icon={<BsChatLeft />}
         />
+
         <NavButton
           title="Notification"
-          dotColor="rgb(254, 201, 15)"
-          customFunc={() => handleClick("notification")}
+          dotColor={unreadData > 0 ? "#FF0000" : "#03C9D7"}
+          customFunc={() => {
+            handleClick("notification");
+            fetch("/api/notifications/read", { method: "PUT" }).then(refetch); // Mark as read
+          }}
           color={currentColor}
-          icon={<RiNotification3Line />}
+          icon={
+            <div className="relative">
+              <RiNotification3Line />
+              {unreadData > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {unreadData}
+                </span>
+              )}
+            </div>
+          }
         />
+
         <TooltipComponent content="Profile" position="BottomCenter">
           <div
             className="flex items-center gap-2 cursor-pointer p-1 hover:bg-light-gray rounded-lg"
@@ -111,7 +136,7 @@ const Navbar = () => {
           </div>
         </TooltipComponent>
 
-        {isClicked.chat && <Chat />}
+        {/* {isClicked.chat && <Chat />} */}
         {isClicked.notification && <NotificationsPage />}
         {isClicked.userProfile && <UserProfile />}
       </div>
