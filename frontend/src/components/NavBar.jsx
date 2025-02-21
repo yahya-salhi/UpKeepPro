@@ -6,9 +6,12 @@ import { TooltipComponent } from "@syncfusion/ej2-react-popups";
 import { useEffect } from "react";
 
 import avatar from "../data/avatar.jpg";
-import { Chat, Notification, UserProfile } from ".";
+
 import { useStateContext } from "../contexts/ContextProvider";
 import { useQuery } from "@tanstack/react-query";
+import NotificationsPage from "../pages/notification/NotificationsPage";
+
+import UserProfile from "../components/UserProfile";
 
 const NavButton = ({ title, customFunc, icon, color, dotColor }) => (
   <TooltipComponent content={title} position="BottomCenter">
@@ -109,7 +112,7 @@ const Navbar = () => {
         </TooltipComponent>
 
         {isClicked.chat && <Chat />}
-        {isClicked.notification && <Notification />}
+        {isClicked.notification && <NotificationsPage />}
         {isClicked.userProfile && <UserProfile />}
       </div>
     </div>

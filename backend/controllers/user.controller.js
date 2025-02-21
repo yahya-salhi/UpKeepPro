@@ -1,4 +1,5 @@
 import User from "../models/user.modal.js";
+import Notification from "../models/notification.modal.js";
 import bcrypt from "bcryptjs";
 import { generateTokenAndSetCookie } from "../lib/utils/generateToken.js";
 
@@ -219,12 +220,12 @@ export const followUnFollowUser = async (req, res) => {
       });
 
       // Send notification to the user
-      // const notification = new Notification({
-      //   type: "follow",
-      //   from: req.user._id,
-      //   to: userToModify._id,
-      // });
-      // await notification.save();
+      const notification = new Notification({
+        type: "follow",
+        from: req.user._id,
+        to: userToModify._id,
+      });
+      await notification.save();
       //to do return the id of the user as a response
       res.status(200).json({ message: "User followed successfully" });
     }

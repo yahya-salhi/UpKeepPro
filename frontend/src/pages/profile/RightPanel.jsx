@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import RightPanelSkeleton from "../../pages/profile/RightPanelSkeleton";
 // import { USERS_FOR_RIGHT_PANEL } from "../../utils/db/dummy";
 import { useQuery } from "@tanstack/react-query";
-import useFollow from "../../hooks/useFollow";
+import useFollow from "../../hooks/UseFollow";
 import { Loader2 } from "lucide-react";
 
 const RightPanel = () => {

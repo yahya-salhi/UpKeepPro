@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/message.routes.js";
+import notificationRoutes from "./routes/notifications.routes.js";
 import cors from "cors";
 
 env.config();
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 //message routes
 app.use("/api/message", messageRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
   connectMongoDb();
