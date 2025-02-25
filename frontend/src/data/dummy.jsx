@@ -874,14 +874,14 @@ export const themeColors = [
   },
 ];
 
-export const userProfileData = (mutate) => [
+export const userProfileData = (mutate, usernmae) => [
   {
     icon: <BsCurrencyDollar />,
     title: "My Profile",
     desc: "Account Settings",
     iconColor: "#03C9D7",
     iconBg: "#E5FAFB",
-    link: "/profile/username",
+    link: `/profile/${usernmae}`,
   },
   {
     icon: <BsShield />,
@@ -890,6 +890,7 @@ export const userProfileData = (mutate) => [
     iconColor: "rgb(0, 194, 146)",
     iconBg: "rgb(235, 250, 242)",
     link: "/inbox",
+    action: () => console.log("inbox"),
   },
   {
     icon: <FiCreditCard />,

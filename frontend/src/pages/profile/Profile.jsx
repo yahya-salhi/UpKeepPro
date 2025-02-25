@@ -1,10 +1,12 @@
-import { useRef, useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditeProfileModal";
 import { Calendar, Edit, LinkIcon, ArrowLeft } from "lucide-react";
-
+import avatar from "../../data/avatar.jpg";
+import { formatMemberSinceDate } from "../../utils/date";
 import RightPanel from "../../pages/profile/RightPanel";
+import { useQuery } from "@tanstack/react-query";
 
 const Profile = () => {
   const [coverImg, setCoverImg] = useState(null);
@@ -13,20 +15,51 @@ const Profile = () => {
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
 
-  const isLoading = false;
   const isMyProfile = true;
 
-  const user = {
-    _id: "1",
-    fullName: "John Doe",
-    username: "johndoe",
-    profileImg: "/avatars/boy2.png",
-    coverImg: "/cover.png",
-    bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    link: "https://youtube.com/@asaprogrammer_",
-    following: ["1", "2", "3"],
-    followers: ["1", "2", "3"],
-  };
+  const { username } = useParams();
+
+  const {
+    data: user,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["userProfile", username],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`/api/users/profile/${username}`);
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message);
+        }
+        return data;
+      } catch (error) {
+        throw new Error(error.message);
+      }
+    },
+  });
+
+  // const user = {
+  //   _id: "1",
+  //   username: "johndoe",
+  //   grade: "LT ",
+  //   role: "REPI",
+
+  //   profileImg: "/avatars/boy2.png",
+  //   phoneUsersCount: 10,
+  //   officeUsersCount: 20,
+  //   isOnline: true,
+  //   availability: "available",
+  //   returnDate: null,
+  //   alternativeUser: null,
+  //   coverImg: "/cover.png",
+  //   mission: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+  //   email: "https://youtube.com/@asaprogrammer_",
+  //   following: ["1", "2", "3"],
+  //   followers: ["1", "2", "3"],
+  //   timestamp: "2021-07-01T00:00:00.000Z",
+  // };
 
   const handleImgChange = (e, state) => {
     const file = e.target.files[0];
@@ -39,18 +72,21 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
+  useEffect(() => {
+    refetch();
+  }, [username, refetch]);
 
   return (
     <div className="container mx-auto grid grid-cols-1 gap-6 p-4 md:grid-cols-3 lg:grid-cols-4">
       <div className="col-span-1 md:col-span-2 lg:col-span-3">
         <div className="card bg-base-100 shadow-xl">
-          {isLoading && <ProfileHeaderSkeleton />}
-          {!isLoading && !user && (
+          {(isLoading || isRefetching) && <ProfileHeaderSkeleton />}
+          {!isLoading && !user && !isRefetching && (
             <div className="flex h-64 items-center justify-center">
               <p className="text-lg text-base-content/60">User not found</p>
             </div>
           )}
-          {!isLoading && user && (
+          {!isLoading && !isRefetching && user && (
             <>
               <div className="border-b border-base-300 p-4">
                 <div className="flex items-center gap-4">
@@ -58,8 +94,13 @@ const Profile = () => {
                     <ArrowLeft className="h-4 w-4" />
                   </button>
                   <div>
-                    <h2 className="text-lg font-bold">{user.fullName}</h2>
-                    <p className="text-sm text-base-content/60">4 posts</p>
+                    <h2 className="text-lg font-bold">
+                      <span className="text-sm text-base-content/60">
+                        {user.grade}{" "}
+                      </span>
+                      {user.username}{" "}
+                    </h2>
+                    <p className="text-sm text-base-content/60">{user.role}</p>
                   </div>
                 </div>
               </div>
@@ -69,7 +110,7 @@ const Profile = () => {
                   {/* Cover Image */}
                   <div className="group relative h-64 overflow-hidden">
                     <img
-                      src={coverImg || user.coverImg || "/cover.png"}
+                      src={coverImg || user.coverImg || avatar}
                       alt="Cover"
                       className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                     />
@@ -90,7 +131,7 @@ const Profile = () => {
                         <div className="w-32 rounded-full ring ring-base-100 ring-offset-2">
                           <img
                             src={profileImg || user.profileImg}
-                            alt={user.fullName}
+                            alt={user.username}
                           />
                         </div>
                       </div>
@@ -140,33 +181,51 @@ const Profile = () => {
 
                   <div className="mt-4 space-y-4">
                     <div>
-                      <h3 className="text-xl font-bold">{user.fullName}</h3>
-                      <p className="text-sm text-base-content/60">
-                        @{user.username}
-                      </p>
-                      <p className="mt-2">{user.bio}</p>
+                      <h3 className="text-xl font-bold">@{user.username}</h3>
+                      {user?.isOnline ? (
+                        <span className="badge badge-success text-center   ">
+                          online
+                        </span>
+                      ) : (
+                        <span className="badge badge-error">OffLine</span>
+                      )}
+                      <p className="mt-2">{user.mission}</p>
+                      {user.availability === "unavailable" && (
+                        <p className="mt-2 text-error">
+                          Not available until {user.returnDate}
+                        </p>
+                      )}
+                      {user.alternativeUser && (
+                        <p className="mt-2 text-error">
+                          Alternative user: {user.alternativeUser}
+                        </p>
+                      )}
+                      {user.phoneUsersCount > 0 && (
+                        <p className="mt-2">
+                          <span className="font-bold   ">
+                            {user.phoneUsersCount}
+                          </span>{" "}
+                          phone Number
+                        </p>
+                      )}
+                      {user.officeUsersCount > 0 && (
+                        <p className="mt-2">
+                          <span className="font-bold">
+                            {user.officeUsersCount}
+                          </span>{" "}
+                          office Number
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-4">
-                      {user.link && (
-                        <div className="dropdown dropdown-hover">
-                          <a
-                            href={user.link}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-2 text-sm text-primary hover:underline"
-                          >
-                            <LinkIcon className="h-4 w-4" />
-                            <span>youtube.com/@asaprogrammer_</span>
-                          </a>
-                          <div className="dropdown-content card card-compact bg-base-200 p-2 shadow">
-                            <p>Visit channel</p>
-                          </div>
-                        </div>
-                      )}
+                      <LinkIcon className="h-4 w-4" />
+                      <span className="font-bold text-base-content hover:underline cursor-pointer">
+                        {user.email}
+                      </span>
                       <div className="flex items-center gap-2 text-sm text-base-content/60">
                         <Calendar className="h-4 w-4" />
-                        <span>Joined July 2021</span>
+                        <span>{formatMemberSinceDate(user.createdAt)}</span>
                       </div>
                     </div>
 
@@ -212,6 +271,8 @@ const Profile = () => {
         </div>
       </div>
     </div>
+
+    //
   );
 };
 export default Profile;

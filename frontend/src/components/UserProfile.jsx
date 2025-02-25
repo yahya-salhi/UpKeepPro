@@ -3,14 +3,18 @@ import { Button } from ".";
 import { userProfileData } from "../data/dummy";
 import { useStateContext } from "../contexts/ContextProvider";
 import avatar from "../data/avatar.jpg";
-import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+
+import { useNavigate, Link } from "react-router-dom";
 
 import UserStatus from "../pages/auth/login/UserStatus ";
 
 const UserProfile = () => {
   const { currentColor, setActivePanel } = useStateContext();
+
+  const navigate = useNavigate();
+
   const queryClient = useQueryClient();
 
   const { mutate, error } = useMutation({
@@ -43,9 +47,10 @@ const UserProfile = () => {
   const { data: authUser } = useQuery({
     queryKey: ["authUser"],
   });
-  //getUserProfile
 
-  const menuItems = userProfileData(mutate);
+  //getUserProfile
+  const usernmae = authUser?.username;
+  const menuItems = userProfileData(mutate, usernmae);
   return (
     <div className="nav-item absolute right-1 top-16 bg-white dark:bg-[#42464D] p-8 rounded-lg w-96">
       <div className="flex justify-between items-center">
@@ -89,9 +94,8 @@ const UserProfile = () => {
             if (item.link) {
               e.preventDefault(); // Prevent immediate navigation
               setActivePanel(null); // Close the panel
-              setTimeout(() => {
-                window.location.href = item.link; // Navigate manually after state update
-              }, 0);
+              // window.location.href = item.link;
+              navigate(item.link); // Navigate manually after state update
             } else if (item.action) {
               item.action();
               setActivePanel(null);

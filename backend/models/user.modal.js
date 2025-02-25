@@ -72,12 +72,12 @@ const userSchema = new mongoose.Schema(
     },
     availability: {
       type: String,
-      enum: ["available", "on vacation"],
+      enum: ["available", "unavailable"],
       default: "available",
     },
     returnDate: {
-      type: Date, // Stores when the user will return from vacation
-      default: null,
+      type: String, // Stores when the user will return from vacation
+      default: "",
     },
     alternativeUser: {
       type: mongoose.Schema.Types.ObjectId,
