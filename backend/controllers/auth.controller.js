@@ -44,15 +44,24 @@ export const logout = async (req, res) => {
   try {
     // Get user from the request
     const userId = req.user?._id;
-    // if (!userId) {
-    //   return res.status(401).json({ error: "Unauthorized: No user found" });
-    // }
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized: No user found" });
+    }
 
     // Update isOnline status to false
-    await User.findByIdAndUpdate(userId, { isOnline: false });
-
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { isOnline: false },
+      { new: true }
+    );
+    console.log("Updated user after logout:", updatedUser);
     // Clear JWT cookie
-    res.cookie("jwt", "", { maxAge: 0 });
+    // Clear JWT cookie properly
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
 
     res.status(200).json({
       message: "Logout successful",

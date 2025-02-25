@@ -106,44 +106,76 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 export const updateUser = async (req, res) => {
+  const {
+    email,
+    username,
+    currentPassword,
+    newPassword,
+    grade,
+    role,
+    mission,
+    phoneUsersCount,
+    officeUsersCount,
+    availability,
+    returnDate,
+    alternativeUser,
+  } = req.body;
+  let { profileImg, coverImg } = req.body;
+
+  const userId = req.user._id;
+
   try {
-    const userId = req.params.id; // ID from the URL
-    const user = await User.findById(userId);
+    let user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (
+      (!newPassword && currentPassword) ||
+      (!currentPassword && newPassword)
+    ) {
+      return res.status(400).json({
+        error: "Please provide both current password and new password",
+      });
     }
 
-    // Only allow users to update their own profile
-    if (req.user._id.toString() !== userId && req.user.role !== "REPI") {
-      return res
-        .status(403)
-        .json({ error: "Unauthorized: You can only update your own profile." });
+    if (currentPassword && newPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch)
+        return res.status(400).json({ error: "Current password is incorrect" });
+      if (newPassword.length < 6) {
+        return res
+          .status(400)
+          .json({ error: "Password must be at least 6 characters long" });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
     }
+    user.profileImg = profileImg || user.profileImg;
+    user.coverImg = coverImg || user.coverImg;
+    user.email = email || user.email;
+    user.username = username || user.username;
+    user.grade = grade || user.grade;
+    user.role = role || user.role;
+    user.mission = mission || user.mission;
+    user.phoneUsersCount = phoneUsersCount || user.phoneUsersCount;
+    user.officeUsersCount = officeUsersCount || user.officeUsersCount;
+    user.availability = availability || user.availability;
+    user.returnDate = returnDate || user.returnDate;
+    user.alternativeUser = alternativeUser || user.alternativeUser;
 
-    // Prevent non-admins from updating the role
-    if (req.body.role && req.user.role !== "REPI") {
-      return res
-        .status(403)
-        .json({ error: "Unauthorized: You cannot change your role." });
-    }
+    user.profileImg = profileImg || user.profileImg;
+    user.coverImg = coverImg || user.coverImg;
 
-    // Update allowed fields
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
+    user = await user.save();
 
-    res.status(200).json({
-      message: "Profile updated successfully",
-      user: updatedUser,
-    });
+    // password should be null in response
+    user.password = null;
+
+    return res.status(200).json(user);
   } catch (error) {
-    console.error("Error in updateUser controller:", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    console.log("Error in updateUser: ", error.message);
+    res.status(500).json({ error: error.message });
   }
 };
 

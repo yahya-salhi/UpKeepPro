@@ -4,6 +4,7 @@ import RightPanelSkeleton from "../../pages/profile/RightPanelSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import useFollow from "../../hooks/UseFollow";
 import { Loader2 } from "lucide-react";
+import avatar from "../../data/avatar.jpg";
 
 const RightPanel = () => {
   const { data: suggestedUsers, isLoading } = useQuery({
@@ -31,9 +32,10 @@ const RightPanel = () => {
   const { follow, isPending } = useFollow();
   if (suggestedUsers?.length === 0) return <div className="md:w-64 w-0"></div>;
   return (
-    <div className="hidden lg:block my-4 mx-2">
-      <div className="bg-white  p-1 rounded-md sticky top-2">
-        <div className="flex flex-col gap-4">
+    <div className="hidden lg:block my-4 mx-2 w-72">
+      <div className="card bg-base-100 shadow-xl rounded-md sticky top-2">
+        <p className="font-bold text-center  text-base">Who to follow</p>
+        <div className="flex flex-col  card-body">
           {/* item */}
           {isLoading && (
             <>
@@ -53,7 +55,7 @@ const RightPanel = () => {
                 <div className="flex gap-2 items-center">
                   <div className="avatar">
                     <div className="w-8 rounded-full">
-                      <img src={user.profileImg || "/avatar-placeholder.png"} />
+                      <img src={user.profileImg || avatar} />
                     </div>
                   </div>
                   <div className="flex flex-col">

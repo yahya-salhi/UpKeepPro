@@ -7,7 +7,7 @@ const router = express.Router();
 // login Admin&
 router.post("/login", login);
 // lougout
-router.post("/logout", logout);
+router.post("/logout", protect, logout);
 //get me
 router.get("/me", protect, getMe);
 

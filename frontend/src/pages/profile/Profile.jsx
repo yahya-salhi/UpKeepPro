@@ -6,7 +6,9 @@ import { Calendar, Edit, LinkIcon, ArrowLeft } from "lucide-react";
 import avatar from "../../data/avatar.jpg";
 import { formatMemberSinceDate } from "../../utils/date";
 import RightPanel from "../../pages/profile/RightPanel";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import usefollow from "../../hooks/UseFollow";
+import toast from "react-hot-toast";
 
 const Profile = () => {
   const [coverImg, setCoverImg] = useState(null);
@@ -15,9 +17,13 @@ const Profile = () => {
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
 
-  const isMyProfile = true;
-
   const { username } = useParams();
+  const queryClient = useQueryClient();
+
+  const { follow, isPandig } = usefollow();
+  const { data: authUser } = useQuery({
+    queryKey: ["authUser"],
+  });
 
   const {
     data: user,
@@ -39,7 +45,42 @@ const Profile = () => {
       }
     },
   });
-
+  const { mutate: updateProfile, isPanding: isPandingProfile } = useMutation({
+    mutationFn: async () => {
+      try {
+        const base64CoverImg = coverImg ? coverImg : user.coverImg;
+        const base64ProfileImg = profileImg ? profileImg : user.profileImg;
+        const res = await fetch(`/api/users/update`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            coverImg: base64CoverImg,
+            profileImg: base64ProfileImg,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message);
+        }
+        return data;
+      } catch (error) {
+        throw new Error(error.message);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Profile updated successfully");
+      Promise.all([
+        queryClient.invalidateQueries(["authUser"]),
+        queryClient.invalidateQueries(["userProfile"]),
+      ]);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+  const isMyProfile = authUser._id === user?._id;
   // const user = {
   //   _id: "1",
   //   username: "johndoe",
@@ -167,14 +208,24 @@ const Profile = () => {
                     {isMyProfile ? (
                       <EditProfileModal />
                     ) : (
-                      <button className="btn btn-outline btn-sm">Follow</button>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() => follow(user._id)}
+                      >
+                        {isPandig && "loading..."}
+                        {!isPandig &&
+                          (authUser?.following.includes(user._id)
+                            ? "Unfollow"
+                            : "Follow")}
+                      </button>
                     )}
                     {(coverImg || profileImg) && (
                       <button
                         className="btn btn-primary btn-sm"
-                        onClick={() => alert("Profile updated successfully")}
+                        onClick={() => updateProfile()}
                       >
-                        Update
+                        {isPandingProfile && "loading..."}
+                        {!isPandingProfile && "update"}
                       </button>
                     )}
                   </div>
@@ -262,13 +313,13 @@ const Profile = () => {
       </div>
 
       <div className="col-span-1">
-        <div className="card bg-base-100 shadow-xl">
-          <div className="card-body">
-            <h3 className="card-title text-base">Who to follow</h3>
-            {/* Right panel content */}
-            <RightPanel />
-          </div>
-        </div>
+        {/* <div className="card bg-base-100 shadow-xl">
+          <div className="card-body"> */}
+        {/* <h3 className="card-title text-base">Who to follow</h3> */}
+        {/* Right panel content */}
+        <RightPanel />
+        {/* </div>
+        </div> */}
       </div>
     </div>
 

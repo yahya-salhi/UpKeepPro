@@ -19,7 +19,7 @@ router.post("/signup", protect, authorizeAdmin, signup);
 router.get("/suggested", protect, getAllUsers);
 router.post("/follow/:id", protect, followUnFollowUser);
 
-router.post("/update/:id", protect, updateUser);
+router.post("/update", protect, updateUser);
 router.delete("/delete/:id", protect, authorizeAdmin, deleteUser);
 router.get("/online", protect, getOnlineUsers);
 
