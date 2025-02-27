@@ -76,7 +76,7 @@ const userSchema = new mongoose.Schema(
       default: "available",
     },
     returnDate: {
-      type: String, // Stores when the user will return from vacation
+      type: Date, // Stores when the user will return from vacation
       default: "",
     },
     alternativeUser: {

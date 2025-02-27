@@ -76,14 +76,16 @@ export const signup = async (req, res) => {
 //getuserProfile
 export const getUserProfile = async (req, res) => {
   const { username } = req.params;
+
   try {
     const user = await User.findOne({ username }).select("-password");
-    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (!user) return res.status(404).json({ error: "User not founddd" });
 
     res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
     console.log("Error in getUserProfile controller", error.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -108,8 +110,8 @@ export const deleteUser = async (req, res) => {
 };
 export const updateUser = async (req, res) => {
   const {
-    email,
     username,
+    email,
     currentPassword,
     newPassword,
     grade,
@@ -127,7 +129,7 @@ export const updateUser = async (req, res) => {
 
   try {
     let user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     if (
       (!newPassword && currentPassword) ||

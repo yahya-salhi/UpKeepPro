@@ -9,3 +9,72 @@ body {
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* General DatePicker Styles */
+.react-datepicker {
+  background-color: white !important; /* Match DaisyUI light theme */
+  border: 1px solid #d1d5db !important; /* Gray-300 */
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
+}
+
+/* Header Styling */
+.react-datepicker__header {
+  background-color: #f3f4f6 !important; /* Gray-200 */
+  border-bottom: 1px solid #e5e7eb !important; /* Gray-300 */
+  padding: 8px;
+}
+
+/* Month & Year Selector */
+.react-datepicker__current-month {
+  color: #1f2937 !important; /* Gray-800 */
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.react-datepicker__navigation {
+  top: 12px;
+}
+
+/* Days & Day Names */
+.react-datepicker__day,
+.react-datepicker__day-name {
+  color: #374151 !important; /* Gray-700 */
+  font-size: 0.9rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover & Selected Date */
+.react-datepicker__day:hover {
+  background-color: #93c5fd !important; /* Light Blue */
+  color: #1e3a8a !important; /* Dark Blue */
+}
+
+.react-datepicker__day--selected {
+  background-color: #2563eb !important; /* DaisyUI Primary */
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Today Highlight */
+.react-datepicker__day--today {
+  border: 2px solid #2563eb !important; /* Blue outline */
+  font-weight: bold;
+}
+
+/* Input Field Styling */
+.react-datepicker__input-container input {
+  @apply input input-bordered w-full; /* DaisyUI input styles */
+}
+
+/* Navigation Arrows */
+.react-datepicker__navigation-icon {
+  filter: brightness(0.5);
+}

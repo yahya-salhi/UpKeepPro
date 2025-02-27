@@ -9,7 +9,7 @@ export const authorizeAdmin = async (req, res, next) => {
     const user = await User.findById(req.user._id);
 
     if (!user) {
-      return res.status(403).json({ error: "User not found." });
+      return res.status(403).json({ error: "User nott found." });
     }
 
     if (user.role !== "REPI") {

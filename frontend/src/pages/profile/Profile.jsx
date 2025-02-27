@@ -45,6 +45,7 @@ const Profile = () => {
       }
     },
   });
+
   const { mutate: updateProfile, isPanding: isPandingProfile } = useMutation({
     mutationFn: async () => {
       try {
@@ -80,7 +81,8 @@ const Profile = () => {
       toast.error(error.message);
     },
   });
-  const isMyProfile = authUser._id === user?._id;
+  const isMyProfile = authUser?._id === user?._id;
+
   // const user = {
   //   _id: "1",
   //   username: "johndoe",
@@ -206,7 +208,7 @@ const Profile = () => {
                 <div className="mt-20 p-6">
                   <div className="flex justify-end gap-2">
                     {isMyProfile ? (
-                      <EditProfileModal />
+                      <EditProfileModal authUser={authUser} />
                     ) : (
                       <button
                         className="btn btn-outline btn-sm"
