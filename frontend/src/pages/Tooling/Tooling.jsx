@@ -275,11 +275,22 @@ export default function ToolingAcquisitionForm() {
                         <FormLabel className="text-sm font-medium">Reference Number</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                              <Hash className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm font-medium text-primary">{acquisitionType}-</span>
+                            </div>
                             <Input
-                              placeholder={acquisitionType === "PV" ? "PV152" : "M11202301"}
-                              className="pl-9 h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-primary dark:focus:border-primary"
+                              placeholder="Enter number"
+                              className="pl-20 h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-primary dark:focus:border-primary"
                               {...field}
+                              onChange={(e) => {
+                                let value = e.target.value;
+                                // Remove any prefix that might have been pasted in
+                                if (value.match(/^(PV|M11|C12)[-]/)) {
+                                  value = value.replace(/^(PV|M11|C12)[-]/, '');
+                                }
+                                field.onChange(value);
+                              }}
                             />
                           </div>
                         </FormControl>

@@ -23,19 +23,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { useStateContext } from "../../contexts/ContextProvider";
 import { useTooling } from "./useTooling";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+// Removed unused imports
 import { 
   Check, 
   ChevronsUpDown, 
@@ -64,6 +52,8 @@ export default function ToolingExitForm() {
   const form = useForm({
     defaultValues: {
       toolId: "",
+      exitRefType: "M11",
+      exitRefNumber: "",
       exitRef: "",
       exitDate: new Date().toISOString().split("T")[0],
       exitQte: 1,
@@ -155,10 +145,10 @@ export default function ToolingExitForm() {
             </Button>
             <div>
               <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                Record Tool Exit (M11)
+                Record Tool Exit (M11/C12)
               </CardTitle>
               <p className="text-muted-foreground mt-1">
-                Record the exit of tools from inventory with M11 reference
+                Record the exit of tools from inventory with M11 or C12 reference
               </p>
             </div>
           </div>
@@ -297,6 +287,7 @@ export default function ToolingExitForm() {
                       <p className="text-muted-foreground">MAT: {selectedTool.mat}</p>
                     </div>
                     <Badge 
+                
                       variant={selectedTool.currentQte > 5 ? "default" : "warning"}
                       className="px-3 py-1"
                     >
@@ -333,34 +324,94 @@ export default function ToolingExitForm() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="exitRef"
-                    rules={{
-                      required: "M11 Reference is required",
-                      pattern: {
-                        value: /^M11\d+$/,
-                        message:
-                          "Must be a valid M11 reference (e.g., M11202301)",
-                      },
-                    }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>M11 Reference</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="M11202301"
-                              className="pl-9 h-11 bg-white dark:bg-gray-800"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-4">
+                    {/* Reference Type Dropdown */}
+                    <FormField
+                      control={form.control}
+                      name="exitRefType"
+                      rules={{ required: "Reference type is required" }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Reference Type</FormLabel>
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              // When type changes, update the full reference
+                              const currentRef = form.getValues("exitRefNumber") || "";
+                              form.setValue("exitRef", `${value}-${currentRef}`);
+                              // Force re-render of the form to update the prefix display
+                              form.trigger("exitRefNumber");
+                            }}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-11 bg-white dark:bg-gray-800">
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="M11">M11</SelectItem>
+                              <SelectItem value="C12">C12</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Reference Number Input with Prefix */}
+                    <FormField
+                      control={form.control}
+                      name="exitRefNumber"
+                      rules={{
+                        required: "Reference number is required"
+                      }}
+                      render={({ field }) => {
+                        const refType = form.getValues("exitRefType") || "M11";
+                        return (
+                          <FormItem>
+                            <FormLabel>Reference Number</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                                  <Hash className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-sm font-medium text-primary">{refType}-</span>
+                                </div>
+                                <Input
+                                  placeholder="Enter number"
+                                  className="pl-20 h-11 bg-white dark:bg-gray-800"
+                                  {...field}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    field.onChange(value);
+                                    // Update the hidden full reference field
+                                    form.setValue("exitRef", `${refType}-${value}`);
+                                  }}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                    
+                    {/* Hidden field to store the complete reference */}
+                    <FormField
+                      control={form.control}
+                      name="exitRef"
+                      rules={{
+                        required: "Reference is required",
+                        pattern: {
+                          value: /^(M11|C12)[-]?.*$/,
+                          message: "Must be a valid M11 or C12 reference"
+                        }
+                      }}
+                      render={({ field }) => (
+                        <input type="hidden" {...field} />
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}
@@ -430,9 +481,10 @@ export default function ToolingExitForm() {
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
+                    
                         >
                           <FormControl>
-                            <SelectTrigger className="h-11 bg-white dark:bg-gray-800">
+                            <SelectTrigger className="h-11 bg-white dark:bg-gray-800 ">
                               <SelectValue placeholder="Select reason" />
                             </SelectTrigger>
                           </FormControl>
@@ -441,6 +493,9 @@ export default function ToolingExitForm() {
                             <SelectItem value="lost">Lost</SelectItem>
                             <SelectItem value="transferred">
                               Transferred
+                            </SelectItem>
+                            <SelectItem value="re-form">
+                              Re-form
                             </SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>

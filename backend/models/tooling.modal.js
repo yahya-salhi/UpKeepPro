@@ -47,7 +47,7 @@ const toolingSchema = new mongoose.Schema(
           type: String,
           required: true,
           trim: true,
-          match: [/^M11\d+$/, "Please enter valid M11 reference"],
+          match: [/^(M11|C12)[-]?.*$/, "Please enter valid M11 or C12 reference"],
         },
         exitDate: {
           type: Date,
@@ -61,7 +61,7 @@ const toolingSchema = new mongoose.Schema(
         },
         exitReason: {
           type: String,
-          enum: ["consumed", "lost", "transferred", "other"],
+          enum: ["consumed", "re-form", "lost", "transferred", "other"],
           required: true,
         },
       },

@@ -104,7 +104,7 @@ export const acquireTooling = async (req, res) => {
   }
 };
 
-// @desc    Exit tooling (M11 only)
+// @desc    Exit tooling (M11 or C12)
 // @route   POST /api/tooling/:id/exit
 export const exitTooling = async (req, res) => {
   try {
