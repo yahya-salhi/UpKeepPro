@@ -44,14 +44,14 @@ import {
   User,
   Building,
   Briefcase,
-  AlertCircle,
+  
   CheckCircle2,
   XCircle
 } from "lucide-react";
 import { useStateContext } from "../../contexts/ContextProvider";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ToolingAcquisitionForm() {
   const [showResponsibleModal, setShowResponsibleModal] = useState(false);
@@ -551,6 +551,10 @@ export default function ToolingAcquisitionForm() {
                             <SelectItem value="common" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
                               <Tag className="h-4 w-4 text-muted-foreground" />
                               <span>Common</span>
+                            </SelectItem>
+                            <SelectItem value="didactic" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                              <Tag className="h-4 w-4 text-muted-foreground" />
+                              <span>Didactic</span>
                             </SelectItem>
                           </SelectContent>
                         </Select>

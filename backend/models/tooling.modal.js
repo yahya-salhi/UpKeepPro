@@ -83,7 +83,7 @@ const toolingSchema = new mongoose.Schema(
     // **Tool Classification**
     type: {
       type: String,
-      enum: ["calibration", "maintenance", "common"],
+      enum: ["calibration", "maintenance", "common", "didactic"],
       required: true,
     },
     direction: {
