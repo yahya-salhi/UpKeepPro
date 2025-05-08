@@ -366,21 +366,20 @@ export default function ToolingTracking() {
 
                 {/* Quick Actions */}
                 <div className="flex gap-2 mt-6">
-                  {selectedTool.acquisitionType === "PV" && (
-                    <ConversionDialog
-                      tool={selectedTool}
-                      onConvert={(conversionData) =>
-                        handleConversion({
-                          id: selectedToolId,
-                          conversionData,
-                        })
-                      }
-                    >
-                      <Button variant="outline" className="gap-2">
-                        Convert to M11
-                      </Button>
-                    </ConversionDialog>
-                  )}
+                  {/* Always show the Convert to M11 button - the dialog will handle checking for PV entries */}
+                  <ConversionDialog
+                    tool={selectedTool}
+                    onConvert={(conversionData) =>
+                      handleConversion({
+                        id: selectedToolId,
+                        conversionData,
+                      })
+                    }
+                  >
+                    <Button variant="outline" className="gap-2">
+                      Convert to M11
+                    </Button>
+                  </ConversionDialog>
                 </div>
               </div>
 

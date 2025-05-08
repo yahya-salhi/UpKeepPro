@@ -47,7 +47,7 @@ export const acquireTooling = async (req, res) => {
       existingTool.currentQte += originalQte;
       existingTool.history.push({
         eventType: "entry",
-        reference: acquisitionRef,
+        reference: acquisitionType === "PV" ? `pv-${acquisitionRef}` : `m11-${acquisitionRef}`,
         date: new Date(acquisitionDate),
         qteChange: originalQte,
         notes:
@@ -79,7 +79,7 @@ export const acquireTooling = async (req, res) => {
       history: [
         {
           eventType: "entry",
-          reference: acquisitionRef,
+          reference: acquisitionType === "PV" ? `pv-${acquisitionRef}` : `m11-${acquisitionRef}`,
           date: new Date(acquisitionDate),
           qteChange: originalQte,
           notes: notes || `Initial ${acquisitionType} acquisition`,
@@ -174,7 +174,7 @@ export const exitTooling = async (req, res) => {
 export const convertPVtoM11 = async (req, res) => {
   try {
     const { id } = req.params;
-    const { m11Ref, m11Date, notes } = req.body;
+    const { m11Ref, m11Date, notes, pvReference } = req.body;
 
     if (!m11Ref || !m11Date) {
       return res.status(400).json({
@@ -187,25 +187,75 @@ export const convertPVtoM11 = async (req, res) => {
       return res.status(404).json({ error: "Tool not found" });
     }
 
-    if (tool.acquisitionType !== "PV") {
+    // If converting a specific PV entry
+    if (pvReference) {
+      // Find the specific entry in history
+      const entryIndex = tool.history.findIndex(
+        entry => entry.eventType === "entry" && entry.reference === pvReference
+      );
+
+      if (entryIndex === -1) {
+        return res.status(404).json({ error: "PV reference not found in tool history" });
+      }
+
+      // Update only this specific entry
+      tool.history[entryIndex].reference = `m11-${m11Ref}`;
+      
+      // Update notes if they reference PV
+      if (tool.history[entryIndex].notes && tool.history[entryIndex].notes.includes("PV")) {
+        tool.history[entryIndex].notes = tool.history[entryIndex].notes.replace("PV", "M11");
+      }
+
+      // Add conversion event to history
+      tool.history.push({
+        eventType: "conversion",
+        reference: m11Ref,
+        date: new Date(m11Date),
+        notes: notes || `Converted ${pvReference} to M11-${m11Ref}`,
+        performedBy: req.user?.id || "system",
+      });
+
+      // Check if this was the main acquisition reference
+      if (tool.acquisitionType === "PV" && 
+          pvReference === `pv-${tool.acquisitionRef}`) {
+        // Update main acquisition info
+        tool.acquisitionType = "M11";
+        tool.acquisitionRef = m11Ref;
+        tool.acquisitionDate = new Date(m11Date);
+      }
+    } 
+    // If converting the entire tool (legacy behavior)
+    else if (tool.acquisitionType === "PV") {
+      // Update main acquisition info
+      tool.acquisitionType = "M11";
+      tool.acquisitionRef = m11Ref;
+      tool.acquisitionDate = new Date(m11Date);
+      
+      // Update all PV references in history entries to M11 references
+      tool.history.forEach(entry => {
+        if (entry.eventType === "entry" && entry.reference.startsWith("pv-")) {
+          // Update to M11 format
+          entry.reference = `m11-${m11Ref}`;
+          // Update notes if they reference PV
+          if (entry.notes && entry.notes.includes("PV")) {
+            entry.notes = entry.notes.replace("PV", "M11");
+          }
+        }
+      });
+
+      // Add conversion event to history
+      tool.history.push({
+        eventType: "conversion",
+        reference: m11Ref,
+        date: new Date(m11Date),
+        notes: notes || `Converted all PV entries to M11-${m11Ref}`,
+        performedBy: req.user?.id || "system",
+      });
+    } else {
       return res.status(400).json({
         error: "Only PV acquisitions can be converted",
       });
     }
-
-    // Update acquisition info
-    tool.acquisitionType = "M11";
-    tool.acquisitionRef = m11Ref;
-    tool.acquisitionDate = new Date(m11Date);
-
-    // Add to history
-    tool.history.push({
-      eventType: "conversion",
-      reference: m11Ref,
-      date: new Date(m11Date),
-      notes,
-      performedBy: req.user?.id || "system",
-    });
 
     await tool.save();
     res.status(200).json(tool);
