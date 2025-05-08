@@ -13,8 +13,7 @@ const toolingSchema = new mongoose.Schema(
     mat: {
       type: String,
       unique: true,
-      immutable: true,
-      match: [/^[A-Z]{2}\d{3}$/, "MAT must be in format AA001"],
+      sparse: true, // Allows multiple null values
     },
 
     // **Acquisition Information (PV or M11)**
@@ -47,7 +46,10 @@ const toolingSchema = new mongoose.Schema(
           type: String,
           required: true,
           trim: true,
-          match: [/^(M11|C12)[-]?.*$/, "Please enter valid M11 or C12 reference"],
+          match: [
+            /^(M11|C12)[-]?.*$/,
+            "Please enter valid M11 or C12 reference",
+          ],
         },
         exitDate: {
           type: Date,
@@ -131,52 +133,67 @@ const toolingSchema = new mongoose.Schema(
   }
 );
 
-// **MAT Generation (e.g., HA001)**
+// **MAT Generation with improved retry mechanism**
 toolingSchema.pre("save", async function (next) {
-  if (!this.isNew) return next();
+  // Skip if not new or already has MAT
+  if (!this.isNew || this.mat) return next();
 
-  // Generate MAT (first 2 letters of designation + sequential number)
-  const prefix = this.designation.substring(0, 2).toUpperCase();
-  const count = await mongoose
-    .model("Tooling")
-    .countDocuments({ designation: this.designation });
-  this.mat = `${prefix}${String(count + 1).padStart(3, "0")}`;
+  try {
+    // Check for existing tool with same designation
+    const existingTool = await mongoose
+      .model("Tooling")
+      .findOne({
+        designation: new RegExp(`^${this.designation}$`, "i"),
+      })
+      .select("mat");
 
-  // Set initial current quantity
-  this.currentQte = this.originalQte;
-  next();
+    if (existingTool) {
+      // Use existing MAT if tool with same designation exists
+      this.mat = existingTool.mat;
+      return next();
+    }
+
+    // Generate new MAT only for completely new designations
+    const prefix = this.designation.substring(0, 2).toUpperCase();
+    const count = await mongoose.model("Tooling").countDocuments({
+      mat: new RegExp(`^${prefix}\\d{3}$`),
+    });
+
+    this.mat = `${prefix}${String(count + 1).padStart(3, "0")}`;
+    return next();
+  } catch (error) {
+    return next(error);
+  }
 });
 
 // **Exit Validation**
-toolingSchema.pre("save", function (next) {
-  if (this.isModified("exits")) {
-    const totalExited = this.exits.reduce((sum, exit) => sum + exit.exitQte, 0);
+toolingSchema.pre("save", async function (next) {
+  if (!this.isNew || this.mat) return next();
 
-    if (totalExited > this.originalQte) {
-      return next(
-        new Error("Total exited quantity cannot exceed original quantity")
-      );
+  try {
+    // Reuse MAT if same designation exists
+    const existing = await mongoose.model("Tooling").findOne({
+      designation: new RegExp(`^${this.designation}$`, "i"),
+      mat: { $ne: null },
+    });
+
+    if (existing) {
+      this.mat = existing.mat;
+      return next();
     }
 
-    this.currentQte = this.originalQte - totalExited;
+    // Generate MAT for new designations
+    const prefix = this.designation.substring(0, 2).toUpperCase();
+    const count = await mongoose.model("Tooling").countDocuments({
+      mat: new RegExp(`^${prefix}\\d{3}$`),
+    });
 
-    // Update situation based on current quantity
-    if (this.currentQte <= 0) {
-      this.situation = "unavailable";
-    } else if (this.currentQte < this.originalQte) {
-      this.situation = "partial";
-    } else {
-      this.situation = "available";
-    }
+    this.mat = `${prefix}${String(count + 1).padStart(3, "0")}`;
+    next();
+  } catch (err) {
+    next(err);
   }
-  next();
-});
-
-// **Virtual for PV to M11 Conversion Tracking**
-toolingSchema.virtual("isConverted").get(function () {
-  return this.history.some((event) => event.eventType === "conversion");
 });
 
 const Tooling = mongoose.model("Tooling", toolingSchema);
-
 export default Tooling;

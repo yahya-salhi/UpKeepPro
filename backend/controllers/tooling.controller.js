@@ -1,8 +1,9 @@
 import Tooling from "../models/tooling.modal.js";
 import mongoose from "mongoose";
-
+import { getOrCreateMAT } from "../utils/matGenerator.js";
 // @desc    Acquire new tooling (via PV or M11)
 // @route   POST /api/tooling/acquire
+
 export const acquireTooling = async (req, res) => {
   try {
     const {
@@ -19,7 +20,6 @@ export const acquireTooling = async (req, res) => {
       notes,
     } = req.body;
 
-    // Validate required fields
     const requiredFields = [
       "designation",
       "acquisitionType",
@@ -33,52 +33,46 @@ export const acquireTooling = async (req, res) => {
       "direction",
     ];
 
-    const missingFields = requiredFields.filter((field) => !req.body[field]);
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        error: `Missing required fields: ${missingFields.join(", ")}`,
-      });
+    const missing = requiredFields.filter((field) => !req.body[field]);
+    if (missing.length > 0) {
+      return res
+        .status(400)
+        .json({ error: `Missing fields: ${missing.join(", ")}` });
     }
 
-    // Check if adding to existing tool
-    if (acquisitionType === "PV") {
-      const existingTool = await Tooling.findOne({
-        designation,
-        acquisitionType: "PV",
-        "exits.exitRef": { $ne: acquisitionRef }, // Ensure not duplicate PV
+    const existingTool = await Tooling.findOne({ designation });
+
+    if (existingTool) {
+      existingTool.originalQte += originalQte;
+      existingTool.currentQte += originalQte;
+      existingTool.history.push({
+        eventType: "entry",
+        reference: acquisitionRef,
+        date: new Date(acquisitionDate),
+        qteChange: originalQte,
+        notes:
+          notes ||
+          `Additional quantity for ${acquisitionType} ${acquisitionRef}`,
+        performedBy: req.user?.id || "system",
       });
-
-      if (existingTool) {
-        // Add to existing tool
-        existingTool.originalQte += originalQte;
-        existingTool.currentQte += originalQte;
-
-        // Add to history
-        existingTool.history.push({
-          eventType: "entry",
-          reference: acquisitionRef,
-          date: new Date(acquisitionDate),
-          qteChange: originalQte,
-          notes,
-          performedBy: req.user?.id || "system",
-        });
-
-        await existingTool.save();
-        return res.status(200).json(existingTool);
-      }
+      await existingTool.save();
+      return res.status(200).json(existingTool);
     }
 
-    // Create new tool entry
-    const newTooling = new Tooling({
+    // Generate MAT only for new tools
+    const mat = await getOrCreateMAT(designation);
+
+    const newTool = new Tooling({
       designation,
+      mat, // Assign the generated mat here
       acquisitionType,
       acquisitionRef,
-      acquisitionDate: new Date(acquisitionDate),
+      acquisitionDate,
       originalQte,
       currentQte: originalQte,
-      responsible: new mongoose.Types.ObjectId(responsible),
-      location: new mongoose.Types.ObjectId(location),
-      placement: new mongoose.Types.ObjectId(placement),
+      responsible,
+      location,
+      placement,
       type,
       direction,
       situation: "available",
@@ -88,19 +82,22 @@ export const acquireTooling = async (req, res) => {
           reference: acquisitionRef,
           date: new Date(acquisitionDate),
           qteChange: originalQte,
-          notes,
+          notes: notes || `Initial ${acquisitionType} acquisition`,
           performedBy: req.user?.id || "system",
         },
       ],
     });
 
-    await newTooling.save();
-    res.status(201).json(newTooling);
-  } catch (error) {
-    res.status(500).json({
-      error: error.message,
-      details: error.errors,
-    });
+    const saved = await newTool.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    if (err.code === 11000 && err.keyPattern?.mat) {
+      return res
+        .status(409)
+        .json({ error: "Duplicate MAT detected. Try again." });
+    }
+
+    res.status(500).json({ error: err.message });
   }
 };
 
