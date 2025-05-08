@@ -280,12 +280,27 @@ export const getUserCount = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
-    // Fetch all users from the database
-    const users = await User.find().select(
-      "-password  -createdBy -updatedAt -followers -following  -isOnline -returnDate -mission   -profileImg -coverImg -createdAt"
-    ); // Excludes passwords for security
+    const page = parseInt(req.query.page) || 1; // default to page 1
+    const limit = parseInt(req.query.limit) || 10; // default to 10 users per page
+    const skip = (page - 1) * limit;
 
-    res.status(200).json(users);
+    const users = await User.find()
+      .select(
+        "-password -createdBy -updatedAt -followers -following -isOnline -returnDate -mission -profileImg -coverImg -createdAt"
+      )
+      .skip(skip)
+      .limit(limit)
+      .lean(); // lean() improves performance by returning plain JS objects
+
+    const totalUsers = await User.countDocuments();
+
+    res.status(200).json({
+      page,
+      limit,
+      totalPages: Math.ceil(totalUsers / limit),
+      totalUsers,
+      users,
+    });
   } catch (error) {
     console.error("Error fetching users:", error.message);
     res.status(500).json({ error: "Internal server error" });
