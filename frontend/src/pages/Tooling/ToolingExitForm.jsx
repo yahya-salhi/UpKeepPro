@@ -20,22 +20,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { useStateContext } from "../../contexts/ContextProvider";
 import { useTooling } from "./useTooling";
 // Removed unused imports
-import { 
-  Check, 
-  ChevronsUpDown, 
-  Package, 
-  Calendar, 
-  Hash, 
-  FileText, 
+import {
+  Check,
+  ChevronsUpDown,
+  Package,
+  Calendar,
+  Hash,
+  FileText,
   AlertCircle,
   ArrowLeft,
   Loader2,
   Search,
-  X
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -68,19 +74,21 @@ export default function ToolingExitForm() {
   // Filter tools based on search term
   useEffect(() => {
     if (!toolingList) return;
-    
+
     // First filter by available tools
-    let availableTools = toolingList.filter(t => t.currentQte > 0);
-    
+    let availableTools = toolingList.filter((t) => t.currentQte > 0);
+
     // Then apply search filter if there's a search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase().trim();
-      availableTools = availableTools.filter(tool => 
-        (tool.designation && tool.designation.toLowerCase().includes(searchLower)) || 
-        (tool.mat && tool.mat.toLowerCase().includes(searchLower))
+      availableTools = availableTools.filter(
+        (tool) =>
+          (tool.designation &&
+            tool.designation.toLowerCase().includes(searchLower)) ||
+          (tool.mat && tool.mat.toLowerCase().includes(searchLower))
       );
     }
-    
+
     setFilteredTools(availableTools);
   }, [toolingList, searchTerm]);
 
@@ -135,20 +143,21 @@ export default function ToolingExitForm() {
       <Card className="border-none shadow-lg bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800">
         <CardHeader className="pb-4 space-y-4">
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="hover:bg-primary/10 rounded-full"
               onClick={() => window.history.back()}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text ">
                 Record Tool Exit (M11/C12)
               </CardTitle>
               <p className="text-muted-foreground mt-1">
-                Record the exit of tools from inventory with M11 or C12 reference
+                Record the exit of tools from inventory with M11 or C12
+                reference
               </p>
             </div>
           </div>
@@ -168,9 +177,11 @@ export default function ToolingExitForm() {
                   rules={{ required: "Tool selection is required" }}
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel className="text-sm font-medium">Tool</FormLabel>
+                      <FormLabel className="text-sm font-medium">
+                        Tool
+                      </FormLabel>
                       <div className="relative">
-                        <div 
+                        <div
                           className="flex items-center justify-between w-full h-11 px-3 py-2 bg-white dark:bg-gray-800 border rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
                           onClick={() => setOpen(!open)}
                         >
@@ -179,16 +190,22 @@ export default function ToolingExitForm() {
                               <>
                                 <Package className="h-4 w-4 text-primary" />
                                 <span className="font-medium">
-                                  {toolingList?.find(tool => tool._id === field.value)?.designation}
+                                  {
+                                    toolingList?.find(
+                                      (tool) => tool._id === field.value
+                                    )?.designation
+                                  }
                                 </span>
                               </>
                             ) : (
-                              <span className="text-muted-foreground">Select a tool...</span>
+                              <span className="text-muted-foreground">
+                                Select a tool...
+                              </span>
                             )}
                           </div>
                           <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
                         </div>
-                        
+
                         {open && (
                           <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border rounded-md shadow-lg">
                             <div className="p-2 border-b">
@@ -198,7 +215,9 @@ export default function ToolingExitForm() {
                                   ref={searchInputRef}
                                   placeholder="Search by name or MAT..."
                                   value={searchTerm}
-                                  onChange={(e) => setSearchTerm(e.target.value)}
+                                  onChange={(e) =>
+                                    setSearchTerm(e.target.value)
+                                  }
                                   className="pl-9 h-9 bg-transparent border-0 focus-visible:ring-0"
                                 />
                                 {searchTerm && (
@@ -216,7 +235,7 @@ export default function ToolingExitForm() {
                                 )}
                               </div>
                             </div>
-                            
+
                             <div className="max-h-[300px] overflow-y-auto">
                               {filteredTools.length === 0 ? (
                                 <div className="p-4 text-center">
@@ -232,7 +251,9 @@ export default function ToolingExitForm() {
                                     <div
                                       key={tool._id}
                                       className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                                        field.value === tool._id ? 'bg-primary/5 dark:bg-primary/10' : ''
+                                        field.value === tool._id
+                                          ? "bg-primary/5 dark:bg-primary/10"
+                                          : ""
                                       }`}
                                       onClick={() => {
                                         form.setValue("toolId", tool._id);
@@ -246,21 +267,31 @@ export default function ToolingExitForm() {
                                         )}
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                        <p className="font-medium truncate">{tool.designation}</p>
+                                        <p className="font-medium truncate">
+                                          {tool.designation}
+                                        </p>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                           <span>MAT: {tool.mat}</span>
                                           <span>•</span>
-                                          <span>Available: {tool.currentQte}</span>
+                                          <span>
+                                            Available: {tool.currentQte}
+                                          </span>
                                           {tool.location?.name && (
                                             <>
                                               <span>•</span>
-                                              <span className="truncate">Location: {tool.location.name}</span>
+                                              <span className="truncate">
+                                                Location: {tool.location.name}
+                                              </span>
                                             </>
                                           )}
                                         </div>
                                       </div>
-                                      <Badge 
-                                        variant={tool.currentQte > 5 ? "outline" : "warning"}
+                                      <Badge
+                                        variant={
+                                          tool.currentQte > 5
+                                            ? "outline"
+                                            : "warning"
+                                        }
                                         className="ml-2 shrink-0"
                                       >
                                         {tool.currentQte}
@@ -283,18 +314,23 @@ export default function ToolingExitForm() {
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border shadow-sm space-y-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-semibold">{selectedTool.designation}</h3>
-                      <p className="text-muted-foreground">MAT: {selectedTool.mat}</p>
+                      <h3 className="text-lg font-semibold">
+                        {selectedTool.designation}
+                      </h3>
+                      <p className="text-muted-foreground">
+                        MAT: {selectedTool.mat}
+                      </p>
                     </div>
-                    <Badge 
-                
-                      variant={selectedTool.currentQte > 5 ? "default" : "warning"}
+                    <Badge
+                      variant={
+                        selectedTool.currentQte > 5 ? "default" : "warning"
+                      }
                       className="px-3 py-1"
                     >
                       {selectedTool.currentQte} Available
                     </Badge>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Type</p>
@@ -302,15 +338,21 @@ export default function ToolingExitForm() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Location</p>
-                      <p className="font-medium">{selectedTool.location?.name}</p>
+                      <p className="font-medium">
+                        {selectedTool.location?.name}
+                      </p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Direction</p>
                       <p className="font-medium">{selectedTool.direction}</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Responsible</p>
-                      <p className="font-medium">{selectedTool.responsible?.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Responsible
+                      </p>
+                      <p className="font-medium">
+                        {selectedTool.responsible?.name}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -337,8 +379,12 @@ export default function ToolingExitForm() {
                             onValueChange={(value) => {
                               field.onChange(value);
                               // When type changes, update the full reference
-                              const currentRef = form.getValues("exitRefNumber") || "";
-                              form.setValue("exitRef", `${value}-${currentRef}`);
+                              const currentRef =
+                                form.getValues("exitRefNumber") || "";
+                              form.setValue(
+                                "exitRef",
+                                `${value}-${currentRef}`
+                              );
                               // Force re-render of the form to update the prefix display
                               form.trigger("exitRefNumber");
                             }}
@@ -358,13 +404,13 @@ export default function ToolingExitForm() {
                         </FormItem>
                       )}
                     />
-                    
+
                     {/* Reference Number Input with Prefix */}
                     <FormField
                       control={form.control}
                       name="exitRefNumber"
                       rules={{
-                        required: "Reference number is required"
+                        required: "Reference number is required",
                       }}
                       render={({ field }) => {
                         const refType = form.getValues("exitRefType") || "M11";
@@ -375,7 +421,9 @@ export default function ToolingExitForm() {
                               <div className="relative">
                                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                                   <Hash className="h-4 w-4 text-muted-foreground" />
-                                  <span className="text-sm font-medium text-primary">{refType}-</span>
+                                  <span className="text-sm font-medium text-primary">
+                                    {refType}-
+                                  </span>
                                 </div>
                                 <Input
                                   placeholder="Enter number"
@@ -385,7 +433,10 @@ export default function ToolingExitForm() {
                                     const value = e.target.value;
                                     field.onChange(value);
                                     // Update the hidden full reference field
-                                    form.setValue("exitRef", `${refType}-${value}`);
+                                    form.setValue(
+                                      "exitRef",
+                                      `${refType}-${value}`
+                                    );
                                   }}
                                 />
                               </div>
@@ -395,7 +446,7 @@ export default function ToolingExitForm() {
                         );
                       }}
                     />
-                    
+
                     {/* Hidden field to store the complete reference */}
                     <FormField
                       control={form.control}
@@ -404,12 +455,10 @@ export default function ToolingExitForm() {
                         required: "Reference is required",
                         pattern: {
                           value: /^(M11|C12)[-]?.*$/,
-                          message: "Must be a valid M11 or C12 reference"
-                        }
+                          message: "Must be a valid M11 or C12 reference",
+                        },
                       }}
-                      render={({ field }) => (
-                        <input type="hidden" {...field} />
-                      )}
+                      render={({ field }) => <input type="hidden" {...field} />}
                     />
                   </div>
 
@@ -481,7 +530,6 @@ export default function ToolingExitForm() {
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
-                    
                         >
                           <FormControl>
                             <SelectTrigger className="h-11 bg-white dark:bg-gray-800 ">
@@ -494,9 +542,7 @@ export default function ToolingExitForm() {
                             <SelectItem value="transferred">
                               Transferred
                             </SelectItem>
-                            <SelectItem value="re-form">
-                              Re-form
-                            </SelectItem>
+                            <SelectItem value="re-form">Re-form</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>
@@ -528,17 +574,21 @@ export default function ToolingExitForm() {
                 />
               </div>
 
-              {selectedTool && form.watch("exitQte") > selectedTool.currentQte && (
-                <div className="bg-destructive/10 p-4 rounded-lg flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
-                  <div>
-                    <p className="font-medium text-destructive">Quantity Exceeds Available Stock</p>
-                    <p className="text-sm text-destructive/80">
-                      You cannot exit more than the available quantity ({selectedTool.currentQte})
-                    </p>
+              {selectedTool &&
+                form.watch("exitQte") > selectedTool.currentQte && (
+                  <div className="bg-destructive/10 p-4 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+                    <div>
+                      <p className="font-medium text-destructive">
+                        Quantity Exceeds Available Stock
+                      </p>
+                      <p className="text-sm text-destructive/80">
+                        You cannot exit more than the available quantity (
+                        {selectedTool.currentQte})
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </form>
           </Form>
         </CardContent>
