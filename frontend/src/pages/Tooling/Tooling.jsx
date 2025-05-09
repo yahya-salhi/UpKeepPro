@@ -25,8 +25,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   PlusCircle,
   Package,
@@ -111,7 +123,7 @@ export default function ToolingAcquisitionForm() {
   const onSubmit = (data) => {
     mutation.mutate(data);
   };
-  
+
   // Add tools data to your query
   const { data: tools } = useQuery({
     queryKey: ["toolings"],
@@ -127,9 +139,9 @@ export default function ToolingAcquisitionForm() {
           <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
           <CardHeader className="pb-4 space-y-4 relative z-10">
             <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="hover:bg-white/20 rounded-full transition-colors"
                 onClick={() => window.history.back()}
               >
@@ -140,22 +152,28 @@ export default function ToolingAcquisitionForm() {
                   Tool Management
                 </CardTitle>
                 <p className="text-muted-foreground mt-1">
-                  {activeTab === "entry" ? "Add a new tool to your inventory" : "Record tool exit from inventory"}
+                  {activeTab === "entry"
+                    ? "Add a new tool to your inventory"
+                    : "Record tool exit from inventory"}
                 </p>
               </div>
             </div>
-            
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
               <TabsList className="grid w-full grid-cols-2 p-1 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg">
-                <TabsTrigger 
-                  value="entry" 
+                <TabsTrigger
+                  value="entry"
                   className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm transition-all duration-200"
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   <span>Tool Entry</span>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="exit" 
+                <TabsTrigger
+                  value="exit"
                   className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm transition-all duration-200"
                 >
                   <XCircle className="h-4 w-4" />
@@ -176,11 +194,13 @@ export default function ToolingAcquisitionForm() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Tool Information</h3>
-                    <p className="text-sm text-muted-foreground">Basic details about the tool</p>
+                    <p className="text-sm text-muted-foreground">
+                      Basic details about the tool
+                    </p>
                   </div>
                   <Separator className="flex-1 ml-2" />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50/50 dark:bg-gray-800/20 rounded-lg border border-gray-100 dark:border-gray-800">
                   <FormField
                     control={form.control}
@@ -224,7 +244,10 @@ export default function ToolingAcquisitionForm() {
                     <div className="flex items-center h-11 px-3 py-2 text-sm border rounded-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
                       {matPreview ? (
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5 font-mono">
+                          <Badge
+                            variant="outline"
+                            className="text-primary border-primary/30 bg-primary/5 font-mono"
+                          >
                             {matPreview}
                           </Badge>
                           <span className="text-xs px-2 py-0.5 bg-green-50 text-green-600 rounded-full dark:bg-green-900/20 dark:text-green-400">
@@ -242,11 +265,24 @@ export default function ToolingAcquisitionForm() {
                     </div>
                     {designation?.length >= 2 && (
                       <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-3.5 w-3.5 text-blue-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         Based on existing tools starting with{" "}
-                        <span className="font-medium text-primary">{designation.substring(0, 2).toUpperCase()}</span>
+                        <span className="font-medium text-primary">
+                          {designation.substring(0, 2).toUpperCase()}
+                        </span>
                       </p>
                     )}
                   </FormItem>
@@ -260,8 +296,12 @@ export default function ToolingAcquisitionForm() {
                     <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">Acquisition Details</h3>
-                    <p className="text-sm text-muted-foreground">Information about how this tool was acquired</p>
+                    <h3 className="text-lg font-semibold">
+                      Acquisition Details
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Information about how this tool was acquired
+                    </p>
                   </div>
                   <Separator className="flex-1 ml-2" />
                 </div>
@@ -276,8 +316,19 @@ export default function ToolingAcquisitionForm() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-3.5 w-3.5 text-blue-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                              />
                             </svg>
                             <span>Acquisition Type</span>
                           </FormLabel>
@@ -291,17 +342,29 @@ export default function ToolingAcquisitionForm() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                              <SelectItem value="PV" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                              <SelectItem
+                                value="PV"
+                                className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
                                 <div className="flex items-center gap-2">
-                                  <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/30">
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/30"
+                                  >
                                     PV
                                   </Badge>
                                   <span>Procès-Verbal</span>
                                 </div>
                               </SelectItem>
-                              <SelectItem value="M11" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                              <SelectItem
+                                value="M11"
+                                className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
                                 <div className="flex items-center gap-2">
-                                  <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30">
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30"
+                                  >
                                     M11
                                   </Badge>
                                   <span>Bon de Sortie</span>
@@ -332,7 +395,9 @@ export default function ToolingAcquisitionForm() {
                                 <Badge className="h-6 px-1.5 py-0.5 bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/30 font-mono">
                                   {acquisitionType}
                                 </Badge>
-                                <span className="text-sm font-medium text-blue-500">-</span>
+                                <span className="text-sm font-medium text-blue-500">
+                                  -
+                                </span>
                               </div>
                               <Input
                                 placeholder="Enter number"
@@ -342,7 +407,10 @@ export default function ToolingAcquisitionForm() {
                                   let value = e.target.value;
                                   // Remove any prefix that might have been pasted in
                                   if (value.match(/^(PV|M11|C12)[-]/)) {
-                                    value = value.replace(/^(PV|M11|C12)[-]/, '');
+                                    value = value.replace(
+                                      /^(PV|M11|C12)[-]/,
+                                      ""
+                                    );
                                   }
                                   field.onChange(value);
                                 }}
@@ -395,8 +463,19 @@ export default function ToolingAcquisitionForm() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm font-medium flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-3.5 w-3.5 text-blue-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                              />
                             </svg>
                             <span>Quantity</span>
                           </FormLabel>
@@ -430,7 +509,9 @@ export default function ToolingAcquisitionForm() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Tool Details</h3>
-                    <p className="text-sm text-muted-foreground">Classification and location information</p>
+                    <p className="text-sm text-muted-foreground">
+                      Classification and location information
+                    </p>
                   </div>
                   <Separator className="flex-1 ml-2" />
                 </div>
@@ -479,7 +560,10 @@ export default function ToolingAcquisitionForm() {
                                       </div>
                                       <span>{res.name}</span>
                                       {res.position && (
-                                        <Badge variant="outline" className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                        <Badge
+                                          variant="outline"
+                                          className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                                        >
                                           {res.position}
                                         </Badge>
                                       )}
@@ -546,7 +630,10 @@ export default function ToolingAcquisitionForm() {
                                       </div>
                                       <span>{loc.name}</span>
                                       {loc.code && (
-                                        <Badge variant="outline" className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                        <Badge
+                                          variant="outline"
+                                          className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                                        >
                                           {loc.code}
                                         </Badge>
                                       )}
@@ -656,46 +743,70 @@ export default function ToolingAcquisitionForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                            <SelectItem value="calibration" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <SelectItem
+                              value="calibration"
+                              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="bg-green-50 dark:bg-green-900/30 p-1 rounded-full">
                                   <Tag className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <span>Calibration</span>
-                                <Badge variant="outline" className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                <Badge
+                                  variant="outline"
+                                  className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                                >
                                   CAL
                                 </Badge>
                               </div>
                             </SelectItem>
-                            <SelectItem value="maintenance" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <SelectItem
+                              value="maintenance"
+                              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="bg-green-50 dark:bg-green-900/30 p-1 rounded-full">
                                   <Tag className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <span>Maintenance</span>
-                                <Badge variant="outline" className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                <Badge
+                                  variant="outline"
+                                  className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                                >
                                   MNT
                                 </Badge>
                               </div>
                             </SelectItem>
-                            <SelectItem value="common" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <SelectItem
+                              value="common"
+                              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="bg-green-50 dark:bg-green-900/30 p-1 rounded-full">
                                   <Tag className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <span>Common</span>
-                                <Badge variant="outline" className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                <Badge
+                                  variant="outline"
+                                  className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                                >
                                   COM
                                 </Badge>
                               </div>
                             </SelectItem>
-                            <SelectItem value="didactic" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <SelectItem
+                              value="didactic"
+                              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="bg-green-50 dark:bg-green-900/30 p-1 rounded-full">
                                   <Tag className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <span>Didactic</span>
-                                <Badge variant="outline" className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                <Badge
+                                  variant="outline"
+                                  className="ml-auto text-xs bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                                >
                                   DID
                                 </Badge>
                               </div>
@@ -730,58 +841,77 @@ export default function ToolingAcquisitionForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                            <SelectItem value="DEMRE" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <SelectItem
+                              value="DEMRE"
+                              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="bg-green-50 dark:bg-green-900/30 p-1 rounded-full">
                                   <Briefcase className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                 </div>
-                                <span>DEMRE</span>
+                                <span>DGMRE</span>
                                 <Badge className="ml-auto text-xs bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/30">
-                                  Direction des Études et Moyens de Réparation
+                                  Direction Générale des Ressources et des
+                                  Équilibres
                                 </Badge>
                               </div>
                             </SelectItem>
-                            <SelectItem value="DGTI" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <SelectItem
+                              value="DGTI"
+                              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="bg-green-50 dark:bg-green-900/30 p-1 rounded-full">
                                   <Briefcase className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <span>DGTI</span>
                                 <Badge className="ml-auto text-xs bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/30">
-                                  Direction Générale des Technologies de l&apos;Information
+                                  Direction Générale de la Transmission et de
+                                  l&apos;Informatique
                                 </Badge>
                               </div>
                             </SelectItem>
-                            <SelectItem value="DGGM" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <SelectItem
+                              value="DGGM"
+                              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="bg-green-50 dark:bg-green-900/30 p-1 rounded-full">
                                   <Briefcase className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <span>DGGM</span>
                                 <Badge className="ml-auto text-xs bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/30">
-                                  Direction Générale du Génie Mécanique
+                                  Direction Générale du Matériel Roulant et du
+                                  Carburant
                                 </Badge>
                               </div>
                             </SelectItem>
-                            <SelectItem value="DHS" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <SelectItem
+                              value="DHS"
+                              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="bg-green-50 dark:bg-green-900/30 p-1 rounded-full">
                                   <Briefcase className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <span>DHS</span>
                                 <Badge className="ml-auto text-xs bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/30">
-                                  Direction Hygiène et Sécurité
+                                  Direction de l’Habillement et des Subsistances
                                 </Badge>
                               </div>
                             </SelectItem>
-                            <SelectItem value="DASIC" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <SelectItem
+                              value="DASIC"
+                              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
                               <div className="flex items-center gap-2 w-full">
                                 <div className="bg-green-50 dark:bg-green-900/30 p-1 rounded-full">
                                   <Briefcase className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                 </div>
                                 <span>DASIC</span>
                                 <Badge className="ml-auto text-xs bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/30">
-                                  Direction des Affaires de Sécurité et Contrôle
+                                  Direction du Patrimoine, de l&apos;Information
+                                  et de la Culture
                                 </Badge>
                               </div>
                             </SelectItem>
@@ -801,7 +931,9 @@ export default function ToolingAcquisitionForm() {
                       <FormLabel className="text-sm font-medium flex items-center gap-1">
                         <FileText className="h-3.5 w-3.5 text-green-500" />
                         <span>Notes</span>
-                        <span className="text-xs text-muted-foreground ml-1">(optional)</span>
+                        <span className="text-xs text-muted-foreground ml-1">
+                          (optional)
+                        </span>
                       </FormLabel>
                       <FormControl>
                         <div className="relative">
@@ -814,7 +946,8 @@ export default function ToolingAcquisitionForm() {
                         </div>
                       </FormControl>
                       <FormDescription className="text-xs text-muted-foreground mt-1">
-                        Add any relevant details about this tool that might be helpful for future reference.
+                        Add any relevant details about this tool that might be
+                        helpful for future reference.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -836,7 +969,11 @@ export default function ToolingAcquisitionForm() {
             {mutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                <span>{activeTab === "entry" ? "Acquiring Tool..." : "Recording Exit..."}</span>
+                <span>
+                  {activeTab === "entry"
+                    ? "Acquiring Tool..."
+                    : "Recording Exit..."}
+                </span>
               </>
             ) : (
               <>
