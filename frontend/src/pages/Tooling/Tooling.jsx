@@ -13,6 +13,7 @@ import {
 import ResponsibleModal from "./ResponsibleModal";
 import LocationModal from "./LocationModal";
 import PlacementModal from "./PlacementModal";
+
 import {
   Form,
   FormControl,
@@ -22,7 +23,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,6 +60,21 @@ import { useStateContext } from "../../contexts/ContextProvider";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ChevronsUpDown, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function ToolingAcquisitionForm() {
   const [showResponsibleModal, setShowResponsibleModal] = useState(false);
@@ -201,91 +216,151 @@ export default function ToolingAcquisitionForm() {
                   <Separator className="flex-1 ml-2" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50/50 dark:bg-gray-800/20 rounded-lg border border-gray-100 dark:border-gray-800">
-                  <FormField
-                    control={form.control}
-                    name="designation"
-                    rules={{
-                      required: "Designation is required",
-                      minLength: {
-                        value: 2,
-                        message: "Designation must be at least 2 characters",
-                      },
-                    }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium flex items-center gap-1">
-                          <Tag className="h-3.5 w-3.5 text-primary" />
-                          <span>Designation</span>
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="HAMMER"
-                              className="pl-9 h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-primary dark:focus:border-primary shadow-sm"
-                              {...field}
-                              onChange={(e) => {
-                                field.onChange(e.target.value.toUpperCase());
-                              }}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium flex items-center gap-1">
-                      <Hash className="h-3.5 w-3.5 text-primary" />
-                      <span>MAT (Auto-generated)</span>
-                    </FormLabel>
-                    <div className="flex items-center h-11 px-3 py-2 text-sm border rounded-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
-                      {matPreview ? (
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className="text-primary border-primary/30 bg-primary/5 font-mono"
-                          >
-                            {matPreview}
-                          </Badge>
-                          <span className="text-xs px-2 py-0.5 bg-green-50 text-green-600 rounded-full dark:bg-green-900/20 dark:text-green-400">
-                            Ready
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="text-xs px-2 py-0.5 bg-yellow-50 text-yellow-600 rounded-full dark:bg-yellow-900/20 dark:text-yellow-400">
-                            Waiting
-                          </span>
-                          <span>Enter designation (min 2 chars)</span>
-                        </div>
+                <div className="flex flex-col md:flex-row gap-6 p-4 bg-gray-50/50 dark:bg-gray-800/20 rounded-lg border border-gray-100 dark:border-gray-800">
+                  <div className="flex-grow md:w-2/3">
+                    <FormField
+                      control={form.control}
+                      name="designation"
+                      rules={{
+                        required: "Designation is required",
+                        minLength: {
+                          value: 2,
+                          message: "Designation must be at least 2 characters",
+                        },
+                      }}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium flex items-center gap-1">
+                            <Tag className="h-3.5 w-3.5 text-primary" />
+                            <span>Designation</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className="w-full justify-between pl-9 h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-primary dark:focus:border-primary shadow-sm"
+                                  >
+                                    <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    {field.value || "Select designation..."}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent 
+                                  className="p-0 bg-white border border-gray-200 shadow-md rounded-md overflow-hidden"
+                                  align="start"
+                                  sideOffset={5}
+                                  alignWidth={true}
+                                  forceMount
+                                  style={{ width: "var(--radix-popover-trigger-width)" }}
+                                >
+                                  <Command className="bg-white">
+                                    <CommandInput 
+                                      placeholder="Search designation..." 
+                                      className="h-10 border-b border-gray-100 focus:ring-0 focus:border-gray-200"
+                                      onValueChange={(value) => {
+                                        field.onChange(value.toUpperCase());
+                                      }}
+                                    />
+                                    <CommandList className="max-h-[200px] overflow-y-auto">
+                                      <CommandEmpty className="py-3 text-center text-sm text-gray-500">No matching tools found</CommandEmpty>
+                                      <CommandGroup>
+                                        {tools && tools
+                                          .filter((tool) => 
+                                            !field.value || 
+                                            tool.designation.toLowerCase().includes(field.value.toLowerCase())
+                                          )
+                                          .sort((a, b) => a.designation.localeCompare(b.designation))
+                                          .slice(0, 10)
+                                          .map((tool) => (
+                                            <CommandItem
+                                              key={tool._id}
+                                              value={tool.designation}
+                                              onSelect={() => {
+                                                field.onChange(tool.designation);
+                                              }}
+                                              className="flex items-center py-2 px-3 text-sm cursor-pointer hover:bg-gray-50"
+                                            >
+                                              <Check
+                                                className={`mr-2 h-4 w-4 text-primary ${
+                                                  field.value === tool.designation
+                                                    ? "opacity-100"
+                                                    : "opacity-0"
+                                                }`}
+                                              />
+                                              {tool.designation}
+                                            </CommandItem>
+                                          ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          </FormControl>
+                          <FormDescription className="text-xs text-muted-foreground mt-1">
+                            Please select your Designation from the alphabetically filtered list below. This ensures consistency with our database and helps prevent typing errors. For a better experience, start typing to see suggestions.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                    </div>
-                    {designation?.length >= 2 && (
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-3.5 w-3.5 text-blue-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        Based on existing tools starting with{" "}
-                        <span className="font-medium text-primary">
-                          {designation.substring(0, 2).toUpperCase()}
-                        </span>
-                      </p>
-                    )}
-                  </FormItem>
+                    />
+                  </div>
+
+                  <div className="md:w-1/3">
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium flex items-center gap-1">
+                        <Hash className="h-3.5 w-3.5 text-primary" />
+                        <span>MAT (Auto-generated)</span>
+                      </FormLabel>
+                      <div className="flex items-center h-11 px-3 py-2 text-sm border rounded-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
+                        {matPreview ? (
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant="outline"
+                              className="text-primary border-primary/30 bg-primary/5 font-mono"
+                            >
+                              {matPreview}
+                            </Badge>
+                            <span className="text-xs px-2 py-0.5 bg-green-50 text-green-600 rounded-full dark:bg-green-900/20 dark:text-green-400">
+                              Ready
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <span className="text-xs px-2 py-0.5 bg-yellow-50 text-yellow-600 rounded-full dark:bg-yellow-900/20 dark:text-yellow-400">
+                              Waiting
+                            </span>
+                            <span>Enter designation (min 2 chars)</span>
+                          </div>
+                        )}
+                      </div>
+                      {designation?.length >= 2 && (
+                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3.5 w-3.5 text-blue-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          Based on existing tools starting with{" "}
+                          <span className="font-medium text-primary">
+                            {designation.substring(0, 2).toUpperCase()}
+                          </span>
+                        </p>
+                      )}
+                    </FormItem>
+                  </div>
                 </div>
               </div>
 
@@ -392,14 +467,14 @@ export default function ToolingAcquisitionForm() {
                           <FormControl>
                             <div className="relative">
                               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                                <Badge className="h-6 px-1.5 py-0.5 bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/30 font-mono">
+                                <Badge className="h-6 px-1.5 py-0.5 bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300">
                                   {acquisitionType}
                                 </Badge>
                                 <span className="text-sm font-medium text-blue-500">
                                   -
                                 </span>
                               </div>
-                              <Input
+                              <Input  
                                 placeholder="Enter number"
                                 className="pl-[4.5rem] h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-primary dark:focus:border-primary shadow-sm"
                                 {...field}
@@ -474,7 +549,7 @@ export default function ToolingAcquisitionForm() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                               />
                             </svg>
                             <span>Quantity</span>

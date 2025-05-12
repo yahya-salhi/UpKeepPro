@@ -12,6 +12,7 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   Box,
+  Briefcase,
   ClipboardList,
   ChevronLeft,
   Filter,
@@ -153,14 +154,14 @@ export default function ToolingTracking() {
       // Apply client-side filtering
       let filteredTools = data;
       switch (activeFilter) {
-        case "low":
-          filteredTools = data.filter((t) => t.currentQte < 5 && t.currentQte > 0);
-          break;
         case "unavailable":
           filteredTools = data.filter((t) => t.currentQte === 0);
           break;
         case "pv":
           filteredTools = data.filter((t) => t.acquisitionType === "PV");
+          break;
+        case "maintenance":
+          filteredTools = data.filter((t) => t.type === "maintenance");
           break;
       }
 
@@ -177,7 +178,7 @@ export default function ToolingTracking() {
         summary: {
           total: data.length,
           available: data.filter((t) => t.currentQte > 0).length,
-          lowStock: data.filter((t) => t.currentQte < 5 && t.currentQte > 0).length,
+          maintenance: data.filter((t) => t.type === "maintenance").length,
           recentExits: data
             .flatMap((t) => t.exits.map((e) => ({ ...e, tool: t })))
             .sort((a, b) => new Date(b.exitDate) - new Date(a.exitDate))
@@ -220,62 +221,64 @@ export default function ToolingTracking() {
         <CardHeader className="pb-4">
           <div className="flex flex-col gap-4">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-2xl font-bold">
-                {selectedTool ? (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSelectedToolId(null)}
-                      className="hover:bg-primary/10"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </Button>
-                    <span>{selectedTool.designation}</span>
-                  </div>
-                ) : (
-                  "Tool Inventory"
-                )}
-              </CardTitle>
+              <div className="space-y-4">
+                <CardTitle className="text-2xl font-bold">
+                  {selectedTool ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setSelectedToolId(null)}
+                        className="hover:bg-primary/10"
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </Button>
+                      <span>{selectedTool.designation}</span>
+                    </div>
+                  ) : (
+                    "Tool Inventory"
+                  )}
+                </CardTitle>
 
-              {!selectedTool && (
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search tools..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 w-[250px]"
-                    />
+                {!selectedTool && (
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search tools..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 w-[250px]"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={activeFilter === "all" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setActiveFilter("all")}
+                        className="flex items-center gap-2"
+                      >
+                        <Filter className="h-4 w-4" />
+                        All
+                      </Button>
+                      <Button
+                        variant={activeFilter === "pv" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setActiveFilter("pv")}
+                      >
+                        PV Tools
+                      </Button>
+                      <Button
+                        variant={activeFilter === "maintenance" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setActiveFilter("maintenance")}
+                      >
+                        Maintenance
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={activeFilter === "all" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveFilter("all")}
-                      className="flex items-center gap-2"
-                    >
-                      <Filter className="h-4 w-4" />
-                      All
-                    </Button>
-                    <Button
-                      variant={activeFilter === "low" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveFilter("low")}
-                    >
-                      Low Stock
-                    </Button>
-                    <Button
-                      variant={activeFilter === "pv" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveFilter("pv")}
-                    >
-                      PV Tools
-                    </Button>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -300,11 +303,11 @@ export default function ToolingTracking() {
                   className="bg-green-50 dark:bg-green-950/20"
                 />
                 <MetricCard
-                  title="Low Stock"
-                  value={toolingData?.summary.lowStock}
-                  icon={<AlertTriangle className="w-5 h-5" />}
-                  trend={-1}
-                  className="bg-yellow-50 dark:bg-yellow-950/20"
+                  title="Maintenance"
+                  value={toolingData?.summary.maintenance}
+                  icon={<Briefcase className="w-5 h-5" />}
+                  trend={3}
+                  className="bg-blue-50 dark:bg-blue-950/20"
                 />
                 <MetricCard
                   title="Unavailable"
@@ -366,20 +369,25 @@ export default function ToolingTracking() {
 
                 {/* Quick Actions */}
                 <div className="flex gap-2 mt-6">
-                  {/* Always show the Convert to M11 button - the dialog will handle checking for PV entries */}
-                  <ConversionDialog
-                    tool={selectedTool}
-                    onConvert={(conversionData) =>
-                      handleConversion({
-                        id: selectedToolId,
-                        conversionData,
-                      })
-                    }
-                  >
-                    <Button variant="outline" className="gap-2">
-                      Convert to M11
-                    </Button>
-                  </ConversionDialog>
+                  {/* Only show the Convert to M11 button if there are PV entries */}
+                  {historyData &&
+                    historyData.some((entry) =>
+                      entry.eventType === "entry" && entry.reference && entry.reference.startsWith("pv-")
+                    ) && (
+                      <ConversionDialog
+                        tool={selectedTool}
+                        onConvert={(conversionData) =>
+                          handleConversion({
+                            id: selectedToolId,
+                            conversionData,
+                          })
+                        }
+                      >
+                        <Button variant="outline" className="gap-2">
+                          Convert to M11
+                        </Button>
+                      </ConversionDialog>
+                    )}
                 </div>
               </div>
 
