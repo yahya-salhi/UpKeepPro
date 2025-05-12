@@ -1,5 +1,7 @@
+import DashbordKanban from "../../components/kanban/DashbordKanban";
+
 function ManageTask() {
-  return <div>manage task</div>;
+  return <DashbordKanban>manage task</DashbordKanban>;
 }
 
 export default ManageTask;

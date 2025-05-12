@@ -19,14 +19,14 @@ import {
   Login,
   Profile,
   ToolingExitForm,
-  UserKanban,
 } from "./pages";
 import { useStateContext } from "./contexts/ContextProvider";
 
 import { Toaster } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
-import SettingsChat from "./pages/chat/SettingsChat";
+
 import CreateTask from "./pages/kanban/CreateTask";
+import ManageTask from "./pages/kanban/ManageTask";
 
 function App() {
   const {
@@ -170,8 +170,8 @@ function App() {
                 }
               />
               <Route
-                path="/userkanban"
-                element={authUser ? <UserKanban /> : <Navigate to="/login" />}
+                path="/Kanban/manage"
+                element={authUser ? <ManageTask /> : <Navigate to="/login" />}
               />
               <Route
                 path="/editor"
