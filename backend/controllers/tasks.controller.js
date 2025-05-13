@@ -7,22 +7,62 @@ import mongoose from "mongoose";
 export const getTasks = async (req, res) => {
   try {
     const { status } = req.query;
+    console.log("API Request - getTasks:", { 
+      statusFromQuery: status,
+      user: {
+        id: req.user._id,
+        role: req.user.role
+      }
+    });
+
+    // Get all unique status values from the database to debug
+    const allStatusValues = await Task.distinct('status');
+    console.log("All status values in database:", allStatusValues);
+
     let filter = {};
-    if (status) {
-      filter.status = status;
+    if (status && status !== 'all') {
+      // Map frontend status values to actual database values if needed
+      let dbStatus = status;
+      
+      // Normalize status values to match database
+      if (status === 'pending') dbStatus = 'pending';
+      else if (status === 'inprogress') dbStatus = 'inprogress';
+      else if (status === 'done') dbStatus = 'done';
+      
+      filter.status = dbStatus;
+      console.log(`Filtering tasks by status: "${status}" (mapped to "${dbStatus}" in database)`);
     }
+
+    // Log filter to debug
+    console.log("Database filter:", filter);
+
     let tasks;
     if (req.user.role === "REPI" || req.user.role === "CC") {
+      console.log("Admin user, fetching all tasks with filter");
       tasks = await Task.find(filter).populate(
         "assignedTo",
         "name email role grade profileImg"
       );
     } else {
+      console.log("Regular user, fetching only assigned tasks with filter");
       tasks = await Task.find({
         ...filter,
         assignedTo: req.user._id,
       }).populate("assignedTo", "name email role grade profileImg");
     }
+
+    console.log(`Found ${tasks.length} tasks matching filter`);
+    
+    // Show sample of tasks found (first 2)
+    if (tasks.length > 0) {
+      console.log("Sample tasks:", tasks.slice(0, 2).map(t => ({
+        id: t._id,
+        title: t.title,
+        status: t.status,
+        createdAt: t.createdAt
+      })));
+    }
+
     //add completed todocheklist count to each task
     tasks = await Promise.all(
       tasks.map(async (task) => {
@@ -32,41 +72,55 @@ export const getTasks = async (req, res) => {
         return { ...task._doc, completedTodoCount: completedCount };
       })
     );
-    //status summary counts
+
+    //status summary counts - using native database values
     const allTasks = await Task.countDocuments(
       req.user.role === "REPI" || req.user.role === "CC"
         ? {}
         : { assignedTo: req.user._id }
     );
-    const pendingTasks = await Task.countDocuments({
-      ...filter,
+    const pendingTask = await Task.countDocuments({
       status: "pending",
-      ...(req.user.role === "REPI" ||
-        (req.user.role === "CC" && { assignedTo: req.user._id })),
+      ...(req.user.role === "REPI" || req.user.role === "CC" 
+        ? {} 
+        : { assignedTo: req.user._id }),
     });
-    const inProgressTasks = await Task.countDocuments({
-      ...filter,
-      status: "in-progress",
-      ...(req.user.role === "REPI" ||
-        (req.user.role === "CC" && { assignedTo: req.user._id })),
+    const inProgressTask = await Task.countDocuments({
+      status: "inprogress", 
+      ...(req.user.role === "REPI" || req.user.role === "CC" 
+        ? {} 
+        : { assignedTo: req.user._id }),
     });
-    const completedTasks = await Task.countDocuments({
-      ...filter,
+    const completedTask = await Task.countDocuments({
       status: "done",
-      ...(req.user.role === "REPI" ||
-        (req.user.role === "CC" && { assignedTo: req.user._id })),
+      ...(req.user.role === "REPI" || req.user.role === "CC" 
+        ? {} 
+        : { assignedTo: req.user._id }),
     });
 
-    res.json({
+    // Log counts for debugging
+    console.log("Task counts:", {
+      all: allTasks,
+      pending: pendingTask,
+      inProgress: inProgressTask,
+      completed: completedTask
+    });
+
+    const responseData = {
       tasks,
       statusSummary: {
         all: allTasks,
-        pendingTasks,
-        inProgressTasks,
-        completedTasks,
+        pendingTask,         
+        inProgressTask,      
+        completedTask,       
       },
-    });
+    };
+
+    console.log("Sending response with status summary:", responseData.statusSummary);
+    
+    res.json(responseData);
   } catch (error) {
+    console.error("Error in getTasks controller:", error);
     res.status(500).json({ message: "server error", error: error.message });
   }
 };
@@ -114,7 +168,7 @@ export const createTask = async (req, res) => {
     const assignedToIds = [];
     for (const id of assignedTo) {
       try {
-        assignedToIds.push(new mongoose.Types.ObjectId(id)); // ✅ fixed here
+        assignedToIds.push(new mongoose.Types.ObjectId(id)); 
       } catch (err) {
         return res.status(400).json({
           message: `Invalid user ID format: ${id}`,
@@ -172,11 +226,6 @@ export const updateTask = async (req, res) => {
     task.todocheklist = req.body.todocheklist || task.todocheklist;
     task.attchments = req.body.attchments || task.attchments;
     if (req.body.assignedTo) {
-      // if (!Array.isArray(req.body.assignedTo)) {
-      //   return res
-      //     .status(400)
-      //     .json({ message: "assignedTo should be an array of users ID " });
-      // }
       task.assignedTo = req.body.assignedTo;
     }
     const updatedTask = await task.save();
@@ -256,7 +305,7 @@ export const updateTaskChecklist = async (req, res) => {
         .status(403)
         .json({ message: "You are not authorized to update this task" });
     }
-    task.todocheklist = todocheklist; //replave with updated checklist
+    task.todocheklist = todocheklist; 
     //auto update progress based on checklist completion
     const completedCount = task.todocheklist.filter(
       (item) => item.completed
@@ -312,12 +361,12 @@ export const getDashboardData = async (req, res) => {
     ]);
 
     const taskDistribution = taskstatuses.reduce((acc, status) => {
-      const formattedKey = status.replace(/-/g, " "); //remove space for response keys
+      const formattedKey = status.replace(/-/g, " "); 
       acc[formattedKey] =
         taskDistributionRow.find((item) => item._id === status)?.count || 0;
       return acc;
     }, {});
-    taskDistribution["All"] = totalTasks; //add total count to task distribution
+    taskDistribution["All"] = totalTasks; 
     //ensure all prioirity are included
     const taskPriorities = ["low", "medium", "high"];
     const taskPriorityLevelsRow = await Task.aggregate([
@@ -393,13 +442,13 @@ export const getUserDashboardData = async (req, res) => {
       },
     ]);
     const taskDistribution = taskstatuses.reduce((acc, status) => {
-      const formattedKey = status.replace(/-/g, " "); //remove space for response keys
+      const formattedKey = status.replace(/-/g, " "); 
       acc[formattedKey] =
         taskDistributionRow.find((item) => item._id === status)?.count || 0;
       return acc;
     }, {});
 
-    taskDistribution["All"] = totalTasks; //add total count to task distribution
+    taskDistribution["All"] = totalTasks; 
     //task distribution by priority
     const taskPriorities = ["low", "medium", "high"];
     const taskPriorityLevelsRow = await Task.aggregate([
