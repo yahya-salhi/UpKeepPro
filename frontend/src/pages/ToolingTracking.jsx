@@ -17,6 +17,9 @@ import {
   ChevronLeft,
   Filter,
   Search,
+  User,
+  Building,
+  MapPin,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ConversionDialog } from "./Tooling/ConversionDialog";
@@ -336,13 +339,55 @@ export default function ToolingTracking() {
                       <h2 className="text-2xl font-bold">{selectedTool.designation}</h2>
                       <p className="text-muted-foreground">MAT: {selectedTool.mat}</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Badge variant="outline" className="px-3 py-1">
                         {selectedTool.type}
                       </Badge>
                       <Badge variant="outline" className="px-3 py-1">
                         {selectedTool.direction}
                       </Badge>
+                    </div>
+                    
+                    {/* Additional Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-3 border-t">
+                      {/* Responsible */}
+                      <div className="flex items-center gap-2">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-1.5 rounded-full">
+                          <User className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Responsible</p>
+                          <p className="text-sm font-medium">
+                            {selectedTool.responsible ? selectedTool.responsible.name : "Not assigned"}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Location */}
+                      <div className="flex items-center gap-2">
+                        <div className="bg-green-50 dark:bg-green-900/20 p-1.5 rounded-full">
+                          <Building className="h-4 w-4 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Location</p>
+                          <p className="text-sm font-medium">
+                            {selectedTool.location ? selectedTool.location.name : "Not specified"}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Placement */}
+                      <div className="flex items-center gap-2">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 p-1.5 rounded-full">
+                          <MapPin className="h-4 w-4 text-amber-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Placement</p>
+                          <p className="text-sm font-medium">
+                            {selectedTool.placement ? selectedTool.placement.name : "Not specified"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="text-right space-y-4">
