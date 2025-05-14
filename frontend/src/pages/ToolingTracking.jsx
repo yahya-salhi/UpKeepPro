@@ -20,10 +20,14 @@ import {
   User,
   Building,
   MapPin,
+  Trash2,
+  Edit,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ConversionDialog } from "./Tooling/ConversionDialog";
 import { useToolingActions } from "../pages/Tooling/toolingActions.js";
+import DeleteToolDialog from "./Tooling/DeleteToolDialog";
+import EditToolModal from "./Tooling/EditToolModal";
 
 // 1. Enhanced Metric Card Component
 const MetricCard = ({ title, value, icon, trend, className }) => (
@@ -145,6 +149,8 @@ export default function ToolingTracking() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const { handleConversion } = useToolingActions();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Fetch all tools with summary data
   const { data: toolingData, isLoading } = useQuery({
@@ -440,6 +446,26 @@ export default function ToolingTracking() {
                         </Button>
                       </ConversionDialog>
                     )}
+                    
+                  {/* Edit Tool Button */}
+                  <Button 
+                    variant="outline" 
+                    className="gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20"
+                    onClick={() => setIsEditModalOpen(true)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit Tool
+                  </Button>
+                    
+                  {/* Delete Tool Button */}
+                  <Button 
+                    variant="outline" 
+                    className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-destructive/40 dark:text-destructive dark:hover:bg-destructive/20"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Tool
+                  </Button>
                 </div>
               </div>
 
@@ -455,6 +481,28 @@ export default function ToolingTracking() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Delete Tool Dialog */}
+      {selectedTool && (
+        <DeleteToolDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => {
+            setIsDeleteDialogOpen(false);
+            // If the tool was deleted, go back to the main view
+            if (!selectedToolId) setSelectedToolId(null);
+          }}
+          tool={selectedTool}
+        />
+      )}
+      
+      {/* Edit Tool Modal */}
+      {selectedTool && (
+        <EditToolModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          toolId={selectedToolId}
+        />
+      )}
     </div>
   );
 }
