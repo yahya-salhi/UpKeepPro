@@ -49,25 +49,25 @@ const DeleteToolDialog = ({ isOpen, onClose, tool }) => {
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
+      <AlertDialogContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-lg">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-destructive flex items-center gap-2">
             <Trash2 className="h-5 w-5" />
             Delete Tool
           </AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
             This action cannot be undone. This will permanently delete the tool{" "}
-            <span className="font-semibold">{tool?.designation}</span> with MAT{" "}
-            <span className="font-semibold">{tool?.mat}</span> and remove all its
+            <span className="font-semibold text-gray-900 dark:text-gray-100">{tool?.designation}</span> with MAT{" "}
+            <span className="font-semibold text-gray-900 dark:text-gray-100">{tool?.mat}</span> and remove all its
             data from our servers.
           </AlertDialogDescription>
         </AlertDialogHeader>
         
         <div className="py-3">
           <div className="mb-4">
-            <p className="text-sm text-muted-foreground mb-2">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
               To confirm, type the tool designation 
-              <span className="font-semibold"> {tool?.designation}</span> below:
+              <span className="font-semibold text-gray-900 dark:text-gray-100"> {tool?.designation}</span> below:
             </p>
             <Input
               value={confirmText}

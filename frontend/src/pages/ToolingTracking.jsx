@@ -20,10 +20,12 @@ import {
   User,
   Building,
   MapPin,
+  Trash2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ConversionDialog } from "./Tooling/ConversionDialog";
 import { useToolingActions } from "../pages/Tooling/toolingActions.js";
+import DeleteToolDialog from "./Tooling/DeleteToolDialog";
 
 // 1. Enhanced Metric Card Component
 const MetricCard = ({ title, value, icon, trend, className }) => (
@@ -145,6 +147,7 @@ export default function ToolingTracking() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const { handleConversion } = useToolingActions();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetch all tools with summary data
   const { data: toolingData, isLoading } = useQuery({
@@ -440,6 +443,16 @@ export default function ToolingTracking() {
                         </Button>
                       </ConversionDialog>
                     )}
+                    
+                  {/* Delete Tool Button */}
+                  <Button 
+                    variant="outline" 
+                    className="gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Tool
+                  </Button>
                 </div>
               </div>
 
@@ -455,6 +468,19 @@ export default function ToolingTracking() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Delete Tool Dialog */}
+      {selectedTool && (
+        <DeleteToolDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => {
+            setIsDeleteDialogOpen(false);
+            // If the tool was deleted, go back to the main view
+            if (!selectedToolId) setSelectedToolId(null);
+          }}
+          tool={selectedTool}
+        />
+      )}
     </div>
   );
 }
