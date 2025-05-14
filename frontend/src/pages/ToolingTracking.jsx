@@ -161,7 +161,14 @@ export default function ToolingTracking() {
           filteredTools = data.filter((t) => t.currentQte === 0);
           break;
         case "pv":
-          filteredTools = data.filter((t) => t.acquisitionType === "PV");
+          filteredTools = data.filter((t) => 
+            t.acquisitionType === "PV" || 
+            (t.history && t.history.some(entry => 
+              entry.eventType === "entry" && 
+              entry.reference && 
+              entry.reference.toLowerCase().startsWith("pv-")
+            ))
+          );
           break;
         case "maintenance":
           filteredTools = data.filter((t) => t.type === "maintenance");
