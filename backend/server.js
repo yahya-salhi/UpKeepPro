@@ -15,6 +15,7 @@ import locationRoutes from "./routes/location.routes.js";
 import placementRoutes from "./routes/placement.routes.js";
 import chatbotRoutes from "./routes/chatbot.routes.js";
 import messageNotificationRoutes from "./routes/messagenotification.routes.js";
+import documentRoutes from "./routes/document.routes.js";
 import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
@@ -67,6 +68,7 @@ app.use("/api/responsibles", responsibleRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/placements", placementRoutes);
 app.use("/api/chat", chatbotRoutes);
+app.use("/api/documents", documentRoutes);
 
 // Socket.IO connection handling
 io.on("connection", (socket) => {
