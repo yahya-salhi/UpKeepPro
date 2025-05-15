@@ -145,9 +145,9 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
   const isDataLoading = isLoadingTool || loadingResponsibles || loadingLocations || loadingPlacements ;
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-lg">
+      <DialogContent  className="sm:max-w-[500px] bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-gray-100">
+          <DialogTitle  className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-gray-100">
             <Tag className="h-5 w-5 text-amber-500" />
             Edit Tool
           </DialogTitle>
@@ -346,7 +346,7 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
   )}
 />
 
-
+  
                 {/* Direction */}
                 <FormField
   control={form.control}
@@ -354,9 +354,11 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
   rules={{ required: "Direction is required" }}
   render={({ field }) => (
     <FormItem>
-      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
-        <NotebookPen className="h-4 w-4 text-amber-500" />
+      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200" >
+        <NotebookPen className='w-4 h-4 text-amber-500' />
         <span>Direction</span>
+  
+ 
       </FormLabel>
 
       <Select onValueChange={field.onChange} value={field.value}>
