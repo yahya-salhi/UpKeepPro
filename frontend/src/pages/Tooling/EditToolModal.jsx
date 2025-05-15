@@ -8,6 +8,7 @@ import {
   fetchPlacements,
   updateTooling,
   fetchToolingById,
+  
 } from "./toolingApi";
 import {
   Dialog,
@@ -34,7 +35,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Tag, MapPin, User, Building } from "lucide-react";
+import { Loader2, Tag, MapPin, User, Building,Axe ,NotebookPen } from "lucide-react";
 import { useStateContext } from "../../contexts/ContextProvider";
 
 const EditToolModal = ({ isOpen, onClose, toolId }) => {
@@ -81,6 +82,7 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
     enabled: isOpen,
   });
 
+
   // Mutation for updating tool
   const mutation = useMutation({
     mutationFn: ({ id, data }) => updateTooling(id, data),
@@ -117,22 +119,36 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
+    } else {
+      setLoading(true); // Reset loading state when modal closes
+      // Reset form when modal closes to prevent stale data
+      form.reset({
+        designation: "",
+        responsible: "",
+        location: "",
+        placement: "",
+        type: "",
+        direction: "",
+        notes: "",
+      });
+      // Clear the query cache for this specific tool to ensure fresh data on next open
+      queryClient.removeQueries({ queryKey: ["tool", toolId] });
     }
-  }, [isOpen]);
+  }, [isOpen, form, queryClient, toolId]);
 
   const onSubmit = (data) => {
     mutation.mutate({ id: toolId, data });
   };
+ 
 
   // Check if any required data is still loading
-  const isDataLoading = isLoadingTool || loadingResponsibles || loadingLocations || loadingPlacements;
-
+  const isDataLoading = isLoadingTool || loadingResponsibles || loadingLocations || loadingPlacements ;
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-gray-100">
-            <Tag className="h-5 w-5 text-primary" />
+            <Tag className="h-5 w-5 text-amber-500" />
             Edit Tool
           </DialogTitle>
         </DialogHeader>
@@ -162,151 +178,219 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
 
               {/* Responsible */}
               <FormField
-                control={form.control}
-                name="responsible"
-                rules={{ required: "Responsible is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <User className="h-3.5 w-3.5 text-blue-500" />
-                      <span>Responsible</span>
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select responsible" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {responsibles?.map((resp) => (
-                          <SelectItem key={resp._id} value={resp._id}>
-                            {resp.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+  control={form.control}
+  name="responsible"
+  rules={{ required: "Responsible is required" }}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+        <User className="h-4 w-4 text-amber-500" />
+        <span>Responsible</span>
+      </FormLabel>
+
+      <Select onValueChange={field.onChange} value={field.value}>
+        <FormControl>
+          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700">
+            <SelectValue placeholder="Select responsible" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+          {responsibles?.map((resp) => (
+            <SelectItem
+              key={resp._id}
+              value={resp._id}
+              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              {resp.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <FormMessage className="text-destructive text-sm mt-1" />
+    </FormItem>
+  )}
+/>
+
 
               {/* Location & Placement in same row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Location */}
                 <FormField
-                  control={form.control}
-                  name="location"
-                  rules={{ required: "Location is required" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        <Building className="h-3.5 w-3.5 text-green-500" />
-                        <span>Location</span>
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select location" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {locations?.map((loc) => (
-                            <SelectItem key={loc._id} value={loc._id}>
-                              {loc.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+  control={form.control}
+  name="location"
+  rules={{ required: "Location is required" }}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+        <Building className="h-4 w-4 text-amber-500"/>
+        <span>Location</span>
+      </FormLabel>
+
+      <Select onValueChange={field.onChange} value={field.value}>
+        <FormControl>
+          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+            <SelectValue placeholder="Select location" />
+          </SelectTrigger>
+        </FormControl>
+
+        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+          {locations?.map((loc) => (
+            <SelectItem
+              key={loc._id}
+              value={loc._id}
+              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              {loc.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <FormMessage className="text-destructive text-sm mt-1" />
+    </FormItem>
+  )}
+/>
+
 
                 {/* Placement */}
                 <FormField
-                  control={form.control}
-                  name="placement"
-                  rules={{ required: "Placement is required" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 text-amber-500" />
-                        <span>Placement</span>
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select placement" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {placements?.map((place) => (
-                            <SelectItem key={place._id} value={place._id}>
-                              {place.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+  control={form.control}
+  name="placement"
+  rules={{ required: "Placement is required" }}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+        <MapPin className="h-4 w-4 text-amber-500" />
+        <span>Placement</span>
+      </FormLabel>
+
+      <Select onValueChange={field.onChange} value={field.value}>
+        <FormControl>
+          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+            <SelectValue placeholder="Select placement" />
+          </SelectTrigger>
+        </FormControl>
+
+        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+          {placements?.map((place) => (
+            <SelectItem
+              key={place._id}
+              value={place._id}
+              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              {place.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <FormMessage className="text-destructive text-sm mt-1" />
+    </FormItem>
+  )}
+/>
+
               </div>
 
               {/* Type & Direction in same row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Type */}
                 <FormField
-                  control={form.control}
-                  name="type"
-                  rules={{ required: "Type is required" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="calibration">Calibration</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                          <SelectItem value="common">Common</SelectItem>
-                          <SelectItem value="didactic">Didactic</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+  control={form.control}
+  name="type"
+  rules={{ required: "Type is required" }}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+        <Axe className="h-4 w-4 text-amber-500" />
+        <span>Type</span>
+      </FormLabel>
+
+      <Select onValueChange={field.onChange} value={field.value}>
+        <FormControl>
+          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+            <SelectValue placeholder="Select type" />
+          </SelectTrigger>
+        </FormControl>
+
+        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+          <SelectItem
+            value="calibration"
+            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            Calibration
+          </SelectItem>
+          <SelectItem
+            value="maintenance"
+            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            Maintenance
+          </SelectItem>
+          <SelectItem
+            value="common"
+            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            Common
+          </SelectItem>
+          <SelectItem
+            value="didactic"
+            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            Didactic
+          </SelectItem>
+        </SelectContent>
+      </Select>
+
+      <FormMessage className="text-destructive text-sm mt-1" />
+    </FormItem>
+  )}
+/>
+
 
                 {/* Direction */}
                 <FormField
-                  control={form.control}
-                  name="direction"
-                  rules={{ required: "Direction is required" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Direction</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select direction" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="DGTI">DGTI</SelectItem>
-                          <SelectItem value="DGPC">DGPC</SelectItem>
-                          <SelectItem value="FINANCE">FINANCE</SelectItem>
-                          <SelectItem value="HR">HR</SelectItem>
-                          <SelectItem value="DGPS">DGPS</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+  control={form.control}
+  name="direction"
+  rules={{ required: "Direction is required" }}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+        <NotebookPen className="h-4 w-4 text-amber-500" />
+        <span>Direction</span>
+      </FormLabel>
+
+      <Select onValueChange={field.onChange} value={field.value}>
+        <FormControl>
+          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+            <SelectValue placeholder="Select direction" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+          <SelectItem value="DGTI" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+            DGTI
+          </SelectItem>
+          <SelectItem value="DGMRE" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+            DGMRE
+          </SelectItem>
+          <SelectItem value="DGGM" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+            DGGM
+          </SelectItem>
+          <SelectItem value="DHS" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+            DHS
+          </SelectItem>
+          <SelectItem value="DASIC" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+            DASIC
+          </SelectItem>
+
+    
+        </SelectContent>
+      </Select>
+
+      <FormMessage className="text-destructive text-sm mt-1" />
+    </FormItem>
+  )}
+/>
+
               </div>
 
               {/* Notes */}

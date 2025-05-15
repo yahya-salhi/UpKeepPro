@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllTooling, fetchToolHistory } from "../pages/Tooling/toolingApi";
+import { fetchAllTooling, fetchToolHistory, fetchResponsibles } from "../pages/Tooling/toolingApi";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "./Tooling/DataTable";
 import columns from "./Tooling/columns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HistoryTable } from "./Tooling/HistoryTable";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,12 +22,22 @@ import {
   MapPin,
   Trash2,
   Edit,
+  ChevronDown,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ConversionDialog } from "./Tooling/ConversionDialog";
 import { useToolingActions } from "../pages/Tooling/toolingActions.js";
 import DeleteToolDialog from "./Tooling/DeleteToolDialog";
 import EditToolModal from "./Tooling/EditToolModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // 1. Enhanced Metric Card Component
 const MetricCard = ({ title, value, icon, trend, className }) => (
@@ -151,6 +161,14 @@ export default function ToolingTracking() {
   const { handleConversion } = useToolingActions();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedResponsible, setSelectedResponsible] = useState(null);
+
+  // Reset selected responsible when filter changes
+  useEffect(() => {
+    if (activeFilter !== "responsible") {
+      setSelectedResponsible(null);
+    }
+  }, [activeFilter]);
 
   // Fetch all tools with summary data
   const { data: toolingData, isLoading } = useQuery({
@@ -178,6 +196,13 @@ export default function ToolingTracking() {
           break;
         case "maintenance":
           filteredTools = data.filter((t) => t.type === "maintenance");
+          break;
+        case "responsible":
+          if (selectedResponsible) {
+            filteredTools = data.filter((t) => 
+              t.responsible && t.responsible._id === selectedResponsible
+            );
+          }
           break;
       }
 
@@ -209,6 +234,12 @@ export default function ToolingTracking() {
     queryKey: ["toolHistory", selectedToolId],
     queryFn: () => (selectedToolId ? fetchToolHistory(selectedToolId) : []),
     enabled: !!selectedToolId,
+  });
+
+  // Fetch responsibles for the filter
+  const { data: responsibles } = useQuery({
+    queryKey: ["responsibles"],
+    queryFn: () => fetchResponsibles(),
   });
 
   // Find the selected tool details
@@ -291,6 +322,59 @@ export default function ToolingTracking() {
                       >
                         Maintenance
                       </Button>
+                      {/* Responsible Filter - Improved Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant={activeFilter === "responsible" ? "default" : "outline"}
+                            size="sm"
+                            className="flex items-center gap-1"
+                          >
+                            <User className="h-4 w-4" />
+                            <span className="max-w-[100px] truncate">
+                              {activeFilter === "responsible" && selectedResponsible
+                                ? responsibles?.find(r => r._id === selectedResponsible)?.name || "Responsible"
+                                : "Responsible"}
+                            </span>
+                            <ChevronDown className="h-3 w-3 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-56">
+                          <DropdownMenuLabel>Filter by Responsible</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                if (activeFilter === "responsible") {
+                                  setActiveFilter("all");
+                                  setSelectedResponsible(null);
+                                }
+                              }}
+                              className="flex items-center justify-between"
+                            >
+                              <span>Show All</span>
+                              {activeFilter !== "responsible" && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                              )}
+                            </DropdownMenuItem>
+                            {responsibles?.map((resp) => (
+                              <DropdownMenuItem
+                                key={resp._id}
+                                onClick={() => {
+                                  setActiveFilter("responsible");
+                                  setSelectedResponsible(resp._id);
+                                }}
+                                className="flex items-center justify-between"
+                              >
+                                <span>{resp.name}</span>
+                                {activeFilter === "responsible" && selectedResponsible === resp._id && (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                )}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 )}
@@ -497,12 +581,13 @@ export default function ToolingTracking() {
       
       {/* Edit Tool Modal */}
       {selectedTool && (
-        <EditToolModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          toolId={selectedToolId}
-        />
-      )}
+  <EditToolModal
+    key={selectedToolId + '-' + isEditModalOpen}
+    isOpen={isEditModalOpen}
+    onClose={() => setIsEditModalOpen(false)}
+    toolId={selectedToolId}
+  />
+)}
     </div>
   );
 }
