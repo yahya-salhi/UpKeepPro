@@ -75,7 +75,7 @@ const StockBar = ({ current, max }) => {
       <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-300 ${getColorClass(percentage)}`}
-          style={{ width: `${percentage}%` }}
+          style={{ width: `${percentage === 0 ? '100%' : percentage + '%'}` }}
         />
       </div>
       <span className="text-sm font-medium min-w-[70px] text-right">
@@ -324,57 +324,66 @@ export default function ToolingTracking() {
                       </Button>
                       {/* Responsible Filter - Improved Dropdown */}
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant={activeFilter === "responsible" ? "default" : "outline"}
-                            size="sm"
-                            className="flex items-center gap-1"
-                          >
-                            <User className="h-4 w-4" />
-                            <span className="max-w-[100px] truncate">
-                              {activeFilter === "responsible" && selectedResponsible
-                                ? responsibles?.find(r => r._id === selectedResponsible)?.name || "Responsible"
-                                : "Responsible"}
-                            </span>
-                            <ChevronDown className="h-3 w-3 opacity-50" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuLabel>Filter by Responsible</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                if (activeFilter === "responsible") {
-                                  setActiveFilter("all");
-                                  setSelectedResponsible(null);
-                                }
-                              }}
-                              className="flex items-center justify-between"
-                            >
-                              <span>Show All</span>
-                              {activeFilter !== "responsible" && (
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
-                              )}
-                            </DropdownMenuItem>
-                            {responsibles?.map((resp) => (
-                              <DropdownMenuItem
-                                key={resp._id}
-                                onClick={() => {
-                                  setActiveFilter("responsible");
-                                  setSelectedResponsible(resp._id);
-                                }}
-                                className="flex items-center justify-between"
-                              >
-                                <span>{resp.name}</span>
-                                {activeFilter === "responsible" && selectedResponsible === resp._id && (
-                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
-                                )}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button
+      variant={activeFilter === "responsible" ? "default" : "outline"}
+      size="sm"
+      className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
+    >
+      <User className="h-4 w-4" />
+      <span className="max-w-[100px] truncate">
+        {activeFilter === "responsible" && selectedResponsible
+          ? responsibles?.find(r => r._id === selectedResponsible)?.name || "Responsible"
+          : "Responsible"}
+      </span>
+      <ChevronDown className="h-3 w-3 opacity-50" />
+    </Button>
+  </DropdownMenuTrigger>
+
+  <DropdownMenuContent
+    align="start"
+    className="w-56 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-200 dark:border-gray-700"
+  >
+    <DropdownMenuLabel className="text-gray-700 dark:text-gray-300">
+      Filter by Responsible
+    </DropdownMenuLabel>
+    <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-600" />
+
+    <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
+      <DropdownMenuItem
+        onClick={() => {
+          if (activeFilter === "responsible") {
+            setActiveFilter("all");
+            setSelectedResponsible(null);
+          }
+        }}
+        className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+      >
+        <span>Show All</span>
+        {activeFilter !== "responsible" && (
+          <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+        )}
+      </DropdownMenuItem>
+
+      {responsibles?.map((resp) => (
+        <DropdownMenuItem
+          key={resp._id}
+          onClick={() => {
+            setActiveFilter("responsible");
+            setSelectedResponsible(resp._id);
+          }}
+          className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+        >
+          <span>{resp.name}</span>
+          {activeFilter === "responsible" && selectedResponsible === resp._id && (
+            <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+          )}
+        </DropdownMenuItem>
+      ))}
+    </DropdownMenuGroup>
+  </DropdownMenuContent>
+</DropdownMenu>
+
                     </div>
                   </div>
                 )}
