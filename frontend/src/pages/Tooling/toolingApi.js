@@ -36,6 +36,7 @@ export const fetchPlacements = async () =>
 export const addPlacement = async (placementData) =>
   handleRequest(() => axios.post("/api/placements", placementData));
 
+
 // ======================
 // ** Tooling API **
 // ======================

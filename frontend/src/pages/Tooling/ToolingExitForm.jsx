@@ -42,6 +42,8 @@ import {
   Loader2,
   Search,
   X,
+
+
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -369,41 +371,38 @@ export default function ToolingExitForm() {
                   <div className="space-y-4">
                     {/* Reference Type Dropdown */}
                     <FormField
-                      control={form.control}
-                      name="exitRefType"
-                      rules={{ required: "Reference type is required" }}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Reference Type</FormLabel>
-                          <Select
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              // When type changes, update the full reference
-                              const currentRef =
-                                form.getValues("exitRefNumber") || "";
-                              form.setValue(
-                                "exitRef",
-                                `${value}-${currentRef}`
-                              );
-                              // Force re-render of the form to update the prefix display
-                              form.trigger("exitRefNumber");
-                            }}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-11 bg-white dark:bg-gray-800">
-                                <SelectValue placeholder="Select type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="M11">M11</SelectItem>
-                              <SelectItem value="C12">C12</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+  control={form.control}
+  name="exitRefType"
+  rules={{ required: "Reference type is required" }}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="text-black dark:text-white">Reference Type</FormLabel>
+      <Select
+        onValueChange={(value) => {
+          field.onChange(value);
+          // When type changes, update the full reference
+          const currentRef = form.getValues("exitRefNumber") || "";
+          form.setValue("exitRef", `${value}-${currentRef}`);
+          // Force re-render of the form to update the prefix display
+          form.trigger("exitRefNumber");
+        }}
+        value={field.value}
+      >
+        <FormControl>
+          <SelectTrigger className="h-11 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-black dark:text-white">
+            <SelectValue placeholder="Select type" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600">
+          <SelectItem value="M11">M11</SelectItem>
+          <SelectItem value="C12">C12</SelectItem>
+        </SelectContent>
+      </Select>
+      <FormMessage className="text-red-500 dark:text-red-300" />
+    </FormItem>
+  )}
+/>
+
 
                     {/* Reference Number Input with Prefix */}
                     <FormField
@@ -520,36 +519,35 @@ export default function ToolingExitForm() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="exitReason"
-                    rules={{ required: "Reason is required" }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Exit Reason</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="h-11 bg-white dark:bg-gray-800 ">
-                              <SelectValue placeholder="Select reason" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="consumed">Consumed</SelectItem>
-                            <SelectItem value="lost">Lost</SelectItem>
-                            <SelectItem value="transferred">
-                              Transferred
-                            </SelectItem>
-                            <SelectItem value="re-form">Re-form</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+<FormField
+  control={form.control}
+  name="exitReason"
+  rules={{ required: "Reason is required" }}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="text-black dark:text-white">Exit Reason</FormLabel>
+      <Select
+        onValueChange={field.onChange}
+        value={field.value}
+      >
+        <FormControl>
+          <SelectTrigger className="h-11 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-black dark:text-white">
+            <SelectValue placeholder="Select reason" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent className="bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600">
+          <SelectItem value="consumed">Consumed</SelectItem>
+          <SelectItem value="lost">Lost</SelectItem>
+          <SelectItem value="transferred">Transferred</SelectItem>
+          <SelectItem value="re-form">Re-form</SelectItem>
+          <SelectItem value="other">Other</SelectItem>
+        </SelectContent>
+      </Select>
+      <FormMessage className="text-red-500 dark:text-red-300" />
+    </FormItem>
+  )}
+/>
+
                 </div>
 
                 <FormField

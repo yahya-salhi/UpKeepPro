@@ -98,17 +98,17 @@ const toolingSchema = new mongoose.Schema(
     responsible: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Responsible",
-      required: true,
+      required: false,
     },
     location: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Location",
-      required: true,
+      required: false,
     },
     placement: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Placement",
-      required: true,
+      required: false,
     },
 
     // **History Tracking**

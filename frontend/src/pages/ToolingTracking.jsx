@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllTooling, fetchToolHistory } from "../pages/Tooling/toolingApi";
+import { fetchAllTooling, fetchToolHistory, fetchResponsibles } from "../pages/Tooling/toolingApi";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "./Tooling/DataTable";
 import columns from "./Tooling/columns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HistoryTable } from "./Tooling/HistoryTable";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,11 +21,30 @@ import {
   Building,
   MapPin,
   Trash2,
+<<<<<<< HEAD
+=======
+  Edit,
+  ChevronDown,
+  Download,
+>>>>>>> fixed_tools
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ConversionDialog } from "./Tooling/ConversionDialog";
 import { useToolingActions } from "../pages/Tooling/toolingActions.js";
 import DeleteToolDialog from "./Tooling/DeleteToolDialog";
+<<<<<<< HEAD
+=======
+import EditToolModal from "./Tooling/EditToolModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+>>>>>>> fixed_tools
 
 // 1. Enhanced Metric Card Component
 const MetricCard = ({ title, value, icon, trend, className }) => (
@@ -63,7 +82,7 @@ const StockBar = ({ current, max }) => {
       <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-300 ${getColorClass(percentage)}`}
-          style={{ width: `${percentage}%` }}
+          style={{ width: `${percentage === 0 ? '100%' : percentage + '%'}` }}
         />
       </div>
       <span className="text-sm font-medium min-w-[70px] text-right">
@@ -148,6 +167,26 @@ export default function ToolingTracking() {
   const [searchQuery, setSearchQuery] = useState("");
   const { handleConversion } = useToolingActions();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+<<<<<<< HEAD
+=======
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedResponsible, setSelectedResponsible] = useState(null);
+  const [selectedType, setSelectedType] = useState(null);
+  const [selectedDirection, setSelectedDirection] = useState(null);
+
+  // Reset selected responsible, type, and direction when filter changes
+  useEffect(() => {
+    if (activeFilter !== "responsible") {
+      setSelectedResponsible(null);
+    }
+    if (activeFilter !== "type") {
+      setSelectedType(null);
+    }
+    if (activeFilter !== "direction") {
+      setSelectedDirection(null);
+    }
+  }, [activeFilter]);
+>>>>>>> fixed_tools
 
   // Fetch all tools with summary data
   const { data: toolingData, isLoading } = useQuery({
@@ -173,8 +212,26 @@ export default function ToolingTracking() {
             ))
           );
           break;
-        case "maintenance":
-          filteredTools = data.filter((t) => t.type === "maintenance");
+        case "type":
+          if (selectedType) {
+            filteredTools = data.filter((t) => 
+              t.type && t.type === selectedType
+            );
+          }
+          break;
+        case "direction":
+          if (selectedDirection) {
+            filteredTools = data.filter((t) => 
+              t.direction && t.direction === selectedDirection
+            );
+          }
+          break;
+        case "responsible":
+          if (selectedResponsible) {
+            filteredTools = data.filter((t) => 
+              t.responsible && t.responsible._id === selectedResponsible
+            );
+          }
           break;
       }
 
@@ -208,6 +265,12 @@ export default function ToolingTracking() {
     enabled: !!selectedToolId,
   });
 
+  // Fetch responsibles for the filter
+  const { data: responsibles } = useQuery({
+    queryKey: ["responsibles"],
+    queryFn: () => fetchResponsibles(),
+  });
+
   // Find the selected tool details
   const selectedTool = selectedToolId
     ? toolingData?.tools.find((t) => t._id === selectedToolId)
@@ -227,6 +290,66 @@ export default function ToolingTracking() {
       ),
     },
   ];
+
+  // Function to export data to Excel
+  const exportToExcel = () => {
+    if (!toolingData?.tools || toolingData.tools.length === 0) {
+      return;
+    }
+
+    // Dynamically import xlsx to avoid bundling it unnecessarily
+    import('xlsx').then((XLSX) => {
+      // Prepare the data for export
+      const exportData = toolingData.tools.map(tool => ({
+        Designation: tool.designation || '',
+        MAT: tool.mat || '',
+        Type: tool.type || '',
+        Direction: tool.direction || '',
+        Responsible: tool.responsible?.name || '',
+        Location: tool.location?.name || '',
+        Placement: tool.placement?.name || '',
+        'Current Quantity': tool.currentQte || 0,
+        'Original Quantity': tool.originalQte || 0,
+        'Acquisition Type': tool.acquisitionType || '',
+        'Acquisition Date': tool.acquisitionDate ? new Date(tool.acquisitionDate).toLocaleDateString() : '',
+        Notes: tool.notes || ''
+      }));
+
+      // Create a worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // Create a workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Tools');
+
+      // Generate a filename based on the current filter
+      let filename = 'tools_export';
+      if (activeFilter === 'type' && selectedType) {
+        filename = `tools_type_${selectedType}`;
+      } else if (activeFilter === 'direction' && selectedDirection) {
+        filename = `tools_direction_${selectedDirection}`;
+      } else if (activeFilter === 'responsible' && selectedResponsible) {
+        const respName = responsibles?.find(r => r._id === selectedResponsible)?.name;
+        if (respName) {
+          filename = `tools_responsible_${respName.replace(/\s+/g, '_')}`;
+        }
+      } else if (activeFilter === 'unavailable') {
+        filename = 'tools_unavailable';
+      } else if (activeFilter === 'pv') {
+        filename = 'tools_pv';
+      }
+      
+      // Add date to filename
+      const date = new Date().toISOString().split('T')[0];
+      filename = `${filename}_${date}.xlsx`;
+
+      // Write and download the file
+      XLSX.writeFile(wb, filename);
+    }).catch(error => {
+      console.error('Error exporting to Excel:', error);
+      // You might want to show a toast notification here
+    });
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -281,14 +404,203 @@ export default function ToolingTracking() {
                       >
                         PV Tools
                       </Button>
-                      <Button
-                        variant={activeFilter === "maintenance" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setActiveFilter("maintenance")}
-                      >
-                        Maintenance
-                      </Button>
+                      {/* Type Filter - Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant={activeFilter === "type" ? "default" : "outline"}
+                            size="sm"
+                            className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
+                          >
+                            <Box className="h-4 w-4" />
+                            <span className="max-w-[100px] truncate">
+                              {activeFilter === "type" && selectedType
+                                ? selectedType
+                                : "Type"}
+                            </span>
+                            <ChevronDown className="h-3 w-3 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent
+                          align="start"
+                          className="w-56 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-200 dark:border-gray-700"
+                        >
+                          <DropdownMenuLabel className="text-gray-700 dark:text-gray-300">
+                            Filter by Type
+                          </DropdownMenuLabel>
+                          <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-600" />
+
+                          <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (activeFilter === "type") {
+                                  setActiveFilter("all");
+                                  setSelectedType(null);
+                                }
+                              }}
+                              className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              <span>Show All</span>
+                              {activeFilter !== "type" && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                              )}
+                            </DropdownMenuItem>
+
+                            {/* Extract unique types from the tools data */}
+                            {toolingData?.tools && Array.from(new Set(toolingData.tools.map(tool => tool.type).filter(Boolean))).map((type) => (
+                              <DropdownMenuItem
+                                key={type}
+                                onClick={() => {
+                                  setActiveFilter("type");
+                                  setSelectedType(type);
+                                }}
+                                className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <span>{type}</span>
+                                {activeFilter === "type" && selectedType === type && (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                )}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      {/* Direction Filter - Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant={activeFilter === "direction" ? "default" : "outline"}
+                            size="sm"
+                            className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
+                          >
+                            <ArrowUpCircle className="h-4 w-4" />
+                            <span className="max-w-[100px] truncate">
+                              {activeFilter === "direction" && selectedDirection
+                                ? selectedDirection
+                                : "Direction"}
+                            </span>
+                            <ChevronDown className="h-3 w-3 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent
+                          align="start"
+                          className="w-56 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-200 dark:border-gray-700"
+                        >
+                          <DropdownMenuLabel className="text-gray-700 dark:text-gray-300">
+                            Filter by Direction
+                          </DropdownMenuLabel>
+                          <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-600" />
+
+                          <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (activeFilter === "direction") {
+                                  setActiveFilter("all");
+                                  setSelectedDirection(null);
+                                }
+                              }}
+                              className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              <span>Show All</span>
+                              {activeFilter !== "direction" && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                              )}
+                            </DropdownMenuItem>
+
+                            {/* Extract unique directions from the tools data */}
+                            {toolingData?.tools && Array.from(new Set(toolingData.tools.map(tool => tool.direction).filter(Boolean))).map((direction) => (
+                              <DropdownMenuItem
+                                key={direction}
+                                onClick={() => {
+                                  setActiveFilter("direction");
+                                  setSelectedDirection(direction);
+                                }}
+                                className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <span>{direction}</span>
+                                {activeFilter === "direction" && selectedDirection === direction && (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                )}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      {/* Responsible Filter - Improved Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant={activeFilter === "responsible" ? "default" : "outline"}
+                            size="sm"
+                            className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
+                          >
+                            <User className="h-4 w-4" />
+                            <span className="max-w-[100px] truncate">
+                              {activeFilter === "responsible" && selectedResponsible
+                                ? responsibles?.find(r => r._id === selectedResponsible)?.name || "Responsible"
+                                : "Responsible"}
+                            </span>
+                            <ChevronDown className="h-3 w-3 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent
+                          align="start"
+                          className="w-56 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-200 dark:border-gray-700"
+                        >
+                          <DropdownMenuLabel className="text-gray-700 dark:text-gray-300">
+                            Filter by Responsible
+                          </DropdownMenuLabel>
+                          <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-600" />
+
+                          <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (activeFilter === "responsible") {
+                                  setActiveFilter("all");
+                                  setSelectedResponsible(null);
+                                }
+                              }}
+                              className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              <span>Show All</span>
+                              {activeFilter !== "responsible" && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                              )}
+                            </DropdownMenuItem>
+
+                            {responsibles?.map((resp) => (
+                              <DropdownMenuItem
+                                key={resp._id}
+                                onClick={() => {
+                                  setActiveFilter("responsible");
+                                  setSelectedResponsible(resp._id);
+                                }}
+                                className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <span>{resp.name}</span>
+                                {activeFilter === "responsible" && selectedResponsible === resp._id && (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                )}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
+                    
+                    {/* Export to Excel Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={exportToExcel}
+                      className="ml-auto flex items-center gap-2 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 dark:hover:text-green-300 border-green-200 dark:border-green-800"
+                    >
+                      <Download className="h-4 w-4" />
+                      Export to Excel
+                    </Button>
                   </div>
                 )}
               </div>
@@ -444,10 +756,27 @@ export default function ToolingTracking() {
                       </ConversionDialog>
                     )}
                     
+<<<<<<< HEAD
                   {/* Delete Tool Button */}
                   <Button 
                     variant="outline" 
                     className="gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+=======
+                  {/* Edit Tool Button */}
+                  <Button 
+                    variant="outline" 
+                    className="gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20"
+                    onClick={() => setIsEditModalOpen(true)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit Tool
+                  </Button>
+                    
+                  {/* Delete Tool Button */}
+                  <Button 
+                    variant="outline" 
+                    className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-destructive/40 dark:text-destructive dark:hover:bg-destructive/20"
+>>>>>>> fixed_tools
                     onClick={() => setIsDeleteDialogOpen(true)}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -481,6 +810,19 @@ export default function ToolingTracking() {
           tool={selectedTool}
         />
       )}
+<<<<<<< HEAD
+=======
+      
+      {/* Edit Tool Modal */}
+      {selectedTool && (
+        <EditToolModal
+          key={selectedToolId + '-' + isEditModalOpen}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          toolId={selectedToolId}
+        />
+      )}
+>>>>>>> fixed_tools
     </div>
   );
 }

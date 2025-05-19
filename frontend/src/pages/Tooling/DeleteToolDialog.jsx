@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { deleteTooling } from "./toolingApi";
+
 import {
   AlertDialog,
-
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -21,7 +21,6 @@ const DeleteToolDialog = ({ isOpen, onClose, tool }) => {
   const [confirmText, setConfirmText] = useState("");
   const [error, setError] = useState("");
 
-  // Mutation for deleting tool
   const mutation = useMutation({
     mutationFn: (id) => deleteTooling(id),
     onSuccess: () => {
@@ -43,31 +42,45 @@ const DeleteToolDialog = ({ isOpen, onClose, tool }) => {
       setError("Confirmation text does not match the tool designation");
       return;
     }
-    
+
     mutation.mutate(tool._id);
   };
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
+<<<<<<< HEAD
       <AlertDialogContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-lg">
+=======
+      <AlertDialogContent className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+>>>>>>> fixed_tools
         <AlertDialogHeader>
           <AlertDialogTitle className="text-destructive flex items-center gap-2">
             <Trash2 className="h-5 w-5" />
             Delete Tool
           </AlertDialogTitle>
+<<<<<<< HEAD
           <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
+=======
+          <AlertDialogDescription className="text-gray-600 dark:text-gray-300">
+>>>>>>> fixed_tools
             This action cannot be undone. This will permanently delete the tool{" "}
             <span className="font-semibold text-gray-900 dark:text-gray-100">{tool?.designation}</span> with MAT{" "}
             <span className="font-semibold text-gray-900 dark:text-gray-100">{tool?.mat}</span> and remove all its
             data from our servers.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        
+
         <div className="py-3">
           <div className="mb-4">
+<<<<<<< HEAD
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
               To confirm, type the tool designation 
               <span className="font-semibold text-gray-900 dark:text-gray-100"> {tool?.designation}</span> below:
+=======
+            <p className="text-sm text-muted-foreground dark:text-gray-400 mb-2">
+              To confirm, type the tool designation
+              <span className="font-semibold"> {tool?.designation}</span> below:
+>>>>>>> fixed_tools
             </p>
             <Input
               value={confirmText}
@@ -76,25 +89,28 @@ const DeleteToolDialog = ({ isOpen, onClose, tool }) => {
                 setError("");
               }}
               placeholder="Type tool designation here"
-              className={error ? "border-destructive" : ""}
+              className={`dark:bg-gray-800 dark:text-gray-100 ${error ? "border-destructive" : ""}`}
             />
-            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+            {error && (
+              <p className="text-xs text-destructive mt-1">{error}</p>
+            )}
           </div>
-          
+
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded p-3">
             <p className="text-sm text-amber-800 dark:text-amber-300">
-              <span className="font-medium">Warning:</span> Deleting this tool will remove all 
+              <span className="font-medium">Warning:</span> Deleting this tool will remove all
               associated history, including acquisitions, exits, and conversions.
             </p>
           </div>
         </div>
-        
+
         <AlertDialogFooter>
           <AlertDialogCancel
             onClick={() => {
               setConfirmText("");
               setError("");
             }}
+            className="dark:bg-gray-800 dark:text-gray-100"
           >
             Cancel
           </AlertDialogCancel>
