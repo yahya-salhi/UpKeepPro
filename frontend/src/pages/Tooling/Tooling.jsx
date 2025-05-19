@@ -136,6 +136,9 @@ export default function ToolingAcquisitionForm() {
   });
 
   const onSubmit = (data) => {
+    if (data.responsible === "") delete data.responsible;
+    if (data.location === "") delete data.location;
+    if (data.placement === "") delete data.placement;
     mutation.mutate(data);
   };
 
@@ -248,51 +251,68 @@ export default function ToolingAcquisitionForm() {
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                   </Button>
                                 </PopoverTrigger>
-                                <PopoverContent 
+                                <PopoverContent
                                   className="p-0 bg-white border border-gray-200 shadow-md rounded-md overflow-hidden"
                                   align="start"
                                   sideOffset={5}
                                   alignWidth={true}
                                   forceMount
-                                  style={{ width: "var(--radix-popover-trigger-width)" }}
+                                  style={{
+                                    width: "var(--radix-popover-trigger-width)",
+                                  }}
                                 >
                                   <Command className="bg-white">
-                                    <CommandInput 
-                                      placeholder="Search designation..." 
+                                    <CommandInput
+                                      placeholder="Search designation..."
                                       className="h-10 border-b border-gray-100 focus:ring-0 focus:border-gray-200"
                                       onValueChange={(value) => {
                                         field.onChange(value.toUpperCase());
                                       }}
                                     />
                                     <CommandList className="max-h-[200px] overflow-y-auto">
-                                      <CommandEmpty className="py-3 text-center text-sm text-gray-500">No matching tools found</CommandEmpty>
+                                      <CommandEmpty className="py-3 text-center text-sm text-gray-500">
+                                        No matching tools found
+                                      </CommandEmpty>
                                       <CommandGroup>
-                                        {tools && tools
-                                          .filter((tool) => 
-                                            !field.value || 
-                                            tool.designation.toLowerCase().includes(field.value.toLowerCase())
-                                          )
-                                          .sort((a, b) => a.designation.localeCompare(b.designation))
-                                          .slice(0, 10)
-                                          .map((tool) => (
-                                            <CommandItem
-                                              key={tool._id}
-                                              value={tool.designation}
-                                              onSelect={() => {
-                                                field.onChange(tool.designation);
-                                              }}
-                                              className="flex items-center py-2 px-3 text-sm cursor-pointer hover:bg-gray-50"
-                                            >
-                                              <Check
-                                                className={`mr-2 h-4 w-4 text-primary ${
-                                                  field.value === tool.designation
-                                                    ? "opacity-100"
-                                                    : "opacity-0"
-                                                }`}
-                                              />
-                                              {tool.designation}
-                                            </CommandItem>
-                                          ))}
+                                        {tools &&
+                                          tools
+                                            .filter(
+                                              (tool) =>
+                                                !field.value ||
+                                                tool.designation
+                                                  .toLowerCase()
+                                                  .includes(
+                                                    field.value.toLowerCase()
+                                                  )
+                                            )
+                                            .sort((a, b) =>
+                                              a.designation.localeCompare(
+                                                b.designation
+                                              )
+                                            )
+                                            .slice(0, 10)
+                                            .map((tool) => (
+                                              <CommandItem
+                                                key={tool._id}
+                                                value={tool.designation}
+                                                onSelect={() => {
+                                                  field.onChange(
+                                                    tool.designation
+                                                  );
+                                                }}
+                                                className="flex items-center py-2 px-3 text-sm cursor-pointer hover:bg-gray-50"
+                                              >
+                                                <Check
+                                                  className={`mr-2 h-4 w-4 text-primary ${
+                                                    field.value ===
+                                                    tool.designation
+                                                      ? "opacity-100"
+                                                      : "opacity-0"
+                                                  }`}
+                                                />
+                                                {tool.designation}
+                                              </CommandItem>
+                                            ))}
                                       </CommandGroup>
                                     </CommandList>
                                   </Command>
@@ -301,7 +321,11 @@ export default function ToolingAcquisitionForm() {
                             </div>
                           </FormControl>
                           <FormDescription className="text-xs text-muted-foreground mt-1">
-                            Please select your Designation from the alphabetically filtered list below. This ensures consistency with our database and helps prevent typing errors. For a better experience, start typing to see suggestions.
+                            Please select your Designation from the
+                            alphabetically filtered list below. This ensures
+                            consistency with our database and helps prevent
+                            typing errors. For a better experience, start typing
+                            to see suggestions.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -474,7 +498,7 @@ export default function ToolingAcquisitionForm() {
                                   -
                                 </span>
                               </div>
-                              <Input  
+                              <Input
                                 placeholder="Enter number"
                                 className="pl-[4.5rem] h-11 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-primary dark:focus:border-primary shadow-sm"
                                 {...field}
@@ -596,7 +620,6 @@ export default function ToolingAcquisitionForm() {
                   <FormField
                     control={form.control}
                     name="responsible"
-                    rules={{ required: "Responsible is required" }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-medium flex items-center gap-1">
@@ -666,7 +689,6 @@ export default function ToolingAcquisitionForm() {
                   <FormField
                     control={form.control}
                     name="location"
-                    rules={{ required: "Location is required" }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-medium flex items-center gap-1">
@@ -739,7 +761,6 @@ export default function ToolingAcquisitionForm() {
                   <FormField
                     control={form.control}
                     name="placement"
-                    rules={{ required: "Placement is required" }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-medium flex items-center gap-1">

@@ -26,9 +26,10 @@ export const acquireTooling = async (req, res) => {
       "acquisitionRef",
       "acquisitionDate",
       "originalQte",
-      "responsible",
-      "location",
-      "placement",
+      // REMOVE these lines:
+      // "responsible",
+      // "location",
+      // "placement",
       "type",
       "direction",
     ];
@@ -47,7 +48,10 @@ export const acquireTooling = async (req, res) => {
       existingTool.currentQte += originalQte;
       existingTool.history.push({
         eventType: "entry",
-        reference: acquisitionType === "PV" ? `pv-${acquisitionRef}` : `m11-${acquisitionRef}`,
+        reference:
+          acquisitionType === "PV"
+            ? `pv-${acquisitionRef}`
+            : `m11-${acquisitionRef}`,
         date: new Date(acquisitionDate),
         qteChange: originalQte,
         notes:
@@ -62,24 +66,32 @@ export const acquireTooling = async (req, res) => {
     // Generate MAT only for new tools
     const mat = await getOrCreateMAT(designation);
 
+    const cleanedResponsible = responsible === "" ? undefined : responsible;
+    const cleanedLocation = location === "" ? undefined : location;
+    const cleanedPlacement = placement === "" ? undefined : placement;
+
     const newTool = new Tooling({
       designation,
-      mat, // Assign the generated mat here
+      mat,
       acquisitionType,
       acquisitionRef,
       acquisitionDate,
       originalQte,
       currentQte: originalQte,
-      responsible,
-      location,
-      placement,
+      responsible: cleanedResponsible,
+      location: cleanedLocation,
+      placement: cleanedPlacement,
       type,
       direction,
       situation: "available",
+      notes,
       history: [
         {
           eventType: "entry",
-          reference: acquisitionType === "PV" ? `pv-${acquisitionRef}` : `m11-${acquisitionRef}`,
+          reference:
+            acquisitionType === "PV"
+              ? `pv-${acquisitionRef}`
+              : `m11-${acquisitionRef}`,
           date: new Date(acquisitionDate),
           qteChange: originalQte,
           notes: notes || `Initial ${acquisitionType} acquisition`,
@@ -191,19 +203,28 @@ export const convertPVtoM11 = async (req, res) => {
     if (pvReference) {
       // Find the specific entry in history
       const entryIndex = tool.history.findIndex(
-        entry => entry.eventType === "entry" && entry.reference === pvReference
+        (entry) =>
+          entry.eventType === "entry" && entry.reference === pvReference
       );
 
       if (entryIndex === -1) {
-        return res.status(404).json({ error: "PV reference not found in tool history" });
+        return res
+          .status(404)
+          .json({ error: "PV reference not found in tool history" });
       }
 
       // Update only this specific entry
       tool.history[entryIndex].reference = `m11-${m11Ref}`;
-      
+
       // Update notes if they reference PV
-      if (tool.history[entryIndex].notes && tool.history[entryIndex].notes.includes("PV")) {
-        tool.history[entryIndex].notes = tool.history[entryIndex].notes.replace("PV", "M11");
+      if (
+        tool.history[entryIndex].notes &&
+        tool.history[entryIndex].notes.includes("PV")
+      ) {
+        tool.history[entryIndex].notes = tool.history[entryIndex].notes.replace(
+          "PV",
+          "M11"
+        );
       }
 
       // Add conversion event to history
@@ -216,23 +237,25 @@ export const convertPVtoM11 = async (req, res) => {
       });
 
       // Check if this was the main acquisition reference
-      if (tool.acquisitionType === "PV" && 
-          pvReference === `pv-${tool.acquisitionRef}`) {
+      if (
+        tool.acquisitionType === "PV" &&
+        pvReference === `pv-${tool.acquisitionRef}`
+      ) {
         // Update main acquisition info
         tool.acquisitionType = "M11";
         tool.acquisitionRef = m11Ref;
         tool.acquisitionDate = new Date(m11Date);
       }
-    } 
+    }
     // If converting the entire tool (legacy behavior)
     else if (tool.acquisitionType === "PV") {
       // Update main acquisition info
       tool.acquisitionType = "M11";
       tool.acquisitionRef = m11Ref;
       tool.acquisitionDate = new Date(m11Date);
-      
+
       // Update all PV references in history entries to M11 references
-      tool.history.forEach(entry => {
+      tool.history.forEach((entry) => {
         if (entry.eventType === "entry" && entry.reference.startsWith("pv-")) {
           // Update to M11 format
           entry.reference = `m11-${m11Ref}`;
