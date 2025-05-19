@@ -23,6 +23,7 @@ import {
   Trash2,
   Edit,
   ChevronDown,
+  Download,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ConversionDialog } from "./Tooling/ConversionDialog";
@@ -281,6 +282,66 @@ export default function ToolingTracking() {
     },
   ];
 
+  // Function to export data to Excel
+  const exportToExcel = () => {
+    if (!toolingData?.tools || toolingData.tools.length === 0) {
+      return;
+    }
+
+    // Dynamically import xlsx to avoid bundling it unnecessarily
+    import('xlsx').then((XLSX) => {
+      // Prepare the data for export
+      const exportData = toolingData.tools.map(tool => ({
+        Designation: tool.designation || '',
+        MAT: tool.mat || '',
+        Type: tool.type || '',
+        Direction: tool.direction || '',
+        Responsible: tool.responsible?.name || '',
+        Location: tool.location?.name || '',
+        Placement: tool.placement?.name || '',
+        'Current Quantity': tool.currentQte || 0,
+        'Original Quantity': tool.originalQte || 0,
+        'Acquisition Type': tool.acquisitionType || '',
+        'Acquisition Date': tool.acquisitionDate ? new Date(tool.acquisitionDate).toLocaleDateString() : '',
+        Notes: tool.notes || ''
+      }));
+
+      // Create a worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // Create a workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Tools');
+
+      // Generate a filename based on the current filter
+      let filename = 'tools_export';
+      if (activeFilter === 'type' && selectedType) {
+        filename = `tools_type_${selectedType}`;
+      } else if (activeFilter === 'direction' && selectedDirection) {
+        filename = `tools_direction_${selectedDirection}`;
+      } else if (activeFilter === 'responsible' && selectedResponsible) {
+        const respName = responsibles?.find(r => r._id === selectedResponsible)?.name;
+        if (respName) {
+          filename = `tools_responsible_${respName.replace(/\s+/g, '_')}`;
+        }
+      } else if (activeFilter === 'unavailable') {
+        filename = 'tools_unavailable';
+      } else if (activeFilter === 'pv') {
+        filename = 'tools_pv';
+      }
+      
+      // Add date to filename
+      const date = new Date().toISOString().split('T')[0];
+      filename = `${filename}_${date}.xlsx`;
+
+      // Write and download the file
+      XLSX.writeFile(wb, filename);
+    }).catch(error => {
+      console.error('Error exporting to Excel:', error);
+      // You might want to show a toast notification here
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Card className="border-none shadow-lg">
@@ -520,6 +581,17 @@ export default function ToolingTracking() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
+                    
+                    {/* Export to Excel Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={exportToExcel}
+                      className="ml-auto flex items-center gap-2 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 dark:hover:text-green-300 border-green-200 dark:border-green-800"
+                    >
+                      <Download className="h-4 w-4" />
+                      Export to Excel
+                    </Button>
                   </div>
                 )}
               </div>
