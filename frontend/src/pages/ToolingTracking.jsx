@@ -1,5 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllTooling, fetchToolHistory, fetchResponsibles } from "../pages/Tooling/toolingApi";
+import {
+  fetchAllTooling,
+  fetchToolHistory,
+  fetchResponsibles,
+} from "../pages/Tooling/toolingApi";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "./Tooling/DataTable";
@@ -21,19 +25,14 @@ import {
   Building,
   MapPin,
   Trash2,
-<<<<<<< HEAD
-=======
   Edit,
   ChevronDown,
   Download,
->>>>>>> fixed_tools
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ConversionDialog } from "./Tooling/ConversionDialog";
 import { useToolingActions } from "../pages/Tooling/toolingActions.js";
 import DeleteToolDialog from "./Tooling/DeleteToolDialog";
-<<<<<<< HEAD
-=======
 import EditToolModal from "./Tooling/EditToolModal";
 import {
   DropdownMenu,
@@ -44,26 +43,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
->>>>>>> fixed_tools
 
 // 1. Enhanced Metric Card Component
 const MetricCard = ({ title, value, icon, trend, className }) => (
-  <Card className={`p-6 transition-all duration-200 hover:shadow-md ${className}`}>
+  <Card
+    className={`p-6 transition-all duration-200 hover:shadow-md ${className}`}
+  >
     <div className="flex justify-between items-start">
       <div className="space-y-1">
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
         <div className="flex items-baseline gap-2">
           <h3 className="text-3xl font-bold">{value || 0}</h3>
           {trend && (
-            <span className={`text-sm ${trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {trend > 0 ? '+' : ''}{trend}%
+            <span
+              className={`text-sm ${
+                trend > 0 ? "text-green-500" : "text-red-500"
+              }`}
+            >
+              {trend > 0 ? "+" : ""}
+              {trend}%
             </span>
           )}
         </div>
       </div>
-      <div className="p-3 rounded-xl bg-primary/10 text-primary">
-        {icon}
-      </div>
+      <div className="p-3 rounded-xl bg-primary/10 text-primary">{icon}</div>
     </div>
   </Card>
 );
@@ -81,8 +84,10 @@ const StockBar = ({ current, max }) => {
     <div className="flex items-center gap-3">
       <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-300 ${getColorClass(percentage)}`}
-          style={{ width: `${percentage === 0 ? '100%' : percentage + '%'}` }}
+          className={`h-full rounded-full transition-all duration-300 ${getColorClass(
+            percentage
+          )}`}
+          style={{ width: `${percentage === 0 ? "100%" : percentage + "%"}` }}
         />
       </div>
       <span className="text-sm font-medium min-w-[70px] text-right">
@@ -167,8 +172,6 @@ export default function ToolingTracking() {
   const [searchQuery, setSearchQuery] = useState("");
   const { handleConversion } = useToolingActions();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-<<<<<<< HEAD
-=======
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedResponsible, setSelectedResponsible] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
@@ -186,7 +189,6 @@ export default function ToolingTracking() {
       setSelectedDirection(null);
     }
   }, [activeFilter]);
->>>>>>> fixed_tools
 
   // Fetch all tools with summary data
   const { data: toolingData, isLoading } = useQuery({
@@ -203,33 +205,36 @@ export default function ToolingTracking() {
           filteredTools = data.filter((t) => t.currentQte === 0);
           break;
         case "pv":
-          filteredTools = data.filter((t) => 
-            t.acquisitionType === "PV" || 
-            (t.history && t.history.some(entry => 
-              entry.eventType === "entry" && 
-              entry.reference && 
-              entry.reference.toLowerCase().startsWith("pv-")
-            ))
+          filteredTools = data.filter(
+            (t) =>
+              t.acquisitionType === "PV" ||
+              (t.history &&
+                t.history.some(
+                  (entry) =>
+                    entry.eventType === "entry" &&
+                    entry.reference &&
+                    entry.reference.toLowerCase().startsWith("pv-")
+                ))
           );
           break;
         case "type":
           if (selectedType) {
-            filteredTools = data.filter((t) => 
-              t.type && t.type === selectedType
+            filteredTools = data.filter(
+              (t) => t.type && t.type === selectedType
             );
           }
           break;
         case "direction":
           if (selectedDirection) {
-            filteredTools = data.filter((t) => 
-              t.direction && t.direction === selectedDirection
+            filteredTools = data.filter(
+              (t) => t.direction && t.direction === selectedDirection
             );
           }
           break;
         case "responsible":
           if (selectedResponsible) {
-            filteredTools = data.filter((t) => 
-              t.responsible && t.responsible._id === selectedResponsible
+            filteredTools = data.filter(
+              (t) => t.responsible && t.responsible._id === selectedResponsible
             );
           }
           break;
@@ -237,9 +242,12 @@ export default function ToolingTracking() {
 
       // Apply search filter
       if (searchQuery) {
-        filteredTools = filteredTools.filter((tool) =>
-          tool.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          tool.mat.toLowerCase().includes(searchQuery.toLowerCase())
+        filteredTools = filteredTools.filter(
+          (tool) =>
+            tool.designation
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            tool.mat.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
 
@@ -298,57 +306,63 @@ export default function ToolingTracking() {
     }
 
     // Dynamically import xlsx to avoid bundling it unnecessarily
-    import('xlsx').then((XLSX) => {
-      // Prepare the data for export
-      const exportData = toolingData.tools.map(tool => ({
-        Designation: tool.designation || '',
-        MAT: tool.mat || '',
-        Type: tool.type || '',
-        Direction: tool.direction || '',
-        Responsible: tool.responsible?.name || '',
-        Location: tool.location?.name || '',
-        Placement: tool.placement?.name || '',
-        'Current Quantity': tool.currentQte || 0,
-        'Original Quantity': tool.originalQte || 0,
-        'Acquisition Type': tool.acquisitionType || '',
-        'Acquisition Date': tool.acquisitionDate ? new Date(tool.acquisitionDate).toLocaleDateString() : '',
-        Notes: tool.notes || ''
-      }));
+    import("xlsx")
+      .then((XLSX) => {
+        // Prepare the data for export
+        const exportData = toolingData.tools.map((tool) => ({
+          Designation: tool.designation || "",
+          MAT: tool.mat || "",
+          Type: tool.type || "",
+          Direction: tool.direction || "",
+          Responsible: tool.responsible?.name || "",
+          Location: tool.location?.name || "",
+          Placement: tool.placement?.name || "",
+          "Current Quantity": tool.currentQte || 0,
+          "Original Quantity": tool.originalQte || 0,
+          "Acquisition Type": tool.acquisitionType || "",
+          "Acquisition Date": tool.acquisitionDate
+            ? new Date(tool.acquisitionDate).toLocaleDateString()
+            : "",
+          Notes: tool.notes || "",
+        }));
 
-      // Create a worksheet
-      const ws = XLSX.utils.json_to_sheet(exportData);
+        // Create a worksheet
+        const ws = XLSX.utils.json_to_sheet(exportData);
 
-      // Create a workbook
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Tools');
+        // Create a workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Tools");
 
-      // Generate a filename based on the current filter
-      let filename = 'tools_export';
-      if (activeFilter === 'type' && selectedType) {
-        filename = `tools_type_${selectedType}`;
-      } else if (activeFilter === 'direction' && selectedDirection) {
-        filename = `tools_direction_${selectedDirection}`;
-      } else if (activeFilter === 'responsible' && selectedResponsible) {
-        const respName = responsibles?.find(r => r._id === selectedResponsible)?.name;
-        if (respName) {
-          filename = `tools_responsible_${respName.replace(/\s+/g, '_')}`;
+        // Generate a filename based on the current filter
+        let filename = "tools_export";
+        if (activeFilter === "type" && selectedType) {
+          filename = `tools_type_${selectedType}`;
+        } else if (activeFilter === "direction" && selectedDirection) {
+          filename = `tools_direction_${selectedDirection}`;
+        } else if (activeFilter === "responsible" && selectedResponsible) {
+          const respName = responsibles?.find(
+            (r) => r._id === selectedResponsible
+          )?.name;
+          if (respName) {
+            filename = `tools_responsible_${respName.replace(/\s+/g, "_")}`;
+          }
+        } else if (activeFilter === "unavailable") {
+          filename = "tools_unavailable";
+        } else if (activeFilter === "pv") {
+          filename = "tools_pv";
         }
-      } else if (activeFilter === 'unavailable') {
-        filename = 'tools_unavailable';
-      } else if (activeFilter === 'pv') {
-        filename = 'tools_pv';
-      }
-      
-      // Add date to filename
-      const date = new Date().toISOString().split('T')[0];
-      filename = `${filename}_${date}.xlsx`;
 
-      // Write and download the file
-      XLSX.writeFile(wb, filename);
-    }).catch(error => {
-      console.error('Error exporting to Excel:', error);
-      // You might want to show a toast notification here
-    });
+        // Add date to filename
+        const date = new Date().toISOString().split("T")[0];
+        filename = `${filename}_${date}.xlsx`;
+
+        // Write and download the file
+        XLSX.writeFile(wb, filename);
+      })
+      .catch((error) => {
+        console.error("Error exporting to Excel:", error);
+        // You might want to show a toast notification here
+      });
   };
 
   return (
@@ -408,7 +422,9 @@ export default function ToolingTracking() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
-                            variant={activeFilter === "type" ? "default" : "outline"}
+                            variant={
+                              activeFilter === "type" ? "default" : "outline"
+                            }
                             size="sm"
                             className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
                           >
@@ -448,21 +464,29 @@ export default function ToolingTracking() {
                             </DropdownMenuItem>
 
                             {/* Extract unique types from the tools data */}
-                            {toolingData?.tools && Array.from(new Set(toolingData.tools.map(tool => tool.type).filter(Boolean))).map((type) => (
-                              <DropdownMenuItem
-                                key={type}
-                                onClick={() => {
-                                  setActiveFilter("type");
-                                  setSelectedType(type);
-                                }}
-                                className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
-                              >
-                                <span>{type}</span>
-                                {activeFilter === "type" && selectedType === type && (
-                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
-                                )}
-                              </DropdownMenuItem>
-                            ))}
+                            {toolingData?.tools &&
+                              Array.from(
+                                new Set(
+                                  toolingData.tools
+                                    .map((tool) => tool.type)
+                                    .filter(Boolean)
+                                )
+                              ).map((type) => (
+                                <DropdownMenuItem
+                                  key={type}
+                                  onClick={() => {
+                                    setActiveFilter("type");
+                                    setSelectedType(type);
+                                  }}
+                                  className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                                >
+                                  <span>{type}</span>
+                                  {activeFilter === "type" &&
+                                    selectedType === type && (
+                                      <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                    )}
+                                </DropdownMenuItem>
+                              ))}
                           </DropdownMenuGroup>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -470,7 +494,11 @@ export default function ToolingTracking() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
-                            variant={activeFilter === "direction" ? "default" : "outline"}
+                            variant={
+                              activeFilter === "direction"
+                                ? "default"
+                                : "outline"
+                            }
                             size="sm"
                             className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
                           >
@@ -510,21 +538,29 @@ export default function ToolingTracking() {
                             </DropdownMenuItem>
 
                             {/* Extract unique directions from the tools data */}
-                            {toolingData?.tools && Array.from(new Set(toolingData.tools.map(tool => tool.direction).filter(Boolean))).map((direction) => (
-                              <DropdownMenuItem
-                                key={direction}
-                                onClick={() => {
-                                  setActiveFilter("direction");
-                                  setSelectedDirection(direction);
-                                }}
-                                className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
-                              >
-                                <span>{direction}</span>
-                                {activeFilter === "direction" && selectedDirection === direction && (
-                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
-                                )}
-                              </DropdownMenuItem>
-                            ))}
+                            {toolingData?.tools &&
+                              Array.from(
+                                new Set(
+                                  toolingData.tools
+                                    .map((tool) => tool.direction)
+                                    .filter(Boolean)
+                                )
+                              ).map((direction) => (
+                                <DropdownMenuItem
+                                  key={direction}
+                                  onClick={() => {
+                                    setActiveFilter("direction");
+                                    setSelectedDirection(direction);
+                                  }}
+                                  className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                                >
+                                  <span>{direction}</span>
+                                  {activeFilter === "direction" &&
+                                    selectedDirection === direction && (
+                                      <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                    )}
+                                </DropdownMenuItem>
+                              ))}
                           </DropdownMenuGroup>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -532,14 +568,21 @@ export default function ToolingTracking() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
-                            variant={activeFilter === "responsible" ? "default" : "outline"}
+                            variant={
+                              activeFilter === "responsible"
+                                ? "default"
+                                : "outline"
+                            }
                             size="sm"
                             className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
                           >
                             <User className="h-4 w-4" />
                             <span className="max-w-[100px] truncate">
-                              {activeFilter === "responsible" && selectedResponsible
-                                ? responsibles?.find(r => r._id === selectedResponsible)?.name || "Responsible"
+                              {activeFilter === "responsible" &&
+                              selectedResponsible
+                                ? responsibles?.find(
+                                    (r) => r._id === selectedResponsible
+                                  )?.name || "Responsible"
                                 : "Responsible"}
                             </span>
                             <ChevronDown className="h-3 w-3 opacity-50" />
@@ -581,16 +624,17 @@ export default function ToolingTracking() {
                                 className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
                               >
                                 <span>{resp.name}</span>
-                                {activeFilter === "responsible" && selectedResponsible === resp._id && (
-                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
-                                )}
+                                {activeFilter === "responsible" &&
+                                  selectedResponsible === resp._id && (
+                                    <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                  )}
                               </DropdownMenuItem>
                             ))}
                           </DropdownMenuGroup>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    
+
                     {/* Export to Excel Button */}
                     <Button
                       variant="outline"
@@ -636,7 +680,9 @@ export default function ToolingTracking() {
                 />
                 <MetricCard
                   title="Unavailable"
-                  value={toolingData?.summary.total - toolingData?.summary.available}
+                  value={
+                    toolingData?.summary.total - toolingData?.summary.available
+                  }
                   icon={<AlertTriangle className="w-5 h-5" />}
                   trend={-3}
                   className="bg-red-50 dark:bg-red-950/20"
@@ -658,8 +704,12 @@ export default function ToolingTracking() {
                 <div className="flex justify-between items-start">
                   <div className="space-y-4">
                     <div>
-                      <h2 className="text-2xl font-bold">{selectedTool.designation}</h2>
-                      <p className="text-muted-foreground">MAT: {selectedTool.mat}</p>
+                      <h2 className="text-2xl font-bold">
+                        {selectedTool.designation}
+                      </h2>
+                      <p className="text-muted-foreground">
+                        MAT: {selectedTool.mat}
+                      </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline" className="px-3 py-1">
@@ -669,7 +719,7 @@ export default function ToolingTracking() {
                         {selectedTool.direction}
                       </Badge>
                     </div>
-                    
+
                     {/* Additional Details */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-3 border-t">
                       {/* Responsible */}
@@ -678,35 +728,47 @@ export default function ToolingTracking() {
                           <User className="h-4 w-4 text-blue-500" />
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Responsible</p>
+                          <p className="text-xs text-muted-foreground">
+                            Responsible
+                          </p>
                           <p className="text-sm font-medium">
-                            {selectedTool.responsible ? selectedTool.responsible.name : "Not assigned"}
+                            {selectedTool.responsible
+                              ? selectedTool.responsible.name
+                              : "Not assigned"}
                           </p>
                         </div>
                       </div>
-                      
+
                       {/* Location */}
                       <div className="flex items-center gap-2">
                         <div className="bg-green-50 dark:bg-green-900/20 p-1.5 rounded-full">
                           <Building className="h-4 w-4 text-green-500" />
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Location</p>
+                          <p className="text-xs text-muted-foreground">
+                            Location
+                          </p>
                           <p className="text-sm font-medium">
-                            {selectedTool.location ? selectedTool.location.name : "Not specified"}
+                            {selectedTool.location
+                              ? selectedTool.location.name
+                              : "Not specified"}
                           </p>
                         </div>
                       </div>
-                      
+
                       {/* Placement */}
                       <div className="flex items-center gap-2">
                         <div className="bg-amber-50 dark:bg-amber-900/20 p-1.5 rounded-full">
                           <MapPin className="h-4 w-4 text-amber-500" />
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Placement</p>
+                          <p className="text-xs text-muted-foreground">
+                            Placement
+                          </p>
                           <p className="text-sm font-medium">
-                            {selectedTool.placement ? selectedTool.placement.name : "Not specified"}
+                            {selectedTool.placement
+                              ? selectedTool.placement.name
+                              : "Not specified"}
                           </p>
                         </div>
                       </div>
@@ -738,8 +800,11 @@ export default function ToolingTracking() {
                 <div className="flex gap-2 mt-6">
                   {/* Only show the Convert to M11 button if there are PV entries */}
                   {historyData &&
-                    historyData.some((entry) =>
-                      entry.eventType === "entry" && entry.reference && entry.reference.startsWith("pv-")
+                    historyData.some(
+                      (entry) =>
+                        entry.eventType === "entry" &&
+                        entry.reference &&
+                        entry.reference.startsWith("pv-")
                     ) && (
                       <ConversionDialog
                         tool={selectedTool}
@@ -755,28 +820,21 @@ export default function ToolingTracking() {
                         </Button>
                       </ConversionDialog>
                     )}
-                    
-<<<<<<< HEAD
-                  {/* Delete Tool Button */}
-                  <Button 
-                    variant="outline" 
-                    className="gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
-=======
+
                   {/* Edit Tool Button */}
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20"
                     onClick={() => setIsEditModalOpen(true)}
                   >
                     <Edit className="h-4 w-4" />
                     Edit Tool
                   </Button>
-                    
+
                   {/* Delete Tool Button */}
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-destructive/40 dark:text-destructive dark:hover:bg-destructive/20"
->>>>>>> fixed_tools
                     onClick={() => setIsDeleteDialogOpen(true)}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -787,7 +845,9 @@ export default function ToolingTracking() {
 
               {/* History Section */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Transaction History</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  Transaction History
+                </h3>
                 <HistoryTable
                   data={historyData || []}
                   columns={historyColumns}
@@ -797,7 +857,7 @@ export default function ToolingTracking() {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Delete Tool Dialog */}
       {selectedTool && (
         <DeleteToolDialog
@@ -810,19 +870,16 @@ export default function ToolingTracking() {
           tool={selectedTool}
         />
       )}
-<<<<<<< HEAD
-=======
-      
+
       {/* Edit Tool Modal */}
       {selectedTool && (
         <EditToolModal
-          key={selectedToolId + '-' + isEditModalOpen}
+          key={selectedToolId + "-" + isEditModalOpen}
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           toolId={selectedToolId}
         />
       )}
->>>>>>> fixed_tools
     </div>
   );
 }
