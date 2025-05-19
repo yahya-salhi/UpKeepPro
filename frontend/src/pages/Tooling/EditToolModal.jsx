@@ -8,7 +8,6 @@ import {
   fetchPlacements,
   updateTooling,
   fetchToolingById,
-  
 } from "./toolingApi";
 import {
   Dialog,
@@ -35,13 +34,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Tag, MapPin, User, Building,Axe ,NotebookPen } from "lucide-react";
+import { Loader2, Tag, MapPin, User, Building, Axe, NotebookPen, PlusCircle } from "lucide-react";
 import { useStateContext } from "../../contexts/ContextProvider";
+import ResponsibleModal from "./ResponsibleModal";
+import LocationModal from "./LocationModal";
+import PlacementModal from "./PlacementModal";
 
 const EditToolModal = ({ isOpen, onClose, toolId }) => {
   const queryClient = useQueryClient();
   const { currentColor } = useStateContext();
   const [loading, setLoading] = useState(true);
+  
+  // State for modals
+  const [showResponsibleModal, setShowResponsibleModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showPlacementModal, setShowPlacementModal] = useState(false);
 
   // Initialize form
   const form = useForm({
@@ -81,7 +88,6 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
     queryFn: fetchPlacements,
     enabled: isOpen,
   });
-
 
   // Mutation for updating tool
   const mutation = useMutation({
@@ -139,15 +145,15 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
   const onSubmit = (data) => {
     mutation.mutate({ id: toolId, data });
   };
- 
 
   // Check if any required data is still loading
-  const isDataLoading = isLoadingTool || loadingResponsibles || loadingLocations || loadingPlacements ;
+  const isDataLoading = isLoadingTool || loadingResponsibles || loadingLocations || loadingPlacements;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent  className="sm:max-w-[500px] bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-lg">
+      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-lg">
         <DialogHeader>
-          <DialogTitle  className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-gray-100">
+          <DialogTitle className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-gray-100">
             <Tag className="h-5 w-5 text-amber-500" />
             Edit Tool
           </DialogTitle>
@@ -178,221 +184,241 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
 
               {/* Responsible */}
               <FormField
-  control={form.control}
-  name="responsible"
-  rules={{ required: "Responsible is required" }}
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
-        <User className="h-4 w-4 text-amber-500" />
-        <span>Responsible</span>
-      </FormLabel>
-
-      <Select onValueChange={field.onChange} value={field.value}>
-        <FormControl>
-          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700">
-            <SelectValue placeholder="Select responsible" />
-          </SelectTrigger>
-        </FormControl>
-        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
-          {responsibles?.map((resp) => (
-            <SelectItem
-              key={resp._id}
-              value={resp._id}
-              className="hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              {resp.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <FormMessage className="text-destructive text-sm mt-1" />
-    </FormItem>
-  )}
-/>
-
+                control={form.control}
+                name="responsible"
+                rules={{ required: "Responsible is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+                      <User className="h-4 w-4 text-amber-500" />
+                      <span>Responsible</span>
+                    </FormLabel>
+                    <div className="flex gap-2">
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700">
+                            <SelectValue placeholder="Select responsible" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+                          {responsibles?.map((resp) => (
+                            <SelectItem
+                              key={resp._id}
+                              value={resp._id}
+                              className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              {resp.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-green-50 hover:text-green-600 hover:border-green-200 dark:hover:bg-green-900/20 dark:hover:text-green-400 dark:hover:border-green-800/30 transition-colors"
+                        onClick={() => setShowResponsibleModal(true)}
+                      >
+                        <PlusCircle className="h-5 w-5" />
+                      </Button>
+                    </div>
+                    <FormMessage className="text-destructive text-sm mt-1" />
+                  </FormItem>
+                )}
+              />
 
               {/* Location & Placement in same row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Location */}
                 <FormField
-  control={form.control}
-  name="location"
-  rules={{ required: "Location is required" }}
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
-        <Building className="h-4 w-4 text-amber-500"/>
-        <span>Location</span>
-      </FormLabel>
-
-      <Select onValueChange={field.onChange} value={field.value}>
-        <FormControl>
-          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
-            <SelectValue placeholder="Select location" />
-          </SelectTrigger>
-        </FormControl>
-
-        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
-          {locations?.map((loc) => (
-            <SelectItem
-              key={loc._id}
-              value={loc._id}
-              className="hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              {loc.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <FormMessage className="text-destructive text-sm mt-1" />
-    </FormItem>
-  )}
-/>
-
+                  control={form.control}
+                  name="location"
+                  rules={{ required: "Location is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+                        <Building className="h-4 w-4 text-amber-500"/>
+                        <span>Location</span>
+                      </FormLabel>
+                      <div className="flex gap-2">
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+                              <SelectValue placeholder="Select location" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+                            {locations?.map((loc) => (
+                              <SelectItem
+                                key={loc._id}
+                                value={loc._id}
+                                className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                {loc.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 shrink-0 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-green-50 hover:text-green-600 hover:border-green-200 dark:hover:bg-green-900/20 dark:hover:text-green-400 dark:hover:border-green-800/30 transition-colors"
+                          onClick={() => setShowLocationModal(true)}
+                        >
+                          <PlusCircle className="h-5 w-5" />
+                        </Button>
+                      </div>
+                      <FormMessage className="text-destructive text-sm mt-1" />
+                    </FormItem>
+                  )}
+                />
 
                 {/* Placement */}
                 <FormField
-  control={form.control}
-  name="placement"
-  rules={{ required: "Placement is required" }}
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
-        <MapPin className="h-4 w-4 text-amber-500" />
-        <span>Placement</span>
-      </FormLabel>
-
-      <Select onValueChange={field.onChange} value={field.value}>
-        <FormControl>
-          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
-            <SelectValue placeholder="Select placement" />
-          </SelectTrigger>
-        </FormControl>
-
-        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
-          {placements?.map((place) => (
-            <SelectItem
-              key={place._id}
-              value={place._id}
-              className="hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              {place.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <FormMessage className="text-destructive text-sm mt-1" />
-    </FormItem>
-  )}
-/>
-
+                  control={form.control}
+                  name="placement"
+                  rules={{ required: "Placement is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+                        <MapPin className="h-4 w-4 text-amber-500" />
+                        <span>Placement</span>
+                      </FormLabel>
+                      <div className="flex gap-2">
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+                              <SelectValue placeholder="Select placement" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+                            {placements?.map((place) => (
+                              <SelectItem
+                                key={place._id}
+                                value={place._id}
+                                className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                {place.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 shrink-0 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-green-50 hover:text-green-600 hover:border-green-200 dark:hover:bg-green-900/20 dark:hover:text-green-400 dark:hover:border-green-800/30 transition-colors"
+                          onClick={() => setShowPlacementModal(true)}
+                        >
+                          <PlusCircle className="h-5 w-5" />
+                        </Button>
+                      </div>
+                      <FormMessage className="text-destructive text-sm mt-1" />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               {/* Type & Direction in same row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Type */}
                 <FormField
-  control={form.control}
-  name="type"
-  rules={{ required: "Type is required" }}
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
-        <Axe className="h-4 w-4 text-amber-500" />
-        <span>Type</span>
-      </FormLabel>
+                  control={form.control}
+                  name="type"
+                  rules={{ required: "Type is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+                        <Axe className="h-4 w-4 text-amber-500" />
+                        <span>Type</span>
+                      </FormLabel>
 
-      <Select onValueChange={field.onChange} value={field.value}>
-        <FormControl>
-          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-        </FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                        </FormControl>
 
-        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
-          <SelectItem
-            value="calibration"
-            className="hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            Calibration
-          </SelectItem>
-          <SelectItem
-            value="maintenance"
-            className="hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            Maintenance
-          </SelectItem>
-          <SelectItem
-            value="common"
-            className="hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            Common
-          </SelectItem>
-          <SelectItem
-            value="didactic"
-            className="hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            Didactic
-          </SelectItem>
-        </SelectContent>
-      </Select>
+                        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+                          <SelectItem
+                            value="calibration"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Calibration
+                          </SelectItem>
+                          <SelectItem
+                            value="maintenance"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Maintenance
+                          </SelectItem>
+                          <SelectItem
+                            value="common"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Common
+                          </SelectItem>
+                          <SelectItem
+                            value="didactic"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            Didactic
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
 
-      <FormMessage className="text-destructive text-sm mt-1" />
-    </FormItem>
-  )}
-/>
+                      <FormMessage className="text-destructive text-sm mt-1" />
+                    </FormItem>
+                  )}
+                />
 
-  
                 {/* Direction */}
                 <FormField
-  control={form.control}
-  name="direction"
-  rules={{ required: "Direction is required" }}
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200" >
-        <NotebookPen className='w-4 h-4 text-amber-500' />
-        <span>Direction</span>
+                  control={form.control}
+                  name="direction"
+                  rules={{ required: "Direction is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200" >
+                        <NotebookPen className='w-4 h-4 text-amber-500' />
+                        <span>Direction</span>
   
  
-      </FormLabel>
+                      </FormLabel>
 
-      <Select onValueChange={field.onChange} value={field.value}>
-        <FormControl>
-          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
-            <SelectValue placeholder="Select direction" />
-          </SelectTrigger>
-        </FormControl>
-        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
-          <SelectItem value="DGTI" className="hover:bg-gray-100 dark:hover:bg-gray-700">
-            DGTI
-          </SelectItem>
-          <SelectItem value="DGMRE" className="hover:bg-gray-100 dark:hover:bg-gray-700">
-            DGMRE
-          </SelectItem>
-          <SelectItem value="DGGM" className="hover:bg-gray-100 dark:hover:bg-gray-700">
-            DGGM
-          </SelectItem>
-          <SelectItem value="DHS" className="hover:bg-gray-100 dark:hover:bg-gray-700">
-            DHS
-          </SelectItem>
-          <SelectItem value="DASIC" className="hover:bg-gray-100 dark:hover:bg-gray-700">
-            DASIC
-          </SelectItem>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+                            <SelectValue placeholder="Select direction" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+                          <SelectItem value="DGTI" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                            DGTI
+                          </SelectItem>
+                          <SelectItem value="DGMRE" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                            DGMRE
+                          </SelectItem>
+                          <SelectItem value="DGGM" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                            DGGM
+                          </SelectItem>
+                          <SelectItem value="DHS" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                            DHS
+                          </SelectItem>
+                          <SelectItem value="DASIC" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                            DASIC
+                          </SelectItem>
 
     
-        </SelectContent>
-      </Select>
+                        </SelectContent>
+                      </Select>
 
-      <FormMessage className="text-destructive text-sm mt-1" />
-    </FormItem>
-  )}
-/>
-
+                      <FormMessage className="text-destructive text-sm mt-1" />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               {/* Notes */}
@@ -441,6 +467,40 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
               </DialogFooter>
             </form>
           </Form>
+        )}
+
+        {/* Modals */}
+        {showResponsibleModal && (
+          <ResponsibleModal
+            isOpen={showResponsibleModal}
+            onClose={() => {
+              setShowResponsibleModal(false);
+              // Refresh responsibles list after adding a new one
+              queryClient.invalidateQueries({ queryKey: ["responsibles"] });
+            }}
+          />
+        )}
+
+        {showLocationModal && (
+          <LocationModal
+            isOpen={showLocationModal}
+            onClose={() => {
+              setShowLocationModal(false);
+              // Refresh locations list after adding a new one
+              queryClient.invalidateQueries({ queryKey: ["locations"] });
+            }}
+          />
+        )}
+
+        {showPlacementModal && (
+          <PlacementModal
+            isOpen={showPlacementModal}
+            onClose={() => {
+              setShowPlacementModal(false);
+              // Refresh placements list after adding a new one
+              queryClient.invalidateQueries({ queryKey: ["placements"] });
+            }}
+          />
         )}
       </DialogContent>
     </Dialog>
