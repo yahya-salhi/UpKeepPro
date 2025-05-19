@@ -90,7 +90,7 @@ const toolingSchema = new mongoose.Schema(
     },
     direction: {
       type: String,
-      enum: ["DEMRE", "DGTI", "DGGM", "DHS", "DASIC"],
+      enum: ["DGMRE", "DGTI", "DGGM", "DHS", "DASIC"],
       required: true,
     },
 
