@@ -145,7 +145,11 @@ function App() {
               <Route
                 path="/tools"
                 element={
-                  authUser ? <ToolingTracking /> : <Navigate to="/login" />
+                  authUser && authUser.isAdmin ? (
+                    <ToolingTracking />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
                 }
               />
               {/* Apps  */}
@@ -187,12 +191,22 @@ function App() {
                 /> */}
               <Route
                 path="/tooling"
-                element={authUser ? <Tooling /> : <Navigate to="/login" />}
+                element={
+                  authUser && authUser.isAdmin ? (
+                    <Tooling />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
               />
               <Route
                 path="/ExitTooling"
                 element={
-                  authUser ? <ToolingExitForm /> : <Navigate to="/login" />
+                  authUser && authUser.isAdmin ? (
+                    <ToolingExitForm />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
                 }
               />
 

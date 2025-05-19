@@ -162,11 +162,19 @@ export default function ToolingTracking() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedResponsible, setSelectedResponsible] = useState(null);
+  const [selectedType, setSelectedType] = useState(null);
+  const [selectedDirection, setSelectedDirection] = useState(null);
 
-  // Reset selected responsible when filter changes
+  // Reset selected responsible, type, and direction when filter changes
   useEffect(() => {
     if (activeFilter !== "responsible") {
       setSelectedResponsible(null);
+    }
+    if (activeFilter !== "type") {
+      setSelectedType(null);
+    }
+    if (activeFilter !== "direction") {
+      setSelectedDirection(null);
     }
   }, [activeFilter]);
 
@@ -194,8 +202,19 @@ export default function ToolingTracking() {
             ))
           );
           break;
-        case "maintenance":
-          filteredTools = data.filter((t) => t.type === "maintenance");
+        case "type":
+          if (selectedType) {
+            filteredTools = data.filter((t) => 
+              t.type && t.type === selectedType
+            );
+          }
+          break;
+        case "direction":
+          if (selectedDirection) {
+            filteredTools = data.filter((t) => 
+              t.direction && t.direction === selectedDirection
+            );
+          }
           break;
         case "responsible":
           if (selectedResponsible) {
@@ -315,75 +334,191 @@ export default function ToolingTracking() {
                       >
                         PV Tools
                       </Button>
-                      <Button
-                        variant={activeFilter === "maintenance" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setActiveFilter("maintenance")}
-                      >
-                        Maintenance
-                      </Button>
+                      {/* Type Filter - Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant={activeFilter === "type" ? "default" : "outline"}
+                            size="sm"
+                            className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
+                          >
+                            <Box className="h-4 w-4" />
+                            <span className="max-w-[100px] truncate">
+                              {activeFilter === "type" && selectedType
+                                ? selectedType
+                                : "Type"}
+                            </span>
+                            <ChevronDown className="h-3 w-3 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent
+                          align="start"
+                          className="w-56 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-200 dark:border-gray-700"
+                        >
+                          <DropdownMenuLabel className="text-gray-700 dark:text-gray-300">
+                            Filter by Type
+                          </DropdownMenuLabel>
+                          <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-600" />
+
+                          <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (activeFilter === "type") {
+                                  setActiveFilter("all");
+                                  setSelectedType(null);
+                                }
+                              }}
+                              className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              <span>Show All</span>
+                              {activeFilter !== "type" && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                              )}
+                            </DropdownMenuItem>
+
+                            {/* Extract unique types from the tools data */}
+                            {toolingData?.tools && Array.from(new Set(toolingData.tools.map(tool => tool.type).filter(Boolean))).map((type) => (
+                              <DropdownMenuItem
+                                key={type}
+                                onClick={() => {
+                                  setActiveFilter("type");
+                                  setSelectedType(type);
+                                }}
+                                className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <span>{type}</span>
+                                {activeFilter === "type" && selectedType === type && (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                )}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      {/* Direction Filter - Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant={activeFilter === "direction" ? "default" : "outline"}
+                            size="sm"
+                            className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
+                          >
+                            <ArrowUpCircle className="h-4 w-4" />
+                            <span className="max-w-[100px] truncate">
+                              {activeFilter === "direction" && selectedDirection
+                                ? selectedDirection
+                                : "Direction"}
+                            </span>
+                            <ChevronDown className="h-3 w-3 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent
+                          align="start"
+                          className="w-56 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-200 dark:border-gray-700"
+                        >
+                          <DropdownMenuLabel className="text-gray-700 dark:text-gray-300">
+                            Filter by Direction
+                          </DropdownMenuLabel>
+                          <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-600" />
+
+                          <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (activeFilter === "direction") {
+                                  setActiveFilter("all");
+                                  setSelectedDirection(null);
+                                }
+                              }}
+                              className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              <span>Show All</span>
+                              {activeFilter !== "direction" && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                              )}
+                            </DropdownMenuItem>
+
+                            {/* Extract unique directions from the tools data */}
+                            {toolingData?.tools && Array.from(new Set(toolingData.tools.map(tool => tool.direction).filter(Boolean))).map((direction) => (
+                              <DropdownMenuItem
+                                key={direction}
+                                onClick={() => {
+                                  setActiveFilter("direction");
+                                  setSelectedDirection(direction);
+                                }}
+                                className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <span>{direction}</span>
+                                {activeFilter === "direction" && selectedDirection === direction && (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                )}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       {/* Responsible Filter - Improved Dropdown */}
                       <DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button
-      variant={activeFilter === "responsible" ? "default" : "outline"}
-      size="sm"
-      className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
-    >
-      <User className="h-4 w-4" />
-      <span className="max-w-[100px] truncate">
-        {activeFilter === "responsible" && selectedResponsible
-          ? responsibles?.find(r => r._id === selectedResponsible)?.name || "Responsible"
-          : "Responsible"}
-      </span>
-      <ChevronDown className="h-3 w-3 opacity-50" />
-    </Button>
-  </DropdownMenuTrigger>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant={activeFilter === "responsible" ? "default" : "outline"}
+                            size="sm"
+                            className="flex items-center gap-1 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-300 dark:border-gray-600"
+                          >
+                            <User className="h-4 w-4" />
+                            <span className="max-w-[100px] truncate">
+                              {activeFilter === "responsible" && selectedResponsible
+                                ? responsibles?.find(r => r._id === selectedResponsible)?.name || "Responsible"
+                                : "Responsible"}
+                            </span>
+                            <ChevronDown className="h-3 w-3 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
 
-  <DropdownMenuContent
-    align="start"
-    className="w-56 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-200 dark:border-gray-700"
-  >
-    <DropdownMenuLabel className="text-gray-700 dark:text-gray-300">
-      Filter by Responsible
-    </DropdownMenuLabel>
-    <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-600" />
+                        <DropdownMenuContent
+                          align="start"
+                          className="w-56 bg-white dark:bg-gray-800 text-black dark:text-white border border-gray-200 dark:border-gray-700"
+                        >
+                          <DropdownMenuLabel className="text-gray-700 dark:text-gray-300">
+                            Filter by Responsible
+                          </DropdownMenuLabel>
+                          <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-600" />
 
-    <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
-      <DropdownMenuItem
-        onClick={() => {
-          if (activeFilter === "responsible") {
-            setActiveFilter("all");
-            setSelectedResponsible(null);
-          }
-        }}
-        className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
-      >
-        <span>Show All</span>
-        {activeFilter !== "responsible" && (
-          <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
-        )}
-      </DropdownMenuItem>
+                          <DropdownMenuGroup className="max-h-[300px] overflow-y-auto">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (activeFilter === "responsible") {
+                                  setActiveFilter("all");
+                                  setSelectedResponsible(null);
+                                }
+                              }}
+                              className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              <span>Show All</span>
+                              {activeFilter !== "responsible" && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                              )}
+                            </DropdownMenuItem>
 
-      {responsibles?.map((resp) => (
-        <DropdownMenuItem
-          key={resp._id}
-          onClick={() => {
-            setActiveFilter("responsible");
-            setSelectedResponsible(resp._id);
-          }}
-          className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
-        >
-          <span>{resp.name}</span>
-          {activeFilter === "responsible" && selectedResponsible === resp._id && (
-            <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
-          )}
-        </DropdownMenuItem>
-      ))}
-    </DropdownMenuGroup>
-  </DropdownMenuContent>
-</DropdownMenu>
-
+                            {responsibles?.map((resp) => (
+                              <DropdownMenuItem
+                                key={resp._id}
+                                onClick={() => {
+                                  setActiveFilter("responsible");
+                                  setSelectedResponsible(resp._id);
+                                }}
+                                className="flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <span>{resp.name}</span>
+                                {activeFilter === "responsible" && selectedResponsible === resp._id && (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                                )}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 )}
@@ -590,13 +725,13 @@ export default function ToolingTracking() {
       
       {/* Edit Tool Modal */}
       {selectedTool && (
-  <EditToolModal
-    key={selectedToolId + '-' + isEditModalOpen}
-    isOpen={isEditModalOpen}
-    onClose={() => setIsEditModalOpen(false)}
-    toolId={selectedToolId}
-  />
-)}
+        <EditToolModal
+          key={selectedToolId + '-' + isEditModalOpen}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          toolId={selectedToolId}
+        />
+      )}
     </div>
   );
 }
