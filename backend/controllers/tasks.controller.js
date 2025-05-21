@@ -7,30 +7,32 @@ import mongoose from "mongoose";
 export const getTasks = async (req, res) => {
   try {
     const { status } = req.query;
-    console.log("API Request - getTasks:", { 
+    console.log("API Request - getTasks:", {
       statusFromQuery: status,
       user: {
         id: req.user._id,
-        role: req.user.role
-      }
+        role: req.user.role,
+      },
     });
 
     // Get all unique status values from the database to debug
-    const allStatusValues = await Task.distinct('status');
+    const allStatusValues = await Task.distinct("status");
     console.log("All status values in database:", allStatusValues);
 
     let filter = {};
-    if (status && status !== 'all') {
+    if (status && status !== "all") {
       // Map frontend status values to actual database values if needed
       let dbStatus = status;
-      
+
       // Normalize status values to match database
-      if (status === 'pending') dbStatus = 'pending';
-      else if (status === 'inprogress') dbStatus = 'inprogress';
-      else if (status === 'done') dbStatus = 'done';
-      
+      if (status === "pending") dbStatus = "pending";
+      else if (status === "inprogress") dbStatus = "inprogress";
+      else if (status === "done") dbStatus = "done";
+
       filter.status = dbStatus;
-      console.log(`Filtering tasks by status: "${status}" (mapped to "${dbStatus}" in database)`);
+      console.log(
+        `Filtering tasks by status: "${status}" (mapped to "${dbStatus}" in database)`
+      );
     }
 
     // Log filter to debug
@@ -52,15 +54,18 @@ export const getTasks = async (req, res) => {
     }
 
     console.log(`Found ${tasks.length} tasks matching filter`);
-    
+
     // Show sample of tasks found (first 2)
     if (tasks.length > 0) {
-      console.log("Sample tasks:", tasks.slice(0, 2).map(t => ({
-        id: t._id,
-        title: t.title,
-        status: t.status,
-        createdAt: t.createdAt
-      })));
+      console.log(
+        "Sample tasks:",
+        tasks.slice(0, 2).map((t) => ({
+          id: t._id,
+          title: t.title,
+          status: t.status,
+          createdAt: t.createdAt,
+        }))
+      );
     }
 
     //add completed todocheklist count to each task
@@ -81,20 +86,20 @@ export const getTasks = async (req, res) => {
     );
     const pendingTask = await Task.countDocuments({
       status: "pending",
-      ...(req.user.role === "REPI" || req.user.role === "CC" 
-        ? {} 
+      ...(req.user.role === "REPI" || req.user.role === "CC"
+        ? {}
         : { assignedTo: req.user._id }),
     });
     const inProgressTask = await Task.countDocuments({
-      status: "inprogress", 
-      ...(req.user.role === "REPI" || req.user.role === "CC" 
-        ? {} 
+      status: "inprogress",
+      ...(req.user.role === "REPI" || req.user.role === "CC"
+        ? {}
         : { assignedTo: req.user._id }),
     });
     const completedTask = await Task.countDocuments({
       status: "done",
-      ...(req.user.role === "REPI" || req.user.role === "CC" 
-        ? {} 
+      ...(req.user.role === "REPI" || req.user.role === "CC"
+        ? {}
         : { assignedTo: req.user._id }),
     });
 
@@ -103,21 +108,24 @@ export const getTasks = async (req, res) => {
       all: allTasks,
       pending: pendingTask,
       inProgress: inProgressTask,
-      completed: completedTask
+      completed: completedTask,
     });
 
     const responseData = {
       tasks,
       statusSummary: {
         all: allTasks,
-        pendingTask,         
-        inProgressTask,      
-        completedTask,       
+        pendingTask,
+        inProgressTask,
+        completedTask,
       },
     };
 
-    console.log("Sending response with status summary:", responseData.statusSummary);
-    
+    console.log(
+      "Sending response with status summary:",
+      responseData.statusSummary
+    );
+
     res.json(responseData);
   } catch (error) {
     console.error("Error in getTasks controller:", error);
@@ -168,7 +176,7 @@ export const createTask = async (req, res) => {
     const assignedToIds = [];
     for (const id of assignedTo) {
       try {
-        assignedToIds.push(new mongoose.Types.ObjectId(id)); 
+        assignedToIds.push(new mongoose.Types.ObjectId(id));
       } catch (err) {
         return res.status(400).json({
           message: `Invalid user ID format: ${id}`,
@@ -305,23 +313,25 @@ export const updateTaskChecklist = async (req, res) => {
         .status(403)
         .json({ message: "You are not authorized to update this task" });
     }
-    task.todocheklist = todocheklist; 
-    //auto update progress based on checklist completion
-    const completedCount = task.todocheklist.filter(
-      (item) => item.completed
-    ).length;
-    const totalItems = task.todocheklist.length;
+    task.todocheklist = todocheklist;
+
+    // Calculate completion stats
+    const completedCount = todocheklist.filter((item) => item.completed).length;
+    const totalItems = todocheklist.length;
+
+    // Update progress
     task.progrss =
       totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
 
-    //auto-mark task as completed if all items are checked
-    if (task.progrss === 100) {
-      task.status = "done";
-    } else if (task.progrss > 0) {
-      task.status = "inprogress";
-    } else {
+    // Update status based on checklist completion
+    if (totalItems === 0 || completedCount === 0) {
       task.status = "pending";
+    } else if (completedCount === totalItems) {
+      task.status = "done";
+    } else {
+      task.status = "inprogress";
     }
+
     await task.save();
     const updatedTask = await Task.findById(req.params.id).populate(
       "assignedTo",
@@ -361,12 +371,12 @@ export const getDashboardData = async (req, res) => {
     ]);
 
     const taskDistribution = taskstatuses.reduce((acc, status) => {
-      const formattedKey = status.replace(/-/g, " "); 
+      const formattedKey = status.replace(/-/g, " ");
       acc[formattedKey] =
         taskDistributionRow.find((item) => item._id === status)?.count || 0;
       return acc;
     }, {});
-    taskDistribution["All"] = totalTasks; 
+    taskDistribution["All"] = totalTasks;
     //ensure all prioirity are included
     const taskPriorities = ["low", "medium", "high"];
     const taskPriorityLevelsRow = await Task.aggregate([
@@ -442,13 +452,13 @@ export const getUserDashboardData = async (req, res) => {
       },
     ]);
     const taskDistribution = taskstatuses.reduce((acc, status) => {
-      const formattedKey = status.replace(/-/g, " "); 
+      const formattedKey = status.replace(/-/g, " ");
       acc[formattedKey] =
         taskDistributionRow.find((item) => item._id === status)?.count || 0;
       return acc;
     }, {});
 
-    taskDistribution["All"] = totalTasks; 
+    taskDistribution["All"] = totalTasks;
     //task distribution by priority
     const taskPriorities = ["low", "medium", "high"];
     const taskPriorityLevelsRow = await Task.aggregate([

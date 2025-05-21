@@ -36,12 +36,14 @@ function ManageTask() {
 
     return response.json();
   };
-
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["tasks", filterStatus],
     queryFn: () => fetchTasks(filterStatus),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Disable cache to always get fresh data
+    cacheTime: 0, // Disable cache
+    refetchInterval: 1000, // Poll every second
     refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   const allTasks = data?.tasks || [];

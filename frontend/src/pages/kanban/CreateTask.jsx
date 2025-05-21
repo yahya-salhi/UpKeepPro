@@ -154,26 +154,36 @@ function CreateTask() {
   // Delete task mutation
   const { mutate: deleteTask, isLoading: isDeleting } = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete task");
+      try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || "Failed to delete task");
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Delete task error:", error);
+        throw error;
       }
-      return response.json();
     },
     onSuccess: () => {
       toast.success("Task deleted successfully");
+      setOpenDeleteTask(false);
       queryClient.invalidateQueries(["tasks"]);
       navigate("/kanban");
     },
     onError: (error) => {
       toast.error(error.message || "Failed to delete task");
+      setOpenDeleteTask(false);
     },
   });
 
@@ -201,10 +211,23 @@ function CreateTask() {
       if (!formattedAssignedTo.length) {
         toast.error("At least one team member must be assigned");
         return;
-      } // Transform checklist items to match the schema
+      }
       const formattedChecklist = (data.todocheklist || []).map((item) =>
         typeof item === "string" ? { title: item, completed: false } : item
-      );
+      ); // Calculate initial status based on checklist completion
+      let status = "pending";
+      if (formattedChecklist.length > 0) {
+        const completedCount = formattedChecklist.filter(
+          (item) => item.completed
+        ).length;
+        if (completedCount === 0) {
+          status = "pending";
+        } else if (completedCount === formattedChecklist.length) {
+          status = "done";
+        } else {
+          status = "inprogress";
+        }
+      }
 
       // Prepare the final payload
       const payload = {
@@ -212,6 +235,7 @@ function CreateTask() {
         assignedTo: formattedAssignedTo,
         todocheklist: formattedChecklist,
         attchments: data.attchments || [],
+        status, // Add calculated status to payload
       };
 
       saveTask(payload);
@@ -417,11 +441,12 @@ function CreateTask() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Checklist Items
-                        </label>
+                        </label>{" "}
                         <TodoChecklistInput
                           control={control}
                           name="todocheklist"
                           disabled={isFetching}
+                          taskId={taskId}
                         />
                       </div>
 
