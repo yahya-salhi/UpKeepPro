@@ -37,6 +37,44 @@ function CreateTask() {
       todocheklist: [],
       attchments: [],
     },
+    mode: "onBlur",
+    // Add validation rules
+    rules: {
+      title: {
+        required: "Title is required",
+        maxLength: {
+          value: 100,
+          message: "Title must be less than 100 characters",
+        },
+      },
+      dueDate: {
+        required: "Due date is required",
+        validate: (value) => {
+          if (!value) return "Due date is required";
+          const date = new Date(value);
+          if (date < new Date()) return "Due date cannot be in the past";
+          return true;
+        },
+      },
+      assignedTo: {
+        required: "At least one team member must be assigned",
+        validate: (value) => {
+          if (!Array.isArray(value) || value.length === 0) {
+            return "At least one team member must be assigned";
+          }
+          return true;
+        },
+      },
+      priority: {
+        required: "Priority is required",
+        validate: (value) => {
+          if (!["low", "medium", "high"].includes(value)) {
+            return "Invalid priority level";
+          }
+          return true;
+        },
+      },
+    },
   });
   // Fetch task data if editing
   const { data: taskData, isLoading: isFetching } = useQuery({
@@ -149,9 +187,23 @@ function CreateTask() {
           })
         : [];
 
-      // Transform checklist items
+      // Validate required fields
+      if (!data.title || !data.title.trim()) {
+        toast.error("Title is required");
+        return;
+      }
+
+      if (!data.dueDate) {
+        toast.error("Due date is required");
+        return;
+      }
+
+      if (!formattedAssignedTo.length) {
+        toast.error("At least one team member must be assigned");
+        return;
+      } // Transform checklist items to match the schema
       const formattedChecklist = (data.todocheklist || []).map((item) =>
-        typeof item === "string" ? { text: item, completed: false } : item
+        typeof item === "string" ? { title: item, completed: false } : item
       );
 
       // Prepare the final payload
@@ -224,7 +276,9 @@ function CreateTask() {
                           type="text"
                           placeholder="Enter task title"
                           className={`w-full px-4 py-2.5 rounded-lg border transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
-                            errors.title ? "border-red-500" : "border-gray-300"
+                            errors.title
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300"
                           }`}
                           disabled={isFetching}
                         />
@@ -324,15 +378,33 @@ function CreateTask() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Due Date
+                          Due Date *
                         </label>
                         <input
-                          {...register("dueDate")}
+                          {...register("dueDate", {
+                            required: "Due date is required",
+                            validate: (value) => {
+                              if (!value) return "Due date is required";
+                              const date = new Date(value);
+                              if (date < new Date())
+                                return "Due date cannot be in the past";
+                              return true;
+                            },
+                          })}
                           type="date"
                           min={moment().format("YYYY-MM-DD")}
-                          className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                          className={`w-full px-4 py-2.5 rounded-lg border transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
+                            errors.dueDate
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300"
+                          }`}
                           disabled={isFetching}
                         />
+                        {errors.dueDate && (
+                          <p className="mt-1.5 text-sm text-red-500">
+                            {errors.dueDate.message}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

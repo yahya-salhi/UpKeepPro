@@ -17,7 +17,7 @@ function TodoChecklistInput({ control, name, disabled }) {
     if (newItem.trim()) {
       field.onChange([
         ...field.value,
-        { text: newItem.trim(), completed: false },
+        { title: newItem.trim(), completed: false },
       ]);
       setNewItem("");
     }
@@ -66,7 +66,7 @@ function TodoChecklistInput({ control, name, disabled }) {
                     : "text-gray-800 dark:text-gray-200"
                 }`}
               >
-                {item.text}
+                {item.title}
               </span>
             </div>
             <button
