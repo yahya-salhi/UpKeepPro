@@ -22,7 +22,7 @@ router.get("/:id", protect, getTaskById);
 router.post("/", protect, authorizeAdmin, createTask);
 router.put("/:id", protect, updateTask);
 router.delete("/:id", protect, authorizeAdmin, deleteTask);
-router.put("/id/status", protect, updateTaskStatus);
+router.put("/:id/status", protect, updateTaskStatus); // This is correct
 router.put("/:id/todo", protect, updateTaskChecklist);
 
 export default router;

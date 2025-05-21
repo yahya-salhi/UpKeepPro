@@ -65,9 +65,8 @@ function ManageTask() {
       count: statusSummary.completedTask || 0,
     },
   ];
-
   const handleClick = (taskData) => {
-    navigate(`/kanban/viewtask/${taskData._id}`);
+    navigate("/kanban/createtask", { state: { taskId: taskData._id } });
   };
 
   const handleDownloadReport = async () => {
