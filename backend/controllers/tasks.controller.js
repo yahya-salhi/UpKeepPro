@@ -66,15 +66,40 @@ export const getTasks = async (req, res) => {
           createdAt: t.createdAt,
         }))
       );
-    }
-
-    //add completed todocheklist count to each task
+    } //add completed todocheklist count and progress to each task
     tasks = await Promise.all(
       tasks.map(async (task) => {
+        const totalCount = task.todocheklist.length;
         const completedCount = task.todocheklist.filter(
           (item) => item.completed
         ).length;
-        return { ...task._doc, completedTodoCount: completedCount };
+        const progress =
+          totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+        // Update task status based on progress
+        let newStatus = task.status;
+        if (totalCount === 0 || completedCount === 0) {
+          newStatus = "pending";
+        } else if (completedCount === totalCount) {
+          newStatus = "done";
+        } else {
+          newStatus = "inprogress";
+        }
+
+        // Only update the task if status has changed
+        if (newStatus !== task.status) {
+          await Task.findByIdAndUpdate(task._id, {
+            status: newStatus,
+            progress: progress,
+          });
+        }
+
+        return {
+          ...task._doc,
+          completedTodoCount: completedCount,
+          progress,
+          status: newStatus,
+        };
       })
     );
 
@@ -239,7 +264,27 @@ export const updateTask = async (req, res) => {
     task.description = req.body.description || task.description;
     task.priority = req.body.priority || task.priority;
     task.dueDate = req.body.dueDate || task.dueDate;
-    task.todocheklist = req.body.todocheklist || task.todocheklist;
+
+    // Update checklist and recalculate progress
+    if (req.body.todocheklist) {
+      task.todocheklist = req.body.todocheklist;
+      const completedCount = task.todocheklist.filter(
+        (item) => item.completed
+      ).length;
+      const totalItems = task.todocheklist.length;
+      const progress =
+        totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+      task.progress = progress;
+
+      // Update status based on progress
+      if (progress === 0) {
+        task.status = "pending";
+      } else if (progress === 100) {
+        task.status = "done";
+      } else {
+        task.status = "inprogress";
+      }
+    }
 
     // Handle attachment updates
     if (req.body.attchments) {
@@ -303,7 +348,7 @@ export const updateTaskStatus = async (req, res) => {
     if (task.status === "done") {
       task.todocheklist.forEach((item) => {
         item.completed = true;
-        task.progrss = 100;
+        task.progress = 100;
       });
     }
     await task.save();
@@ -338,14 +383,15 @@ export const updateTaskChecklist = async (req, res) => {
     const completedCount = todocheklist.filter((item) => item.completed).length;
     const totalItems = todocheklist.length;
 
-    // Update progress
-    task.progrss =
+    // Update progress based on completed checklist items
+    const progress =
       totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+    task.progress = progress;
 
-    // Update status based on checklist completion
-    if (totalItems === 0 || completedCount === 0) {
+    // Update status based on progress percentage
+    if (progress === 0) {
       task.status = "pending";
-    } else if (completedCount === totalItems) {
+    } else if (progress === 100) {
       task.status = "done";
     } else {
       task.status = "inprogress";

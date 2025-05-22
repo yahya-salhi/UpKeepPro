@@ -185,7 +185,6 @@ function ManageTask() {
                 description={item.description}
                 priority={item.priority}
                 status={item.status}
-                progress={item.progress || 0}
                 createdAt={item.createdAt}
                 dueDate={item.dueDate}
                 assignedTo={
