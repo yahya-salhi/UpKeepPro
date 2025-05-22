@@ -18,7 +18,16 @@ const taskSchema = new mongoose.Schema(
     dueDate: { type: Date, required: true },
     assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    attchments: [{ type: String }],
+    attchments: [
+      {
+        name: { type: String, required: true },
+        type: { type: String, required: true },
+        size: { type: Number, required: true },
+        data: { type: String, required: true }, // Base64 encoded file data
+        uploadedAt: { type: Date, default: Date.now },
+        uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
     todocheklist: [todoSchema],
     progrss: { type: Number, default: 0 },
   },

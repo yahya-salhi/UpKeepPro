@@ -183,6 +183,14 @@ export const createTask = async (req, res) => {
           error: err.message,
         });
       }
+    } // Validate and process attachments
+    let processedAttachments = [];
+    if (Array.isArray(attchments)) {
+      processedAttachments = attchments.map((attachment) => ({
+        ...attachment,
+        uploadedBy: req.user._id,
+        uploadedAt: new Date(),
+      }));
     }
 
     const task = await Task.create({
@@ -193,7 +201,7 @@ export const createTask = async (req, res) => {
       assignedTo: assignedToIds,
       createdBy: req.user._id,
       todocheklist: todocheklist || [],
-      attchments: attchments || [],
+      attchments: processedAttachments,
     });
 
     res.status(201).json({
@@ -232,7 +240,18 @@ export const updateTask = async (req, res) => {
     task.priority = req.body.priority || task.priority;
     task.dueDate = req.body.dueDate || task.dueDate;
     task.todocheklist = req.body.todocheklist || task.todocheklist;
-    task.attchments = req.body.attchments || task.attchments;
+
+    // Handle attachment updates
+    if (req.body.attchments) {
+      // Keep existing attachments and add new ones with proper metadata
+      const newAttachments = req.body.attchments.map((attachment) => ({
+        ...attachment,
+        uploadedBy: req.user._id,
+        uploadedAt: new Date(),
+      }));
+      task.attchments = newAttachments;
+    }
+
     if (req.body.assignedTo) {
       task.assignedTo = req.body.assignedTo;
     }
