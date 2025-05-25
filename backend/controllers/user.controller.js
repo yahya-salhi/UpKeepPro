@@ -292,6 +292,12 @@ export const getUsers = async (req, res) => {
       .limit(limit)
       .lean(); // lean() improves performance by returning plain JS objects
 
+    // Ensure availability is always present and boolean for frontend
+    const usersWithAvailability = users.map((user) => ({
+      ...user,
+      availability: user.availability === "available",
+    }));
+
     const totalUsers = await User.countDocuments();
 
     res.status(200).json({
@@ -299,7 +305,7 @@ export const getUsers = async (req, res) => {
       limit,
       totalPages: Math.ceil(totalUsers / limit),
       totalUsers,
-      users,
+      users: usersWithAvailability,
     });
   } catch (error) {
     console.error("Error fetching users:", error.message);
