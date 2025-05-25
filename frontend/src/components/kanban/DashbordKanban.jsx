@@ -61,8 +61,16 @@ function DashbordKanban({ children }) {
                 <span>Manage Tasks</span>
               </button>
               <button
-                className="px-4 py-2 rounded-lg flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => navigate("/kanban/team")}
+                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                  location.pathname === "/kanban/manageusers"
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                }`}
+                onClick={() =>
+                  location.pathname === "/kanban/manageusers"
+                    ? navigate("/kanban")
+                    : navigate("/kanban/manageusers")
+                }
               >
                 <Users size={18} />
                 <span>Team Members</span>

@@ -27,6 +27,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import CreateTask from "./pages/kanban/CreateTask";
 import ManageTask from "./pages/kanban/ManageTask";
+import ManageUsers from "./pages/kanban/ManageUsers";
 
 function App() {
   const {
@@ -164,7 +165,7 @@ function App() {
                 }
               />
               <Route
-                path="/Kanban/createtask"
+                path="/kanban/createtask"
                 element={
                   authUser && authUser.isAdmin ? (
                     <CreateTask />
@@ -174,8 +175,24 @@ function App() {
                 }
               />
               <Route
-                path="/Kanban/manage"
-                element={authUser ? <ManageTask /> : <Navigate to="/login" />}
+                path="/kanban/manage"
+                element={
+                  authUser && authUser.isAdmin ? (
+                    <ManageTask />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+              <Route
+                path="/kanban/manageusers"
+                element={
+                  authUser && authUser.isAdmin ? (
+                    <ManageUsers />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
               />
               <Route
                 path="/editor"

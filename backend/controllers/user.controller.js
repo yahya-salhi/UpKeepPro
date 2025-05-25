@@ -321,15 +321,15 @@ export const getUsersTasks = async (req, res) => {
       users.map(async (user) => {
         const pendingTasks = await Task.countDocuments({
           assignedTo: user._id,
-          status: "Pending",
+          status: "pending", // fixed: lowercase
         });
         const inProgressTasks = await Task.countDocuments({
           assignedTo: user._id,
-          status: "In Progress",
+          status: "inprogress", // fixed: lowercase, one word
         });
         const completedTasks = await Task.countDocuments({
           assignedTo: user._id,
-          status: "done",
+          status: "done", // already correct
         });
         return {
           ...user._doc,

@@ -13,6 +13,7 @@ import {
   FaArrowDown,
   FaCalendarAlt,
   FaRegClock,
+  FaUserFriends,
 } from "react-icons/fa";
 import { BsBoxSeam } from "react-icons/bs";
 import { FiBarChart } from "react-icons/fi";
@@ -23,11 +24,12 @@ import { useDashboardData } from "../hooks/useDashboardData";
 import { useWeeklyEvents } from "../hooks/useWeeklyEvents";
 import PieChart from "../pages/kanban/PieChart";
 import BarChart from "../pages/kanban/BarChart";
-import { medicalproBranding, dropdownData } from "../data/dummy";
+import { dropdownData } from "../data/dummy";
 import { useStateContext } from "../contexts/ContextProvider";
 import product9 from "../data/product9.jpg";
 import { useQuery } from "@tanstack/react-query";
 import ChatInterface from "../components/ChatInterface";
+import RightPanel from "./profile/RightPanel";
 
 const DropDown = ({ currentMode }) => (
   <div className="w-28 border-1 border-color px-2 py-1 rounded-md">
@@ -719,9 +721,10 @@ const Dashboard = () => {
                     fill="currentColor"
                   >
                     <path
-                      fillRule="evenodd"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
                       d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clipRule="evenodd"
                     />
                   </svg>
                 </button>
@@ -747,9 +750,10 @@ const Dashboard = () => {
                     fill="currentColor"
                   >
                     <path
-                      fillRule="evenodd"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
                       d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
                     />
                   </svg>
                 </button>
@@ -1016,69 +1020,19 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* MedicalPro Branding */}
+          {/* RightPanel Component (Replacing MedicalPro Branding) */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <FaChartLine
+                <FaUserFriends
                   className="text-xl"
                   style={{ color: currentColor }}
                 />
-                MedicalPro Branding
+                Who to Follow
               </h3>
-              <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                <IoIosMore className="text-xl" />
-              </button>
             </div>
-            <div className="space-y-6">
-              <div className="inline-block px-3 py-1 text-xs font-medium text-white bg-orange-500 rounded-full">
-                16 APR, 2021
-              </div>
-              <div className="grid grid-cols-3 gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
-                {medicalproBranding.data.map((item) => (
-                  <div key={item.title}>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {item.title}
-                    </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {item.desc}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Teams
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {medicalproBranding.teams.map((item) => (
-                      <span
-                        key={item.name}
-                        className="px-3 py-1 text-xs font-medium text-white rounded-full"
-                        style={{ background: item.color }}
-                      >
-                        {item.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Leaders
-                  </p>
-                  <div className="flex gap-2">
-                    {medicalproBranding.leaders.map((item, index) => (
-                      <img
-                        key={index}
-                        src={item.image}
-                        alt=""
-                        className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-700"
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
+            <div className="space-y-4">
+              <RightPanel />
             </div>
           </div>
 
