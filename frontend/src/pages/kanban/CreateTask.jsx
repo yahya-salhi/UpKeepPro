@@ -3,10 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import moment from "moment";
 import { LuTrash2 } from "react-icons/lu";
 import { ChevronDown, Loader } from "lucide-react";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
+
 import DashboardKanban from "../../components/kanban/DashbordKanban";
 import Modal from "../../components/kanban/Modal";
 import Button from "../../components/kanban/Button";
@@ -20,7 +20,6 @@ function CreateTask() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [openDeleteTask, setOpenDeleteTask] = useState(false);
-
   const {
     register,
     handleSubmit,
@@ -35,44 +34,91 @@ function CreateTask() {
       priority: "low",
       dueDate: moment().format("YYYY-MM-DD"),
       assignedTo: [],
-      todochecklist: [],
-      attachments: [],
+      todocheklist: [],
+      attchments: [],
+    },
+    mode: "onBlur",
+    // Add validation rules
+    rules: {
+      title: {
+        required: "Title is required",
+        maxLength: {
+          value: 100,
+          message: "Title must be less than 100 characters",
+        },
+      },
+      dueDate: {
+        required: "Due date is required",
+        validate: (value) => {
+          if (!value) return "Due date is required";
+          const date = new Date(value);
+          if (date < new Date()) return "Due date cannot be in the past";
+          return true;
+        },
+      },
+      assignedTo: {
+        required: "At least one team member must be assigned",
+        validate: (value) => {
+          if (!Array.isArray(value) || value.length === 0) {
+            return "At least one team member must be assigned";
+          }
+          return true;
+        },
+      },
+      priority: {
+        required: "Priority is required",
+        validate: (value) => {
+          if (!["low", "medium", "high"].includes(value)) {
+            return "Invalid priority level";
+          }
+          return true;
+        },
+      },
     },
   });
-
   // Fetch task data if editing
-  const { isLoading: isFetching } = useQuery({
+  const { data: taskData, isLoading: isFetching } = useQuery({
     queryKey: ["task", taskId],
     queryFn: async () => {
       if (!taskId) return null;
+      console.log("Fetching task with ID:", taskId);
       const response = await fetch(`/api/tasks/${taskId}`, {
+        method: "GET",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
         },
+        credentials: "include",
       });
       if (!response.ok) {
         const error = await response.json();
+        console.error("Error fetching task:", error);
         throw new Error(error.message || "Failed to fetch task");
       }
-      return await response.json();
+      const data = await response.json();
+      console.log("Received task data:", data);
+      return data;
     },
     enabled: !!taskId,
-    onSuccess: (data) => {
-      if (data) {
-        reset({
-          ...data,
-          dueDate: moment(data.dueDate).format("YYYY-MM-DD"),
-          assignedTo: data.assignedTo.map((user) => user._id || user),
-          todochecklist: data.todochecklist || [],
-          attachments: data.attachments || [],
-        });
-      }
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to fetch task");
-      navigate("/kanban");
-    },
   });
+
+  // Handle form population when task data is received
+  useEffect(() => {
+    if (taskData) {
+      console.log("Populating form with task data:", taskData);
+      const formData = {
+        title: taskData.title,
+        description: taskData.description,
+        status: taskData.status,
+        priority: taskData.priority,
+        dueDate: moment(taskData.dueDate).format("YYYY-MM-DD"),
+        assignedTo: taskData.assignedTo.map((user) => user._id || user),
+        todocheklist: taskData.todocheklist || [],
+        attchments: taskData.attchments || [],
+      };
+      console.log("Formatted form data:", formData);
+      reset(formData);
+    }
+  }, [taskData, reset]);
 
   // Create/Update task mutation
   const { mutate: saveTask, isLoading: isSaving } = useMutation({
@@ -84,8 +130,8 @@ function CreateTask() {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 
@@ -108,25 +154,36 @@ function CreateTask() {
   // Delete task mutation
   const { mutate: deleteTask, isLoading: isDeleting } = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete task");
+      try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || "Failed to delete task");
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Delete task error:", error);
+        throw error;
       }
-      return response.json();
     },
     onSuccess: () => {
       toast.success("Task deleted successfully");
+      setOpenDeleteTask(false);
       queryClient.invalidateQueries(["tasks"]);
       navigate("/kanban");
     },
     onError: (error) => {
       toast.error(error.message || "Failed to delete task");
+      setOpenDeleteTask(false);
     },
   });
 
@@ -140,17 +197,45 @@ function CreateTask() {
           })
         : [];
 
-      // Transform checklist items
-      const formattedChecklist = (data.todochecklist || []).map((item) =>
-        typeof item === "string" ? { text: item, completed: false } : item
-      );
+      // Validate required fields
+      if (!data.title || !data.title.trim()) {
+        toast.error("Title is required");
+        return;
+      }
+
+      if (!data.dueDate) {
+        toast.error("Due date is required");
+        return;
+      }
+
+      if (!formattedAssignedTo.length) {
+        toast.error("At least one team member must be assigned");
+        return;
+      }
+      const formattedChecklist = (data.todocheklist || []).map((item) =>
+        typeof item === "string" ? { title: item, completed: false } : item
+      ); // Calculate initial status based on checklist completion
+      let status = "pending";
+      if (formattedChecklist.length > 0) {
+        const completedCount = formattedChecklist.filter(
+          (item) => item.completed
+        ).length;
+        if (completedCount === 0) {
+          status = "pending";
+        } else if (completedCount === formattedChecklist.length) {
+          status = "done";
+        } else {
+          status = "inprogress";
+        }
+      }
 
       // Prepare the final payload
       const payload = {
         ...data,
         assignedTo: formattedAssignedTo,
-        todochecklist: formattedChecklist,
-        attachments: data.attachments || [],
+        todocheklist: formattedChecklist,
+        attchments: data.attchments || [],
+        status, // Add calculated status to payload
       };
 
       saveTask(payload);
@@ -172,7 +257,9 @@ function CreateTask() {
                   {taskId ? "Edit Task" : "Create New Task"}
                 </h2>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                  {taskId ? "Update your task details below" : "Fill in the details to create a new task"}
+                  {taskId
+                    ? "Update your task details below"
+                    : "Fill in the details to create a new task"}
                 </p>
               </div>
               {taskId && (
@@ -187,28 +274,42 @@ function CreateTask() {
               )}
             </div>
 
-            <form onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} onSubmit={handleSubmit(onSubmit)} className="p-6">
+            <form
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.preventDefault();
+              }}
+              onSubmit={handleSubmit(onSubmit)}
+              className="p-6"
+            >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Left Column */}
                 <div className="space-y-6">
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Basic Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                      Basic Information
+                    </h3>
                     <div className="space-y-5">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Task Title *
                         </label>
                         <input
-                          {...register("title", { required: "Title is required" })}
+                          {...register("title", {
+                            required: "Title is required",
+                          })}
                           type="text"
                           placeholder="Enter task title"
                           className={`w-full px-4 py-2.5 rounded-lg border transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
-                            errors.title ? "border-red-500" : "border-gray-300"
+                            errors.title
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300"
                           }`}
                           disabled={isFetching}
                         />
                         {errors.title && (
-                          <p className="mt-1.5 text-sm text-red-500">{errors.title.message}</p>
+                          <p className="mt-1.5 text-sm text-red-500">
+                            {errors.title.message}
+                          </p>
                         )}
                       </div>
 
@@ -228,7 +329,9 @@ function CreateTask() {
                   </div>
 
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Assignment</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                      Assignment
+                    </h3>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Assign To *
@@ -236,11 +339,15 @@ function CreateTask() {
                       <SelectUsers
                         control={control}
                         name="assignedTo"
-                        rules={{ required: "At least one assignee is required" }}
+                        rules={{
+                          required: "At least one assignee is required",
+                        }}
                         disabled={isFetching}
                       />
                       {errors.assignedTo && (
-                        <p className="mt-1.5 text-sm text-red-500">{errors.assignedTo.message}</p>
+                        <p className="mt-1.5 text-sm text-red-500">
+                          {errors.assignedTo.message}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -249,7 +356,9 @@ function CreateTask() {
                 {/* Right Column */}
                 <div className="space-y-6">
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Task Details</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                      Task Details
+                    </h3>
                     <div className="space-y-5">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -293,30 +402,51 @@ function CreateTask() {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Due Date
+                          Due Date *
                         </label>
                         <input
-                          {...register("dueDate")}
+                          {...register("dueDate", {
+                            required: "Due date is required",
+                            validate: (value) => {
+                              if (!value) return "Due date is required";
+                              const date = new Date(value);
+                              if (date < new Date())
+                                return "Due date cannot be in the past";
+                              return true;
+                            },
+                          })}
                           type="date"
                           min={moment().format("YYYY-MM-DD")}
-                          className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                          className={`w-full px-4 py-2.5 rounded-lg border transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 ${
+                            errors.dueDate
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300"
+                          }`}
                           disabled={isFetching}
                         />
+                        {errors.dueDate && (
+                          <p className="mt-1.5 text-sm text-red-500">
+                            {errors.dueDate.message}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Additional Details</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                      Additional Details
+                    </h3>
                     <div className="space-y-5">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Checklist Items
-                        </label>
+                        </label>{" "}
                         <TodoChecklistInput
                           control={control}
-                          name="todochecklist"
+                          name="todocheklist"
                           disabled={isFetching}
+                          taskId={taskId}
                         />
                       </div>
 
@@ -326,7 +456,7 @@ function CreateTask() {
                         </label>
                         <AddAttachmentsInput
                           control={control}
-                          name="attachments"
+                          name="attchments"
                           disabled={isFetching}
                         />
                       </div>
@@ -376,7 +506,8 @@ function CreateTask() {
       >
         <div className="space-y-4">
           <p className="text-gray-600 dark:text-gray-300">
-            Are you sure you want to delete this task? This action cannot be undone.
+            Are you sure you want to delete this task? This action cannot be
+            undone.
           </p>
           <div className="flex justify-end gap-3 pt-4">
             <Button

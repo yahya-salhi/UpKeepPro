@@ -7,6 +7,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Cell,
 } from "recharts";
 
 const COLORS = ["#EF4444", "#F59E0B", "#10B981"]; // red, orange, green
@@ -33,12 +34,11 @@ export default function BarChart({ data, colors = COLORS }) {
         <Legend
           formatter={(value) => <span className="text-sm">{value}</span>}
         />
-        <Bar
-          dataKey="count"
-          name="Task Count"
-          fill={colors[0]}
-          radius={[4, 4, 0, 0]}
-        />
+        <Bar dataKey="count" name="Task Count" radius={[4, 4, 0, 0]}>
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+          ))}
+        </Bar>
       </ReBarChart>
     </ResponsiveContainer>
   );

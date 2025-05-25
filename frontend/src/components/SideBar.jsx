@@ -1,5 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
-import { SiShopware } from "react-icons/si";
+// import { SiShopware } from "react-icons/si";
 import { MdOutlineCancel } from "react-icons/md";
 import { TooltipComponent } from "@syncfusion/ej2-react-popups";
 import { useStateContext } from "../contexts/ContextProvider.jsx";
@@ -154,7 +154,36 @@ function SideBar() {
               onClick={handelCloseSideBar}
               className="items-center gap-3 ml-3 mt-4 flex text-xl font-extrabold tracking-tight dark:text-white text-slate-900"
             >
-              <SiShopware color={currentColor} />{" "}
+              <svg
+                className="size-5"
+                style={{ color: currentColor }}
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 2L2 7L12 12L22 7L12 2Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M2 17L12 22L22 17"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M2 12L12 17L22 12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {/* <SiShopware color={currentColor} />{" "} */}
               <span style={{ color: currentColor }}>UpKeepPro</span>
             </Link>
             <TooltipComponent content="Menu" position="BottomCenter">

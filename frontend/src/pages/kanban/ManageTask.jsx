@@ -36,12 +36,14 @@ function ManageTask() {
 
     return response.json();
   };
-
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["tasks", filterStatus],
     queryFn: () => fetchTasks(filterStatus),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Disable cache to always get fresh data
+    cacheTime: 0, // Disable cache
+    refetchInterval: 1000, // Poll every second
     refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   const allTasks = data?.tasks || [];
@@ -65,9 +67,8 @@ function ManageTask() {
       count: statusSummary.completedTask || 0,
     },
   ];
-
   const handleClick = (taskData) => {
-    navigate(`/kanban/viewtask/${taskData._id}`);
+    navigate("/kanban/createtask", { state: { taskId: taskData._id } });
   };
 
   const handleDownloadReport = async () => {
@@ -184,7 +185,6 @@ function ManageTask() {
                 description={item.description}
                 priority={item.priority}
                 status={item.status}
-                progress={item.progress || 0}
                 createdAt={item.createdAt}
                 dueDate={item.dueDate}
                 assignedTo={

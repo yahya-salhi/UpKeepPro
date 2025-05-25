@@ -28,7 +28,25 @@ export const getEventById = async (req, res) => {
 // Create a new event
 export const createEvent = async (req, res) => {
   try {
-    const newEvent = new Event(req.body); // Create new event with request data
+    const {
+      title,
+      start,
+      end,
+      description = "",
+      location = "",
+      status = "upcoming",
+      priority = "medium",
+    } = req.body;
+
+    const newEvent = new Event({
+      title,
+      start,
+      end,
+      description,
+      location,
+      status,
+      priority,
+    });
     await newEvent.save(); // Save it in the database
     res.status(201).json(newEvent); // Return saved event data
   } catch (error) {
@@ -40,10 +58,21 @@ export const createEvent = async (req, res) => {
 // Update an event
 export const updateEvent = async (req, res) => {
   try {
+    const { title, start, end, description, location, status, priority } =
+      req.body;
+
     const updatedEvent = await Event.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true } // Return the updated event
+      {
+        ...(title !== undefined && { title }),
+        ...(start !== undefined && { start }),
+        ...(end !== undefined && { end }),
+        ...(description !== undefined && { description }),
+        ...(location !== undefined && { location }),
+        ...(status !== undefined && { status }),
+        ...(priority !== undefined && { priority }),
+      },
+      { new: true }
     );
     if (!updatedEvent) {
       return res.status(404).json({ message: "Event not found" });

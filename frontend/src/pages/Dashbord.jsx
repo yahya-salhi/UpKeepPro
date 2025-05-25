@@ -1,5 +1,4 @@
 import { BsCurrencyDollar } from "react-icons/bs";
-
 import { IoIosMore } from "react-icons/io";
 import { DropDownListComponent } from "@syncfusion/ej2-react-dropdowns";
 import {
@@ -18,12 +17,13 @@ import {
 import { BsBoxSeam } from "react-icons/bs";
 import { FiBarChart } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
-import { useMemo } from "react";
-import { Button, LineChart, SparkLine } from "../components";
+import { useMemo, useState } from "react";
+import { Button, LineChart } from "../components";
 import { useDashboardData } from "../hooks/useDashboardData";
+import { useWeeklyEvents } from "../hooks/useWeeklyEvents";
 import PieChart from "../pages/kanban/PieChart";
 import BarChart from "../pages/kanban/BarChart";
-import { medicalproBranding, weeklyStats, dropdownData } from "../data/dummy";
+import { medicalproBranding, dropdownData } from "../data/dummy";
 import { useStateContext } from "../contexts/ContextProvider";
 import product9 from "../data/product9.jpg";
 import { useQuery } from "@tanstack/react-query";
@@ -46,6 +46,17 @@ const DropDown = ({ currentMode }) => (
 const Dashboard = () => {
   const { currentColor, currentMode } = useStateContext();
   const { data: dashboardData } = useDashboardData();
+  const [weekOffset, setWeekOffset] = useState(0);
+  const {
+    weeklyEvents,
+    weekDays,
+    categorizedEvents,
+    weekRange,
+    isLoading: eventsLoading,
+    isError: eventsError,
+    formatEventTime,
+  } = useWeeklyEvents(weekOffset);
+
   const fetchUserCount = async () => {
     const res = await fetch("/api/users/count");
     if (!res.ok) throw new Error("Failed to fetch user count");
@@ -101,14 +112,6 @@ const Dashboard = () => {
     ],
     [dashboardData, isLoading]
   );
-
-  const SparklineAreaData = [
-    { x: 1, y: 2 },
-    { x: 2, y: 6 },
-    { x: 3, y: 8 },
-    { x: 4, y: 5 },
-    { x: 5, y: 10 },
-  ];
 
   return (
     <div className="mt-20 px-4 sm:px-6 lg:px-8 pb-8">
@@ -223,10 +226,15 @@ const Dashboard = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Task Status Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
             <div
-              className="p-4 text-white flex items-center justify-between"
-              style={{ backgroundColor: currentColor }}
+              className="p-5 text-white flex items-center justify-between bg-gradient-to-r"
+              style={{
+                backgroundImage:
+                  currentMode === "Dark"
+                    ? `linear-gradient(to right, ${currentColor}, ${currentColor}dd)`
+                    : `linear-gradient(to right, ${currentColor}, ${currentColor}dd)`,
+              }}
             >
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <FaChartPie className="text-xl" />
@@ -242,42 +250,106 @@ const Dashboard = () => {
                 />
               </div>
               <div className="space-y-3">
-                {dashboardData.pieChartData.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          backgroundColor: ["#F59E0B", "#3B82F6", "#10B981"][
-                            index
-                          ],
-                        }}
-                      />
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        {item.status}
-                      </span>
+                {dashboardData.pieChartData.map((item, index) => {
+                  const colors = [
+                    {
+                      bg: "#F59E0B",
+                      bgHover: "#F59E0B",
+                      lightBg: "rgba(245, 158, 11, 0.1)",
+                      darkBg: "rgba(245, 158, 11, 0.15)",
+                    },
+                    {
+                      bg: "#3B82F6",
+                      bgHover: "#3B82F6",
+                      lightBg: "rgba(59, 130, 246, 0.1)",
+                      darkBg: "rgba(59, 130, 246, 0.15)",
+                    },
+                    {
+                      bg: "#10B981",
+                      bgHover: "#10B981",
+                      lightBg: "rgba(16, 185, 129, 0.1)",
+                      darkBg: "rgba(16, 185, 129, 0.15)",
+                    },
+                  ];
+
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 transform hover:translate-x-1 ${
+                        currentMode === "Dark"
+                          ? `hover:bg-${colors[index].darkBg} bg-gray-700/30`
+                          : `hover:bg-${colors[index].lightBg} bg-gray-50`
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <span
+                            className="w-4 h-4 rounded-full block"
+                            style={{
+                              backgroundColor: colors[index].bg,
+                              boxShadow: `0 0 10px ${colors[index].bg}80`,
+                            }}
+                          />
+                          <span
+                            className="absolute -inset-1 rounded-full opacity-30 animate-pulse"
+                            style={{ backgroundColor: colors[index].bg }}
+                          />
+                        </div>
+                        <span
+                          className={`text-sm font-medium ${
+                            currentMode === "Dark"
+                              ? "text-gray-200"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {item.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`text-sm font-bold ${
+                            currentMode === "Dark"
+                              ? "text-white"
+                              : "text-gray-800"
+                          }`}
+                        >
+                          {item.count}
+                        </div>
+                        <div
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            currentMode === "Dark"
+                              ? `bg-${colors[index].darkBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                              : `bg-${colors[index].lightBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                          }`}
+                        >
+                          {Math.round(
+                            (item.count / dashboardData.taskStats?.total) *
+                              100 || 0
+                          )}
+                          %
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      <span className="font-semibold">{item.count}</span> (
-                      {Math.round(
-                        (item.count / dashboardData.taskStats?.total) * 100 || 0
-                      )}
-                      %)
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* Task Priority Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
             <div
-              className="p-4 text-white flex items-center justify-between"
-              style={{ backgroundColor: currentColor }}
+              className="p-5 text-white flex items-center justify-between bg-gradient-to-r"
+              style={{
+                backgroundImage:
+                  currentMode === "Dark"
+                    ? `linear-gradient(to right, ${currentColor}, ${currentColor}dd)`
+                    : `linear-gradient(to right, ${currentColor}, ${currentColor}dd)`,
+              }}
             >
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <FaChartBar className="text-xl" />
@@ -293,33 +365,137 @@ const Dashboard = () => {
                 />
               </div>
               <div className="space-y-3">
-                {dashboardData.barChartData.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          backgroundColor: ["#EF4444", "#F59E0B", "#10B981"][
-                            index
-                          ],
-                        }}
+                {dashboardData.barChartData.map((item, index) => {
+                  const colors = [
+                    {
+                      bg: "#EF4444",
+                      lightBg: "rgba(239, 68, 68, 0.1)",
+                      darkBg: "rgba(239, 68, 68, 0.15)",
+                    },
+                    {
+                      bg: "#F59E0B",
+                      lightBg: "rgba(245, 158, 11, 0.1)",
+                      darkBg: "rgba(245, 158, 11, 0.15)",
+                    },
+                    {
+                      bg: "#10B981",
+                      lightBg: "rgba(16, 185, 129, 0.1)",
+                      darkBg: "rgba(16, 185, 129, 0.15)",
+                    },
+                  ];
+
+                  const priorityIcons = [
+                    <svg
+                      key="high"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
                       />
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        {item.priority}
-                      </span>
+                    </svg>,
+                    <svg
+                      key="medium"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M18 12H6"
+                      />
+                    </svg>,
+                    <svg
+                      key="low"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>,
+                  ];
+
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 transform hover:translate-x-1 ${
+                        currentMode === "Dark"
+                          ? `hover:bg-${colors[index].darkBg} bg-gray-700/30`
+                          : `hover:bg-${colors[index].lightBg} bg-gray-50`
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-1.5 rounded-lg flex items-center justify-center ${
+                            currentMode === "Dark"
+                              ? `bg-${colors[index].darkBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                              : `bg-${colors[index].lightBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                          }`}
+                        >
+                          {priorityIcons[index]}
+                        </div>
+                        <span
+                          className={`text-sm font-medium ${
+                            currentMode === "Dark"
+                              ? "text-gray-200"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {item.priority}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`text-sm font-bold ${
+                            currentMode === "Dark"
+                              ? "text-white"
+                              : "text-gray-800"
+                          }`}
+                        >
+                          {item.count}
+                        </div>
+                        <div
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            currentMode === "Dark"
+                              ? `bg-${colors[index].darkBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                              : `bg-${colors[index].lightBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                          }`}
+                        >
+                          {Math.round(
+                            (item.count / dashboardData.taskStats?.total) *
+                              100 || 0
+                          )}
+                          %
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      <span className="font-semibold">{item.count}</span> (
-                      {Math.round(
-                        (item.count / dashboardData.taskStats?.total) * 100 || 0
-                      )}
-                      %)
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -452,7 +628,7 @@ const Dashboard = () => {
                   <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-6">
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                           <FaChartLine
                             className="text-xl"
                             style={{ color: currentColor }}
@@ -478,7 +654,7 @@ const Dashboard = () => {
                     <div className="mt-4 grid grid-cols-2 gap-4">
                       <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-gray-600 dark:text-gray-300">
                             ISO 9001 Current
                           </span>
                           <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
@@ -494,7 +670,7 @@ const Dashboard = () => {
                       </div>
                       <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-gray-600 dark:text-gray-300">
                             ISO 21001 Target
                           </span>
                           <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
@@ -517,64 +693,326 @@ const Dashboard = () => {
         </div>
         {/* Additional Stats Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Weekly Stats */}
+          {/* Weekly Events */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <FaChartLine
+                <FaCalendarAlt
                   className="text-xl"
                   style={{ color: currentColor }}
                 />
-                Weekly Stats
+                Weekly Events
               </h3>
-              <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                <IoIosMore className="text-xl" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              {weeklyStats.map((item) => (
-                <div
-                  key={item.title}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              <div className="flex items-center gap-2">
+                <button
+                  className={`p-1.5 rounded-md text-xs font-medium ${
+                    currentMode === "Dark"
+                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  } transition-colors`}
+                  onClick={() => setWeekOffset((prev) => prev - 1)}
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="p-2 rounded-lg text-white"
-                      style={{ background: item.iconBg }}
-                    >
-                      {item.icon}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {item.title}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {item.desc}
-                      </p>
-                    </div>
-                  </div>
-                  <p
-                    className={`text-sm font-medium ${
-                      item.pcColor === "green-600"
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-red-600 dark:text-red-400"
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+                <span
+                  className={`text-sm ${
+                    currentMode === "Dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  {weekRange.displayRange}
+                </span>
+                <button
+                  className={`p-1.5 rounded-md text-xs font-medium ${
+                    currentMode === "Dark"
+                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  } transition-colors`}
+                  onClick={() => setWeekOffset((prev) => prev + 1)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Mini Calendar Week View */}
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {weekDays.map((day) => (
+                <div key={day.name} className="text-center">
+                  <div
+                    className={`text-xs font-medium mb-1 ${
+                      currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
                     }`}
                   >
-                    {item.amount}
-                  </p>
+                    {day.name}
+                  </div>
+                  <div
+                    className={`rounded-full w-8 h-8 mx-auto flex items-center justify-center text-sm transition-colors
+                      ${
+                        day.isToday
+                          ? `bg-${currentColor.replace("#", "")} text-white`
+                          : currentMode === "Dark"
+                          ? "text-gray-300 hover:bg-gray-700"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }
+                    `}
+                  >
+                    {day.date.getDate()}
+                  </div>
                 </div>
               ))}
             </div>
-            <div className="mt-6">
-              <SparkLine
-                currentColor={currentColor}
-                id="area-sparkLine"
-                height="160px"
-                type="Area"
-                data={SparklineAreaData}
-                width="320"
-                color="rgb(242, 252, 253)"
-              />
+
+            {/* Event Categories */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              <div
+                className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
+                  currentMode === "Dark"
+                    ? "bg-blue-900/30 text-blue-400"
+                    : "bg-blue-100 text-blue-600"
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                <span>Upcoming ({categorizedEvents.upcoming.length})</span>
+              </div>
+              <div
+                className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
+                  currentMode === "Dark"
+                    ? "bg-green-900/30 text-green-400"
+                    : "bg-green-100 text-green-600"
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                <span>Completed ({categorizedEvents.completed.length})</span>
+              </div>
+              <div
+                className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
+                  currentMode === "Dark"
+                    ? "bg-yellow-900/30 text-yellow-400"
+                    : "bg-yellow-100 text-yellow-600"
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                <span>In Progress ({categorizedEvents.inProgress.length})</span>
+              </div>
+            </div>
+
+            {/* Events List */}
+            <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
+              {eventsLoading ? (
+                <div className="flex items-center justify-center h-40">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              ) : eventsError ? (
+                <div
+                  className={`text-center p-4 rounded-lg ${
+                    currentMode === "Dark"
+                      ? "bg-red-900/20 text-red-400"
+                      : "bg-red-100 text-red-600"
+                  }`}
+                >
+                  <p className="font-medium">Error loading events</p>
+                  <p className="text-sm mt-1">Please try again later</p>
+                </div>
+              ) : weeklyEvents.length === 0 ? (
+                <div
+                  className={`text-center p-4 rounded-lg ${
+                    currentMode === "Dark" ? "bg-gray-700/50" : "bg-gray-50"
+                  }`}
+                >
+                  <p
+                    className={`font-medium ${
+                      currentMode === "Dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    No events scheduled this week
+                  </p>
+                  <p
+                    className={`text-sm mt-1 ${
+                      currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    Add events in the scheduler to see them here
+                  </p>
+                </div>
+              ) : (
+                weeklyEvents.map((event) => {
+                  // Determine event status
+                  const now = new Date();
+                  // const isUpcoming = new Date(event.start) > now;
+                  const isInProgress =
+                    new Date(event.start) <= now && new Date(event.end) >= now;
+                  const isCompleted = new Date(event.end) < now;
+
+                  // Determine border color based on status
+                  let borderColor = "border-blue-500"; // default: upcoming
+                  if (isInProgress) borderColor = "border-yellow-500";
+                  if (isCompleted) borderColor = "border-green-500";
+
+                  // Determine status label
+                  let statusLabel = "Upcoming";
+                  let statusClass =
+                    currentMode === "Dark"
+                      ? "bg-blue-900/30 text-blue-400"
+                      : "bg-blue-100 text-blue-600";
+
+                  if (isInProgress) {
+                    statusLabel = "In Progress";
+                    statusClass =
+                      currentMode === "Dark"
+                        ? "bg-yellow-900/30 text-yellow-400"
+                        : "bg-yellow-100 text-yellow-600";
+                  }
+                  if (isCompleted) {
+                    statusLabel = "Completed";
+                    statusClass =
+                      currentMode === "Dark"
+                        ? "bg-green-900/30 text-green-400"
+                        : "bg-green-100 text-green-600";
+                  }
+
+                  // Determine priority class
+                  let priorityLabel = "Medium Priority";
+                  let priorityClass =
+                    currentMode === "Dark"
+                      ? "bg-yellow-900/30 text-yellow-400"
+                      : "bg-yellow-100 text-yellow-600";
+
+                  if (event.priority === "high") {
+                    priorityLabel = "High Priority";
+                    priorityClass =
+                      currentMode === "Dark"
+                        ? "bg-red-900/30 text-red-400"
+                        : "bg-red-100 text-red-600";
+                  } else if (event.priority === "low") {
+                    priorityLabel = "Low Priority";
+                    priorityClass =
+                      currentMode === "Dark"
+                        ? "bg-green-900/30 text-green-400"
+                        : "bg-green-100 text-green-600";
+                  }
+
+                  return (
+                    <div
+                      key={event._id}
+                      className={`p-3 rounded-lg border-l-4 ${borderColor} ${
+                        currentMode === "Dark" ? "bg-gray-700/50" : "bg-gray-50"
+                      } hover:shadow-md transition-all`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4
+                            className={`font-medium ${
+                              currentMode === "Dark"
+                                ? "text-gray-200"
+                                : "text-gray-800"
+                            }`}
+                          >
+                            {event.title}
+                          </h4>
+                          <p
+                            className={`text-xs ${
+                              currentMode === "Dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {formatEventTime(event)}
+                          </p>
+                        </div>
+                        <div
+                          className={`text-xs px-2 py-1 rounded-full ${statusClass}`}
+                        >
+                          {statusLabel}
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        {event.priority && (
+                          <div
+                            className={`text-xs px-2 py-0.5 rounded-full ${priorityClass}`}
+                          >
+                            {priorityLabel}
+                          </div>
+                        )}
+                        {event.location && (
+                          <div
+                            className={`text-xs ${
+                              currentMode === "Dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            <span className="inline-block w-1 h-1 rounded-full bg-gray-400 mr-1"></span>
+                            {event.location}
+                          </div>
+                        )}
+                      </div>
+                      {event.description && (
+                        <div
+                          className={`mt-2 text-xs ${
+                            currentMode === "Dark"
+                              ? "text-gray-400"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {event.description.length > 100
+                            ? `${event.description.substring(0, 100)}...`
+                            : event.description}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* View All Button */}
+            <div className="mt-4 text-center">
+              <a
+                href="/calendar"
+                className={`inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                  ${
+                    currentMode === "Dark"
+                      ? "text-white bg-blue-600 hover:bg-blue-700"
+                      : "text-white bg-blue-500 hover:bg-blue-600"
+                  }`}
+                style={{ backgroundColor: currentColor }}
+              >
+                <span>View Full Calendar</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 ml-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </a>
             </div>
           </div>
 

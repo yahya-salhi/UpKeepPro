@@ -36,7 +36,6 @@ const TaskCard = React.memo(function TaskCard({
   description,
   priority,
   status,
-  progress,
   createdAt,
   dueDate,
   assignedTo,
@@ -116,14 +115,23 @@ const TaskCard = React.memo(function TaskCard({
 
       <div className="px-4 py-2">
         <div className="flex justify-between items-center mb-1">
+          {" "}
           <span className="text-xs text-gray-600 font-medium">
             Task Progress
           </span>
           <span className="text-xs text-gray-600">
             {completedTodoCount} / {checklistLength}
+            {` (${Math.round(
+              (completedTodoCount / checklistLength) * 100 || 0
+            )}%)`}
           </span>
         </div>
-        <Progress progress={progress} status={statusKey} />
+        <Progress
+          progress={Math.round(
+            (completedTodoCount / checklistLength) * 100 || 0
+          )}
+          status={status}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-2 px-4 py-2 border-t border-gray-100">

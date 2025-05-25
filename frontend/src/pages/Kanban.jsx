@@ -2,7 +2,13 @@ import PieChart from "./kanban/PieChart";
 import BarChart from "./kanban/BarChart";
 // import DashbordKanban from "../components/kanban/DashbordKanban";
 import TaskListTable from "@/components/kanban/TaskListTable";
-import { LucideArrowRight, LucideRefreshCw, LucideBarChart2, LucidePieChart, LucideListTodo } from "lucide-react";
+import {
+  LucideArrowRight,
+  LucideRefreshCw,
+  LucideBarChart2,
+  LucidePieChart,
+  LucideListTodo,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import "../App.css";
@@ -81,7 +87,7 @@ function Kanban() {
   const { data, isLoading, isError, error, refetch } = useDashboardData();
 
   const onSeeMore = () => {
-    navigate("admin/tasks");
+    navigate("manage");
   };
 
   if (isLoading) {
@@ -134,7 +140,9 @@ function Kanban() {
       <div className="p-6 space-y-6">
         {/* Dashboard Header */}
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard Overview</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Dashboard Overview
+          </h2>
           <button
             onClick={() => refetch()}
             className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition shadow-sm"
@@ -149,16 +157,16 @@ function Kanban() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard 
-            title="Total Tasks" 
-            value={data.stats.total} 
-            color="blue" 
+          <StatCard
+            title="Total Tasks"
+            value={data.stats.total}
+            color="blue"
             icon={<LucideListTodo className="h-5 w-5 text-blue-600" />}
           />
-          <StatCard 
-            title="Pending" 
-            value={data.stats.pending} 
-            color="yellow" 
+          <StatCard
+            title="Pending"
+            value={data.stats.pending}
+            color="yellow"
             icon={<LucideListTodo className="h-5 w-5 text-yellow-600" />}
           />
           <StatCard
@@ -239,7 +247,7 @@ function Kanban() {
             </div>
           </div>
         </div>
-        
+
         {/* Recent Tasks */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
           <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">

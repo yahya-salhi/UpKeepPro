@@ -1,10 +1,52 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { HiMiniPlus } from "react-icons/hi2";
 import { LuTrash2 } from "react-icons/lu";
 import { useController } from "react-hook-form";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
-function TodoChecklistInput({ control, name, disabled }) {
+function TodoChecklistInput({ control, name, disabled, taskId }) {
+  const queryClient = useQueryClient();
+
+  const { mutate: updateChecklist } = useMutation({
+    mutationFn: async (checklist) => {
+      const response = await fetch(`/api/tasks/${taskId}/todo`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ todocheklist: checklist }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update checklist");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Update form values with the new status
+      if (data.task && data.task.status) {
+        control._formValues.status = data.task.status;
+        // Show status update toast
+        const statusMap = {
+          pending: "Task set to Pending",
+          inprogress: "Task in Progress",
+          done: "Task Completed",
+        };
+        toast.success(statusMap[data.task.status] || "Status updated");
+      }
+      // Refresh task data
+      queryClient.invalidateQueries(["task", taskId]);
+      queryClient.invalidateQueries(["tasks"]);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update checklist");
+    },
+  });
+
   const { field } = useController({
     control,
     name,
@@ -15,25 +57,53 @@ function TodoChecklistInput({ control, name, disabled }) {
 
   const addItem = () => {
     if (newItem.trim()) {
-      field.onChange([
+      const updated = [
         ...field.value,
-        { text: newItem.trim(), completed: false },
-      ]);
+        { title: newItem.trim(), completed: false },
+      ];
+      field.onChange(updated);
       setNewItem("");
+      if (taskId) {
+        updateChecklist(updated);
+      }
     }
   };
 
   const removeItem = (index) => {
-    field.onChange(field.value.filter((_, i) => i !== index));
+    const updated = field.value.filter((_, i) => i !== index);
+    field.onChange(updated);
+    if (taskId) {
+      updateChecklist(updated);
+    }
   };
-
   const toggleComplete = (index) => {
     const updated = [...field.value];
     updated[index] = {
       ...updated[index],
       completed: !updated[index].completed,
     };
+
+    // Calculate new status immediately for better UX
+    const completedCount = updated.filter((item) => item.completed).length;
+    const totalItems = updated.length;
+    let newStatus = "pending";
+
+    if (completedCount === 0) {
+      newStatus = "pending";
+    } else if (completedCount === totalItems) {
+      newStatus = "done";
+    } else {
+      newStatus = "inprogress";
+    }
+
+    // Update form immediately
     field.onChange(updated);
+    control._formValues.status = newStatus;
+
+    // Send update to server
+    if (taskId) {
+      updateChecklist(updated);
+    }
   };
 
   return (
@@ -66,7 +136,7 @@ function TodoChecklistInput({ control, name, disabled }) {
                     : "text-gray-800 dark:text-gray-200"
                 }`}
               >
-                {item.text}
+                {item.title}
               </span>
             </div>
             <button

@@ -7,30 +7,32 @@ import mongoose from "mongoose";
 export const getTasks = async (req, res) => {
   try {
     const { status } = req.query;
-    console.log("API Request - getTasks:", { 
+    console.log("API Request - getTasks:", {
       statusFromQuery: status,
       user: {
         id: req.user._id,
-        role: req.user.role
-      }
+        role: req.user.role,
+      },
     });
 
     // Get all unique status values from the database to debug
-    const allStatusValues = await Task.distinct('status');
+    const allStatusValues = await Task.distinct("status");
     console.log("All status values in database:", allStatusValues);
 
     let filter = {};
-    if (status && status !== 'all') {
+    if (status && status !== "all") {
       // Map frontend status values to actual database values if needed
       let dbStatus = status;
-      
+
       // Normalize status values to match database
-      if (status === 'pending') dbStatus = 'pending';
-      else if (status === 'inprogress') dbStatus = 'inprogress';
-      else if (status === 'done') dbStatus = 'done';
-      
+      if (status === "pending") dbStatus = "pending";
+      else if (status === "inprogress") dbStatus = "inprogress";
+      else if (status === "done") dbStatus = "done";
+
       filter.status = dbStatus;
-      console.log(`Filtering tasks by status: "${status}" (mapped to "${dbStatus}" in database)`);
+      console.log(
+        `Filtering tasks by status: "${status}" (mapped to "${dbStatus}" in database)`
+      );
     }
 
     // Log filter to debug
@@ -52,24 +54,52 @@ export const getTasks = async (req, res) => {
     }
 
     console.log(`Found ${tasks.length} tasks matching filter`);
-    
+
     // Show sample of tasks found (first 2)
     if (tasks.length > 0) {
-      console.log("Sample tasks:", tasks.slice(0, 2).map(t => ({
-        id: t._id,
-        title: t.title,
-        status: t.status,
-        createdAt: t.createdAt
-      })));
-    }
-
-    //add completed todocheklist count to each task
+      console.log(
+        "Sample tasks:",
+        tasks.slice(0, 2).map((t) => ({
+          id: t._id,
+          title: t.title,
+          status: t.status,
+          createdAt: t.createdAt,
+        }))
+      );
+    } //add completed todocheklist count and progress to each task
     tasks = await Promise.all(
       tasks.map(async (task) => {
+        const totalCount = task.todocheklist.length;
         const completedCount = task.todocheklist.filter(
           (item) => item.completed
         ).length;
-        return { ...task._doc, completedTodoCount: completedCount };
+        const progress =
+          totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+        // Update task status based on progress
+        let newStatus = task.status;
+        if (totalCount === 0 || completedCount === 0) {
+          newStatus = "pending";
+        } else if (completedCount === totalCount) {
+          newStatus = "done";
+        } else {
+          newStatus = "inprogress";
+        }
+
+        // Only update the task if status has changed
+        if (newStatus !== task.status) {
+          await Task.findByIdAndUpdate(task._id, {
+            status: newStatus,
+            progress: progress,
+          });
+        }
+
+        return {
+          ...task._doc,
+          completedTodoCount: completedCount,
+          progress,
+          status: newStatus,
+        };
       })
     );
 
@@ -81,20 +111,20 @@ export const getTasks = async (req, res) => {
     );
     const pendingTask = await Task.countDocuments({
       status: "pending",
-      ...(req.user.role === "REPI" || req.user.role === "CC" 
-        ? {} 
+      ...(req.user.role === "REPI" || req.user.role === "CC"
+        ? {}
         : { assignedTo: req.user._id }),
     });
     const inProgressTask = await Task.countDocuments({
-      status: "inprogress", 
-      ...(req.user.role === "REPI" || req.user.role === "CC" 
-        ? {} 
+      status: "inprogress",
+      ...(req.user.role === "REPI" || req.user.role === "CC"
+        ? {}
         : { assignedTo: req.user._id }),
     });
     const completedTask = await Task.countDocuments({
       status: "done",
-      ...(req.user.role === "REPI" || req.user.role === "CC" 
-        ? {} 
+      ...(req.user.role === "REPI" || req.user.role === "CC"
+        ? {}
         : { assignedTo: req.user._id }),
     });
 
@@ -103,21 +133,24 @@ export const getTasks = async (req, res) => {
       all: allTasks,
       pending: pendingTask,
       inProgress: inProgressTask,
-      completed: completedTask
+      completed: completedTask,
     });
 
     const responseData = {
       tasks,
       statusSummary: {
         all: allTasks,
-        pendingTask,         
-        inProgressTask,      
-        completedTask,       
+        pendingTask,
+        inProgressTask,
+        completedTask,
       },
     };
 
-    console.log("Sending response with status summary:", responseData.statusSummary);
-    
+    console.log(
+      "Sending response with status summary:",
+      responseData.statusSummary
+    );
+
     res.json(responseData);
   } catch (error) {
     console.error("Error in getTasks controller:", error);
@@ -168,13 +201,21 @@ export const createTask = async (req, res) => {
     const assignedToIds = [];
     for (const id of assignedTo) {
       try {
-        assignedToIds.push(new mongoose.Types.ObjectId(id)); 
+        assignedToIds.push(new mongoose.Types.ObjectId(id));
       } catch (err) {
         return res.status(400).json({
           message: `Invalid user ID format: ${id}`,
           error: err.message,
         });
       }
+    } // Validate and process attachments
+    let processedAttachments = [];
+    if (Array.isArray(attchments)) {
+      processedAttachments = attchments.map((attachment) => ({
+        ...attachment,
+        uploadedBy: req.user._id,
+        uploadedAt: new Date(),
+      }));
     }
 
     const task = await Task.create({
@@ -185,7 +226,7 @@ export const createTask = async (req, res) => {
       assignedTo: assignedToIds,
       createdBy: req.user._id,
       todocheklist: todocheklist || [],
-      attchments: attchments || [],
+      attchments: processedAttachments,
     });
 
     res.status(201).json({
@@ -223,8 +264,39 @@ export const updateTask = async (req, res) => {
     task.description = req.body.description || task.description;
     task.priority = req.body.priority || task.priority;
     task.dueDate = req.body.dueDate || task.dueDate;
-    task.todocheklist = req.body.todocheklist || task.todocheklist;
-    task.attchments = req.body.attchments || task.attchments;
+
+    // Update checklist and recalculate progress
+    if (req.body.todocheklist) {
+      task.todocheklist = req.body.todocheklist;
+      const completedCount = task.todocheklist.filter(
+        (item) => item.completed
+      ).length;
+      const totalItems = task.todocheklist.length;
+      const progress =
+        totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+      task.progress = progress;
+
+      // Update status based on progress
+      if (progress === 0) {
+        task.status = "pending";
+      } else if (progress === 100) {
+        task.status = "done";
+      } else {
+        task.status = "inprogress";
+      }
+    }
+
+    // Handle attachment updates
+    if (req.body.attchments) {
+      // Keep existing attachments and add new ones with proper metadata
+      const newAttachments = req.body.attchments.map((attachment) => ({
+        ...attachment,
+        uploadedBy: req.user._id,
+        uploadedAt: new Date(),
+      }));
+      task.attchments = newAttachments;
+    }
+
     if (req.body.assignedTo) {
       task.assignedTo = req.body.assignedTo;
     }
@@ -276,7 +348,7 @@ export const updateTaskStatus = async (req, res) => {
     if (task.status === "done") {
       task.todocheklist.forEach((item) => {
         item.completed = true;
-        task.progrss = 100;
+        task.progress = 100;
       });
     }
     await task.save();
@@ -305,23 +377,26 @@ export const updateTaskChecklist = async (req, res) => {
         .status(403)
         .json({ message: "You are not authorized to update this task" });
     }
-    task.todocheklist = todocheklist; 
-    //auto update progress based on checklist completion
-    const completedCount = task.todocheklist.filter(
-      (item) => item.completed
-    ).length;
-    const totalItems = task.todocheklist.length;
-    task.progrss =
-      totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+    task.todocheklist = todocheklist;
 
-    //auto-mark task as completed if all items are checked
-    if (task.progrss === 100) {
-      task.status = "done";
-    } else if (task.progrss > 0) {
-      task.status = "inprogress";
-    } else {
+    // Calculate completion stats
+    const completedCount = todocheklist.filter((item) => item.completed).length;
+    const totalItems = todocheklist.length;
+
+    // Update progress based on completed checklist items
+    const progress =
+      totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+    task.progress = progress;
+
+    // Update status based on progress percentage
+    if (progress === 0) {
       task.status = "pending";
+    } else if (progress === 100) {
+      task.status = "done";
+    } else {
+      task.status = "inprogress";
     }
+
     await task.save();
     const updatedTask = await Task.findById(req.params.id).populate(
       "assignedTo",
@@ -361,12 +436,12 @@ export const getDashboardData = async (req, res) => {
     ]);
 
     const taskDistribution = taskstatuses.reduce((acc, status) => {
-      const formattedKey = status.replace(/-/g, " "); 
+      const formattedKey = status.replace(/-/g, " ");
       acc[formattedKey] =
         taskDistributionRow.find((item) => item._id === status)?.count || 0;
       return acc;
     }, {});
-    taskDistribution["All"] = totalTasks; 
+    taskDistribution["All"] = totalTasks;
     //ensure all prioirity are included
     const taskPriorities = ["low", "medium", "high"];
     const taskPriorityLevelsRow = await Task.aggregate([
@@ -442,13 +517,13 @@ export const getUserDashboardData = async (req, res) => {
       },
     ]);
     const taskDistribution = taskstatuses.reduce((acc, status) => {
-      const formattedKey = status.replace(/-/g, " "); 
+      const formattedKey = status.replace(/-/g, " ");
       acc[formattedKey] =
         taskDistributionRow.find((item) => item._id === status)?.count || 0;
       return acc;
     }, {});
 
-    taskDistribution["All"] = totalTasks; 
+    taskDistribution["All"] = totalTasks;
     //task distribution by priority
     const taskPriorities = ["low", "medium", "high"];
     const taskPriorityLevelsRow = await Task.aggregate([

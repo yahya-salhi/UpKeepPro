@@ -17,7 +17,6 @@ const UserProfile = () => {
   const { currentColor, setActivePanel } = useStateContext();
 
   const navigate = useNavigate();
-
   const queryClient = useQueryClient();
 
   const { mutate, error } = useMutation({
@@ -49,125 +48,149 @@ const UserProfile = () => {
   });
 
   const authUser = queryClient.getQueryData(["authUser"]);
+  const username = authUser?.username;
 
-  //getUserProfile
-  const usernmae = authUser?.username;
   const userProfileData = [
     {
       icon: <BsCurrencyDollar />,
       title: "My Profile",
       desc: "Account Settings",
-      iconColor: "#03C9D7",
-      iconBg: "#E5FAFB",
-      link: `/profile/${usernmae}`,
+      iconColor: currentColor,
+      iconBg: `${currentColor}15`,
+      link: `/profile/${username}`,
     },
     {
       icon: <BsShield />,
       title: "My Inbox",
       desc: "Messages & Emails",
-      iconColor: "rgb(0, 194, 146)",
-      iconBg: "rgb(235, 250, 242)",
+      iconColor: currentColor,
+      iconBg: `${currentColor}15`,
       link: "/chat",
     },
     {
       icon: <FiCreditCard />,
       title: "My Tasks",
       desc: "To-do and Daily Tasks",
-      iconColor: "rgb(255, 244, 229)",
-      iconBg: "rgb(254, 201, 15)",
-      link: "/tasks",
+      iconColor: currentColor,
+      iconBg: `${currentColor}15`,
+      link: "/kanban",
     },
     {
       icon: <CiLogout />,
       title: "Logout",
-      desc: "To-do and Daily Tasks",
-      iconColor: "rgb(255, 244, 229)",
-      iconBg: "red",
+      desc: "Sign out of your account",
+      iconColor: "#FF4747",
+      iconBg: "#FFE7E7",
       action: () => mutate(),
     },
   ];
 
   return (
-    <div className="nav-item absolute right-1 top-16 bg-white dark:bg-[#42464D] p-8 rounded-lg w-96">
-      <div className="flex justify-between items-center">
-        <p className="font-semibold text-lg dark:text-gray-200">User Profile</p>
-        <Button
-          icon={<MdOutlineCancel />}
-          color={currentColor}
-          onClick={() => window.history.back()}
-          bgHoverColor="light-gray"
-          size="2xl"
-          borderRadius="50%"
-        />
-      </div>
-      <div className="flex gap-5 items-center mt-6 border-color border-b-1 pb-6">
-        <img
-          className="rounded-full h-24 w-24"
-          src={authUser?.profileImg || avatar}
-          alt="user-profile"
-        />
-        <div>
-          <p className="font-semibold text-xl dark:text-gray-200 first:capitalize">
-            <span>
-              {authUser?.grade}
-              {""}
-            </span>{" "}
-            {authUser?.username}
-          </p>
-          <p className="text-gray-500 text-sm dark:text-gray-400 text-center ">
-            {authUser?.role}
-          </p>
-          <p className="text-gray-500 text-sm font-semibold dark:text-gray-400">
-            {authUser?.email}
-          </p>
-          <UserStatus isOnline={authUser?.isOnline} />
+    <div className="nav-item fixed right-1 top-16 bg-white dark:bg-gray-800 rounded-xl shadow-lg w-80 sm:w-96 transform transition-all duration-300 ease-in-out animate-fade-in">
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Profile
+          </h3>
+          <Button
+            icon={<MdOutlineCancel />}
+            color={currentColor}
+            onClick={() => window.history.back()}
+            bgHoverColor="light-gray"
+            size="sm"
+            borderRadius="full"
+            className="!p-2"
+          />
         </div>
-      </div>
 
-      <div>
-        {userProfileData.map((item, index) => {
-          const handleClick = (e) => {
-            if (item.link) {
-              e.preventDefault(); // Prevent immediate navigation
-              setActivePanel(null); // Close the panel
-              // window.location.href = item.link;
-              navigate(item.link); // Navigate manually after state update
-            } else if (item.action) {
-              item.action();
-              setActivePanel(null);
-            }
-          };
-          const content = (
-            <div
-              key={index}
-              className="flex gap-5 border-b-1 border-color p-4 hover:bg-light-gray cursor-pointer dark:hover:bg-[#42464D]"
-              onClick={handleClick} // Add onClick if action exists
-            >
-              <button
-                type="button"
-                style={{ color: item.iconColor, backgroundColor: item.iconBg }}
-                className="text-xl rounded-lg p-3 hover:bg-light-gray"
-              >
-                {item.icon}
-              </button>
-
-              <div>
-                <p className="font-semibold dark:text-gray-200">{item.title}</p>
-                <p className="text-gray-500 text-sm dark:text-gray-400">
-                  {item.desc}
-                </p>
-              </div>
+        {/* Profile Info */}
+        <div className="flex gap-4 items-start border-b border-gray-200 dark:border-gray-700 pb-6">
+          <img
+            className="h-16 w-16 rounded-full object-cover border-2 border-gray-100 dark:border-gray-700 shadow-sm"
+            src={authUser?.profileImg || avatar}
+            alt={`${authUser?.username}'s profile`}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                {authUser?.username}
+              </h4>
+              <UserStatus isOnline={authUser?.isOnline} />
             </div>
-          );
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-0.5">
+              {authUser?.grade}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+              {authUser?.email}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              {authUser?.role}
+            </p>
+          </div>
+        </div>
 
-          return item.link ? (
-            <Link to={item.link} key={index} onClick={handleClick}>
-              {content}
-            </Link>
-          ) : (
-            content
-          );
-        })}
+        {/* Navigation Menu */}
+        <nav className="mt-6 space-y-2">
+          {userProfileData.map((item, index) => {
+            const handleClick = (e) => {
+              if (item.link) {
+                e.preventDefault();
+                setActivePanel(null);
+                navigate(item.link);
+              } else if (item.action) {
+                item.action();
+                setActivePanel(null);
+              }
+            };
+
+            const MenuItem = ({ children }) => (
+              <div
+                className="flex items-center gap-4 p-3 rounded-lg transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+                onClick={handleClick}
+              >
+                {children}
+              </div>
+            );
+
+            const content = (
+              <MenuItem key={index}>
+                <div
+                  className="flex items-center justify-center h-10 w-10 rounded-lg transition-transform duration-200 group-hover:scale-110"
+                  style={{
+                    color: item.iconColor,
+                    backgroundColor: item.iconBg,
+                  }}
+                >
+                  {item.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {item.title}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                    {item.desc}
+                  </p>
+                </div>
+              </MenuItem>
+            );
+
+            return item.link ? (
+              <Link
+                to={item.link}
+                key={index}
+                className="block group"
+                onClick={handleClick}
+              >
+                {content}
+              </Link>
+            ) : (
+              <div key={index} className="group">
+                {content}
+              </div>
+            );
+          })}
+        </nav>
       </div>
     </div>
   );

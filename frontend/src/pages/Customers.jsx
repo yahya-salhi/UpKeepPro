@@ -280,7 +280,7 @@ export default function Customers() {
                 <SelectValue placeholder="Select direction" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="DEMRE">DEMRE</SelectItem>
+                <SelectItem value="DGMRE">DGMRE</SelectItem>
                 <SelectItem value="DGTI">DGTI</SelectItem>
                 <SelectItem value="DGGM">DGGM</SelectItem>
                 <SelectItem value="DHS">DHS</SelectItem>
