@@ -1,5 +1,4 @@
 import { BsCurrencyDollar } from "react-icons/bs";
-
 import { IoIosMore } from "react-icons/io";
 import { DropDownListComponent } from "@syncfusion/ej2-react-dropdowns";
 import {
@@ -18,12 +17,13 @@ import {
 import { BsBoxSeam } from "react-icons/bs";
 import { FiBarChart } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
-import { useMemo } from "react";
-import { Button, LineChart, SparkLine } from "../components";
+import { useMemo, useState } from "react";
+import { Button, LineChart } from "../components";
 import { useDashboardData } from "../hooks/useDashboardData";
+import { useWeeklyEvents } from "../hooks/useWeeklyEvents";
 import PieChart from "../pages/kanban/PieChart";
 import BarChart from "../pages/kanban/BarChart";
-import { medicalproBranding, weeklyStats, dropdownData } from "../data/dummy";
+import { medicalproBranding, dropdownData } from "../data/dummy";
 import { useStateContext } from "../contexts/ContextProvider";
 import product9 from "../data/product9.jpg";
 import { useQuery } from "@tanstack/react-query";
@@ -46,6 +46,17 @@ const DropDown = ({ currentMode }) => (
 const Dashboard = () => {
   const { currentColor, currentMode } = useStateContext();
   const { data: dashboardData } = useDashboardData();
+  const [weekOffset, setWeekOffset] = useState(0);
+  const {
+    weeklyEvents,
+    weekDays,
+    categorizedEvents,
+    weekRange,
+    isLoading: eventsLoading,
+    isError: eventsError,
+    formatEventTime,
+  } = useWeeklyEvents(weekOffset);
+
   const fetchUserCount = async () => {
     const res = await fetch("/api/users/count");
     if (!res.ok) throw new Error("Failed to fetch user count");
@@ -101,14 +112,6 @@ const Dashboard = () => {
     ],
     [dashboardData, isLoading]
   );
-
-  const SparklineAreaData = [
-    { x: 1, y: 2 },
-    { x: 2, y: 6 },
-    { x: 3, y: 8 },
-    { x: 4, y: 5 },
-    { x: 5, y: 10 },
-  ];
 
   return (
     <div className="mt-20 px-4 sm:px-6 lg:px-8 pb-8">
@@ -452,7 +455,7 @@ const Dashboard = () => {
                   <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-6">
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                           <FaChartLine
                             className="text-xl"
                             style={{ color: currentColor }}
@@ -517,7 +520,7 @@ const Dashboard = () => {
         </div>
         {/* Additional Stats Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Weekly Stats */}
+          {/* Weekly Events */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -528,37 +531,53 @@ const Dashboard = () => {
                 Weekly Events
               </h3>
               <div className="flex items-center gap-2">
-                <button 
+                <button
                   className={`p-1.5 rounded-md text-xs font-medium ${
                     currentMode === "Dark"
                       ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   } transition-colors`}
-                  onClick={() => {
-                    // Navigate to previous week
-                  }}
+                  onClick={() => setWeekOffset((prev) => prev - 1)}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </button>
-                <span className={`text-sm ${currentMode === "Dark" ? "text-gray-300" : "text-gray-700"}`}>
-                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {
-                    new Date(new Date().setDate(new Date().getDate() + 6)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                  }
+                <span
+                  className={`text-sm ${
+                    currentMode === "Dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  {weekRange.displayRange}
                 </span>
-                <button 
+                <button
                   className={`p-1.5 rounded-md text-xs font-medium ${
                     currentMode === "Dark"
                       ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   } transition-colors`}
-                  onClick={() => {
-                    // Navigate to next week
-                  }}
+                  onClick={() => setWeekOffset((prev) => prev + 1)}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </button>
               </div>
@@ -566,211 +585,258 @@ const Dashboard = () => {
 
             {/* Mini Calendar Week View */}
             <div className="grid grid-cols-7 gap-1 mb-4">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
-                const date = new Date();
-                date.setDate(date.getDate() - date.getDay() + index);
-                const isToday = new Date().toDateString() === date.toDateString();
-                
-                return (
-                  <div key={day} className="text-center">
-                    <div className={`text-xs font-medium mb-1 ${currentMode === "Dark" ? "text-gray-400" : "text-gray-500"}`}>
-                      {day}
-                    </div>
-                    <div 
-                      className={`rounded-full w-8 h-8 mx-auto flex items-center justify-center text-sm transition-colors
-                        ${isToday 
-                          ? `bg-${currentColor.replace('#', '')} text-white` 
-                          : currentMode === "Dark"
-                            ? "text-gray-300 hover:bg-gray-700"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }
-                      `}
-                    >
-                      {date.getDate()}
-                    </div>
+              {weekDays.map((day) => (
+                <div key={day.name} className="text-center">
+                  <div
+                    className={`text-xs font-medium mb-1 ${
+                      currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    {day.name}
                   </div>
-                );
-              })}
+                  <div
+                    className={`rounded-full w-8 h-8 mx-auto flex items-center justify-center text-sm transition-colors
+                      ${
+                        day.isToday
+                          ? `bg-${currentColor.replace("#", "")} text-white`
+                          : currentMode === "Dark"
+                          ? "text-gray-300 hover:bg-gray-700"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }
+                    `}
+                  >
+                    {day.date.getDate()}
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Event Categories */}
             <div className="flex flex-wrap gap-2 mb-4">
-              <div className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
-                currentMode === "Dark" ? "bg-blue-900/30 text-blue-400" : "bg-blue-100 text-blue-600"
-              }`}>
+              <div
+                className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
+                  currentMode === "Dark"
+                    ? "bg-blue-900/30 text-blue-400"
+                    : "bg-blue-100 text-blue-600"
+                }`}
+              >
                 <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                <span>Upcoming</span>
+                <span>Upcoming ({categorizedEvents.upcoming.length})</span>
               </div>
-              <div className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
-                currentMode === "Dark" ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-600"
-              }`}>
+              <div
+                className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
+                  currentMode === "Dark"
+                    ? "bg-green-900/30 text-green-400"
+                    : "bg-green-100 text-green-600"
+                }`}
+              >
                 <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                <span>Completed</span>
+                <span>Completed ({categorizedEvents.completed.length})</span>
               </div>
-              <div className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
-                currentMode === "Dark" ? "bg-yellow-900/30 text-yellow-400" : "bg-yellow-100 text-yellow-600"
-              }`}>
+              <div
+                className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
+                  currentMode === "Dark"
+                    ? "bg-yellow-900/30 text-yellow-400"
+                    : "bg-yellow-100 text-yellow-600"
+                }`}
+              >
                 <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                <span>In Progress</span>
-              </div>
-              <div className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
-                currentMode === "Dark" ? "bg-red-900/30 text-red-400" : "bg-red-100 text-red-600"
-              }`}>
-                <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                <span>High Priority</span>
+                <span>In Progress ({categorizedEvents.inProgress.length})</span>
               </div>
             </div>
 
             {/* Events List */}
             <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
-              {/* This would be populated with actual event data from your Scheduler */}
-              {/* Example event items */}
-              <div className={`p-3 rounded-lg border-l-4 border-blue-500 ${
-                currentMode === "Dark" ? "bg-gray-700/50" : "bg-gray-50"
-              } hover:shadow-md transition-all`}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className={`font-medium ${
-                      currentMode === "Dark" ? "text-gray-200" : "text-gray-800"
-                    }`}>Team Meeting</h4>
-                    <p className={`text-xs ${
+              {eventsLoading ? (
+                <div className="flex items-center justify-center h-40">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              ) : eventsError ? (
+                <div
+                  className={`text-center p-4 rounded-lg ${
+                    currentMode === "Dark"
+                      ? "bg-red-900/20 text-red-400"
+                      : "bg-red-100 text-red-600"
+                  }`}
+                >
+                  <p className="font-medium">Error loading events</p>
+                  <p className="text-sm mt-1">Please try again later</p>
+                </div>
+              ) : weeklyEvents.length === 0 ? (
+                <div
+                  className={`text-center p-4 rounded-lg ${
+                    currentMode === "Dark" ? "bg-gray-700/50" : "bg-gray-50"
+                  }`}
+                >
+                  <p
+                    className={`font-medium ${
+                      currentMode === "Dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    No events scheduled this week
+                  </p>
+                  <p
+                    className={`text-sm mt-1 ${
                       currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
-                    }`}>Today, 10:00 AM - 11:30 AM</p>
-                  </div>
-                  <div className={`text-xs px-2 py-1 rounded-full ${
-                    currentMode === "Dark" ? "bg-blue-900/30 text-blue-400" : "bg-blue-100 text-blue-600"
-                  }`}>
-                    Upcoming
-                  </div>
+                    }`}
+                  >
+                    Add events in the scheduler to see them here
+                  </p>
                 </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <div className={`text-xs px-2 py-0.5 rounded-full ${
-                    currentMode === "Dark" ? "bg-red-900/30 text-red-400" : "bg-red-100 text-red-600"
-                  }`}>
-                    High Priority
-                  </div>
-                  <div className={`text-xs ${
-                    currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
-                  }`}>
-                    <span className="inline-block w-1 h-1 rounded-full bg-gray-400 mr-1"></span>
-                    Conference Room A
-                  </div>
-                </div>
-              </div>
+              ) : (
+                weeklyEvents.map((event) => {
+                  // Determine event status
+                  const now = new Date();
+                  // const isUpcoming = new Date(event.start) > now;
+                  const isInProgress =
+                    new Date(event.start) <= now && new Date(event.end) >= now;
+                  const isCompleted = new Date(event.end) < now;
 
-              <div className={`p-3 rounded-lg border-l-4 border-green-500 ${
-                currentMode === "Dark" ? "bg-gray-700/50" : "bg-gray-50"
-              } hover:shadow-md transition-all`}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className={`font-medium ${
-                      currentMode === "Dark" ? "text-gray-200" : "text-gray-800"
-                    }`}>Project Review</h4>
-                    <p className={`text-xs ${
-                      currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
-                    }`}>Yesterday, 2:00 PM - 3:00 PM</p>
-                  </div>
-                  <div className={`text-xs px-2 py-1 rounded-full ${
-                    currentMode === "Dark" ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-600"
-                  }`}>
-                    Completed
-                  </div>
-                </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <div className={`text-xs px-2 py-0.5 rounded-full ${
-                    currentMode === "Dark" ? "bg-yellow-900/30 text-yellow-400" : "bg-yellow-100 text-yellow-600"
-                  }`}>
-                    Medium Priority
-                  </div>
-                  <div className={`text-xs ${
-                    currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
-                  }`}>
-                    <span className="inline-block w-1 h-1 rounded-full bg-gray-400 mr-1"></span>
-                    Online Meeting
-                  </div>
-                </div>
-              </div>
+                  // Determine border color based on status
+                  let borderColor = "border-blue-500"; // default: upcoming
+                  if (isInProgress) borderColor = "border-yellow-500";
+                  if (isCompleted) borderColor = "border-green-500";
 
-              <div className={`p-3 rounded-lg border-l-4 border-yellow-500 ${
-                currentMode === "Dark" ? "bg-gray-700/50" : "bg-gray-50"
-              } hover:shadow-md transition-all`}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className={`font-medium ${
-                      currentMode === "Dark" ? "text-gray-200" : "text-gray-800"
-                    }`}>Client Presentation</h4>
-                    <p className={`text-xs ${
-                      currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
-                    }`}>Tomorrow, 9:30 AM - 11:00 AM</p>
-                  </div>
-                  <div className={`text-xs px-2 py-1 rounded-full ${
-                    currentMode === "Dark" ? "bg-yellow-900/30 text-yellow-400" : "bg-yellow-100 text-yellow-600"
-                  }`}>
-                    In Progress
-                  </div>
-                </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <div className={`text-xs px-2 py-0.5 rounded-full ${
-                    currentMode === "Dark" ? "bg-green-900/30 text-green-400" : "bg-green-100 text-green-600"
-                  }`}>
-                    Low Priority
-                  </div>
-                  <div className={`text-xs ${
-                    currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
-                  }`}>
-                    <span className="inline-block w-1 h-1 rounded-full bg-gray-400 mr-1"></span>
-                    Client Office
-                  </div>
-                </div>
-              </div>
+                  // Determine status label
+                  let statusLabel = "Upcoming";
+                  let statusClass =
+                    currentMode === "Dark"
+                      ? "bg-blue-900/30 text-blue-400"
+                      : "bg-blue-100 text-blue-600";
 
-              <div className={`p-3 rounded-lg border-l-4 border-purple-500 ${
-                currentMode === "Dark" ? "bg-gray-700/50" : "bg-gray-50"
-              } hover:shadow-md transition-all`}>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className={`font-medium ${
-                      currentMode === "Dark" ? "text-gray-200" : "text-gray-800"
-                    }`}>Training Session</h4>
-                    <p className={`text-xs ${
-                      currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
-                    }`}>Friday, 1:00 PM - 3:00 PM</p>
-                  </div>
-                  <div className={`text-xs px-2 py-1 rounded-full ${
-                    currentMode === "Dark" ? "bg-blue-900/30 text-blue-400" : "bg-blue-100 text-blue-600"
-                  }`}>
-                    Upcoming
-                  </div>
-                </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <div className={`text-xs px-2 py-0.5 rounded-full ${
-                    currentMode === "Dark" ? "bg-yellow-900/30 text-yellow-400" : "bg-yellow-100 text-yellow-600"
-                  }`}>
-                    Medium Priority
-                  </div>
-                  <div className={`text-xs ${
-                    currentMode === "Dark" ? "text-gray-400" : "text-gray-500"
-                  }`}>
-                    <span className="inline-block w-1 h-1 rounded-full bg-gray-400 mr-1"></span>
-                    Training Room B
-                  </div>
-                </div>
-              </div>
+                  if (isInProgress) {
+                    statusLabel = "In Progress";
+                    statusClass =
+                      currentMode === "Dark"
+                        ? "bg-yellow-900/30 text-yellow-400"
+                        : "bg-yellow-100 text-yellow-600";
+                  }
+                  if (isCompleted) {
+                    statusLabel = "Completed";
+                    statusClass =
+                      currentMode === "Dark"
+                        ? "bg-green-900/30 text-green-400"
+                        : "bg-green-100 text-green-600";
+                  }
+
+                  // Determine priority class
+                  let priorityLabel = "Medium Priority";
+                  let priorityClass =
+                    currentMode === "Dark"
+                      ? "bg-yellow-900/30 text-yellow-400"
+                      : "bg-yellow-100 text-yellow-600";
+
+                  if (event.priority === "high") {
+                    priorityLabel = "High Priority";
+                    priorityClass =
+                      currentMode === "Dark"
+                        ? "bg-red-900/30 text-red-400"
+                        : "bg-red-100 text-red-600";
+                  } else if (event.priority === "low") {
+                    priorityLabel = "Low Priority";
+                    priorityClass =
+                      currentMode === "Dark"
+                        ? "bg-green-900/30 text-green-400"
+                        : "bg-green-100 text-green-600";
+                  }
+
+                  return (
+                    <div
+                      key={event._id}
+                      className={`p-3 rounded-lg border-l-4 ${borderColor} ${
+                        currentMode === "Dark" ? "bg-gray-700/50" : "bg-gray-50"
+                      } hover:shadow-md transition-all`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4
+                            className={`font-medium ${
+                              currentMode === "Dark"
+                                ? "text-gray-200"
+                                : "text-gray-800"
+                            }`}
+                          >
+                            {event.title}
+                          </h4>
+                          <p
+                            className={`text-xs ${
+                              currentMode === "Dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {formatEventTime(event)}
+                          </p>
+                        </div>
+                        <div
+                          className={`text-xs px-2 py-1 rounded-full ${statusClass}`}
+                        >
+                          {statusLabel}
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        {event.priority && (
+                          <div
+                            className={`text-xs px-2 py-0.5 rounded-full ${priorityClass}`}
+                          >
+                            {priorityLabel}
+                          </div>
+                        )}
+                        {event.location && (
+                          <div
+                            className={`text-xs ${
+                              currentMode === "Dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            <span className="inline-block w-1 h-1 rounded-full bg-gray-400 mr-1"></span>
+                            {event.location}
+                          </div>
+                        )}
+                      </div>
+                      {event.description && (
+                        <div
+                          className={`mt-2 text-xs ${
+                            currentMode === "Dark"
+                              ? "text-gray-400"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {event.description.length > 100
+                            ? `${event.description.substring(0, 100)}...`
+                            : event.description}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             {/* View All Button */}
             <div className="mt-4 text-center">
-              <a 
-                href="/scheduler" 
+              <a
+                href="/calendar"
                 className={`inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                  ${currentMode === "Dark" 
-                    ? "text-white bg-blue-600 hover:bg-blue-700" 
-                    : "text-white bg-blue-500 hover:bg-blue-600"
+                  ${
+                    currentMode === "Dark"
+                      ? "text-white bg-blue-600 hover:bg-blue-700"
+                      : "text-white bg-blue-500 hover:bg-blue-600"
                   }`}
               >
                 <span>View Full Calendar</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 ml-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </a>
             </div>
