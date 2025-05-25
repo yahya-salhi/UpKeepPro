@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const stateContext = createContext();
 
@@ -19,11 +19,52 @@ export const ContextProvider = ({ children }) => {
   const [currentMode, setCurrentMode] = useState("Light");
   const [themeSettings, setThemeSettings] = useState(false);
 
+  // Close all dropdowns when URL changes
+  useEffect(() => {
+    const closeDropdownsOnNavigation = () => {
+      setIsClicked(initialState);
+    };
+
+    // Listen for history changes
+    window.addEventListener('popstate', closeDropdownsOnNavigation);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('popstate', closeDropdownsOnNavigation);
+    };
+  }, []);
+
+  // Handle clicks outside of dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Skip if no dropdowns are open
+      if (!isClicked.chat && !isClicked.notification && !isClicked.userProfile) {
+        return;
+      }
+      
+      // Check if the click was on a NavButton (which has its own click handler)
+      if (event.target.closest('[data-dropdown-toggle]')) {
+        return;
+      }
+      
+      // If click was outside dropdown content, close all dropdowns
+      if (!event.target.closest('[data-dropdown-content]')) {
+        setIsClicked(initialState);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isClicked]);
+
   const setMode = (e) => {
     setCurrentMode(e.target.value);
     localStorage.setItem("themeMode", e.target.value);
     setThemeSettings(false);
   };
+  
   const setColor = (color) => {
     setCurrentColor(color);
     localStorage.setItem("colorMode", color);
@@ -31,11 +72,18 @@ export const ContextProvider = ({ children }) => {
   };
 
   const handleClick = (clicked) => {
-    setIsClicked((prev) => ({
-      chat: clicked === "chat" ? !prev.chat : false,
-      notification: clicked === "notification" ? !prev.notification : false,
-      userProfile: clicked === "userProfile" ? !prev.userProfile : false,
-    }));
+    setIsClicked((prev) => {
+      // If clicking the same item that's already open, close it
+      if (prev[clicked]) {
+        return { ...initialState };
+      }
+      
+      // Otherwise, close all other items and open the clicked one
+      return {
+        ...initialState,
+        [clicked]: true
+      };
+    });
   };
 
   return (

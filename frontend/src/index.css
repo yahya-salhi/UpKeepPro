@@ -15,3 +15,27 @@ body {
   padding: 0;
   font-family: "Roboto", sans-serif;
 }
+
+/* Dropdown animation styles */
+.dropdown-animation {
+  animation: dropdownFade 0.2s ease-in-out;
+  transform-origin: top right;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Dark mode adjustments for dropdowns */
+.dark .dropdown-animation {
+  border-color: rgba(55, 65, 81, 0.5);
+}

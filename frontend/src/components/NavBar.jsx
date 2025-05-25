@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import avatar from "../data/avatar.jpg";
 import { useStateContext } from "../contexts/ContextProvider";
-import { useQuery, useQueryClient } from "@tanstack/react-query"; 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import NotificationsPage from "../pages/notification/NotificationsPage";
 
 import UserProfile from "../components/UserProfile";
@@ -23,6 +23,7 @@ const NavButton = ({ title, customFunc, icon, color, dotColor }) => (
       }}
       style={{ color }}
       className="relative text-xl rounded-full p-3 hover:bg-light-gray"
+      data-dropdown-toggle="true"
     >
       <span
         style={{ background: dotColor }}
@@ -34,7 +35,9 @@ const NavButton = ({ title, customFunc, icon, color, dotColor }) => (
 );
 
 const Navbar = () => {
-  const socket = useRef(io("http://localhost:5000", { withCredentials: true })).current;
+  const socket = useRef(
+    io("http://localhost:5000", { withCredentials: true })
+  ).current;
   const {
     currentColor,
     activeMenu,
@@ -98,16 +101,18 @@ const Navbar = () => {
   const { data: unreadMsgData = 0, refetch: refetchMessageBadge } = useQuery({
     queryKey: ["unreadMessageNotifications"],
     queryFn: async () => {
-      const res = await fetch("/api/messageNotifications/unread", { credentials: 'include' });
+      const res = await fetch("/api/messageNotifications/unread", {
+        credentials: "include",
+      });
       const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.error || "Failed to fetch unread messages");
+
+      if (!res.ok)
+        throw new Error(data.error || "Failed to fetch unread messages");
       return data.unreadCount || 0;
     },
     initialData: 0,
     refetchInterval: 5000,
   });
-
 
   useEffect(() => {
     if (authUser?._id) {
@@ -132,8 +137,10 @@ const Navbar = () => {
           dotColor={unreadMsgData > 0 ? "#FF0000" : "#03C9D7"}
           customFunc={() => {
             handleClick("chat");
-            fetch("/api/messageNotifications/read", { method: "PUT", credentials: 'include' })
-              .then(() => refetchMessageBadge());
+            fetch("/api/messageNotifications/read", {
+              method: "PUT",
+              credentials: "include",
+            }).then(() => refetchMessageBadge());
           }}
           color={currentColor}
           icon={
@@ -175,7 +182,7 @@ const Navbar = () => {
               e.stopPropagation();
               handleClick("userProfile");
             }}
-            ref={userProfileRef}
+            data-dropdown-toggle="true"
           >
             <img
               className="rounded-full w-8 h-8"
@@ -203,13 +210,18 @@ const Navbar = () => {
           </div>
         </TooltipComponent>
 
-        {isClicked.chat && <NotificationMessage />}
-        {isClicked.notification && <NotificationsPage />}
-        {isClicked.userProfile && (
-          <div ref={userProfileRef}>
-            <UserProfile />
-          </div>
+        {isClicked.chat && (
+          // <div
+          //   className="dropdown-animation fixed right-5 top-16 bg-white dark:bg-secondary-dark-bg p-8 rounded-lg w-96 shadow-xl z-50"
+          //   data-dropdown-content="true"
+          // >
+          <NotificationMessage />
+          // </div>
         )}
+
+        {isClicked.notification && <NotificationsPage />}
+
+        {isClicked.userProfile && <UserProfile />}
       </div>
     </div>
   );

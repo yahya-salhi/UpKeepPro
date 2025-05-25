@@ -5,6 +5,7 @@ import { useChatStore } from "../store/useChatStore";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import avatar from "../data/avatar.jpg";
 
 const NotificationMessage = () => {
   const queryClient = useQueryClient();
@@ -14,7 +15,9 @@ const NotificationMessage = () => {
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["messageNotifications"],
     queryFn: async () => {
-      const res = await fetch("/api/messageNotifications", { credentials: 'include' });
+      const res = await fetch("/api/messageNotifications", {
+        credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to fetch messages");
       return data;
@@ -23,7 +26,10 @@ const NotificationMessage = () => {
   });
   const { mutate: deleteNotifications } = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/messageNotifications", { method: "DELETE", credentials: 'include' });
+      const res = await fetch("/api/messageNotifications", {
+        method: "DELETE",
+        credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete messages");
       return data;
@@ -31,7 +37,9 @@ const NotificationMessage = () => {
     onSuccess: () => {
       toast.success("Message notifications deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["messageNotifications"] });
-      queryClient.invalidateQueries({ queryKey: ["unreadMessageNotifications"] });
+      queryClient.invalidateQueries({
+        queryKey: ["unreadMessageNotifications"],
+      });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -39,58 +47,64 @@ const NotificationMessage = () => {
   });
 
   return (
-    <div className="nav-item absolute right-1 top-16 bg-white dark:bg-[#42464D] p-8 rounded-lg w-96">
-      <div className="flex items-center justify-between mb-4">
-        <p className="font-semibold text-lg dark:text-gray-200">Messages</p>
+    <div className="nav-item absolute right-1 top-16 bg-white dark:bg-[#23272F] p-8 rounded-2xl w-full max-w-md shadow-xl border border-gray-200 dark:border-gray-700 transition-all duration-300">
+      <div className="flex items-center justify-between mb-6">
+        <p className="font-semibold text-xl dark:text-gray-100 tracking-tight font-['Roboto','Inter','sans-serif']">
+          Messages
+        </p>
         <button
-          className="text-sm text-red-500"
+          className="text-sm text-red-500 hover:underline hover:text-red-600 transition-colors font-medium"
           onClick={() => deleteNotifications()}
         >
           Delete all
         </button>
       </div>
       {isLoading ? (
-        <div className="flex justify-center">
-          <Loader2 />
+        <div className="flex justify-center items-center h-32">
+          <Loader2 className="animate-spin text-primary w-7 h-7" />
         </div>
       ) : notifications?.length === 0 ? (
-        <div className="text-center p-4 font-bold">No messages 🤔</div>
+        <div className="text-center p-6 font-semibold text-gray-400 dark:text-gray-500 text-lg">
+          No messages 🤔
+        </div>
       ) : (
-        notifications.map((notification) => (
-          <div
-            key={notification._id}
-            className="border-b border-gray-700 p-4 hover:bg-light-gray cursor-pointer"
-            onClick={() => {
-              setSelectedUser(notification.from);
-              handleClick("chat");
-              navigate("/chat");
-            }}
-          >
-            <div className="flex gap-2">
-              <div className="avatar">
-                <div className="w-8 rounded-full">
-                  <img
-                    src={
-                      notification.from.profileImg || "/avatar-placeholder.png"
-                    }
-                    alt="sender"
-                  />
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          {notifications.map((notification) => (
+            <div
+              key={notification._id}
+              className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-[#282C34] transition-colors cursor-pointer group"
+              onClick={() => {
+                setSelectedUser(notification.from);
+                handleClick("chat");
+                navigate("/chat");
+              }}
+            >
+              <Link
+                to={`/profile/${notification.from.username}`}
+                className="flex items-center gap-3 flex-1 min-w-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="avatar relative">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/40 dark:border-primary/60 shadow-md">
+                    <img
+                      src={notification.from.profileImg || avatar}
+                      alt={notification.from.username}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <Link
-                  to={`/profile/${notification.from.username}`}
-                  className="font-bold text-primary"
-                >
-                  @{notification.from.username}
-                </Link>
-                <p className="text-gray-600 dark:text-gray-200 break-words">
-                  {notification.message}
-                </p>
-              </div>
+                <div className="flex flex-col min-w-0 justify-center">
+                  <span className="font-semibold text-base text-gray-900 dark:text-gray-100 truncate font-['Roboto','Inter','sans-serif']">
+                    @{notification.from.username}
+                  </span>
+                  <span className="text-sm text-gray-500 dark:text-gray-300 mt-0.5 break-words">
+                    {notification.message}
+                  </span>
+                </div>
+              </Link>
             </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
     </div>
   );
