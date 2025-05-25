@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import axios from "../lib/axios";
 import { Send, Loader2, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useStateContext } from "../contexts/ContextProvider";
 
 const ChatInterface = () => {
+  const { currentColor } = useStateContext();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +53,10 @@ const ChatInterface = () => {
   return (
     <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-4 rounded-t-2xl">
+      <div
+        className="text-white px-6 py-4 rounded-t-2xl"
+        style={{ background: currentColor }}
+      >
         <h2 className="text-2xl font-bold flex items-center gap-2">
           <BookOpen className="w-6 h-6" />
           AI Chat Assistant

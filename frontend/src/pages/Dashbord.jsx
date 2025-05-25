@@ -226,10 +226,15 @@ const Dashboard = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Task Status Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
             <div
-              className="p-4 text-white flex items-center justify-between"
-              style={{ backgroundColor: currentColor }}
+              className="p-5 text-white flex items-center justify-between bg-gradient-to-r"
+              style={{
+                backgroundImage:
+                  currentMode === "Dark"
+                    ? `linear-gradient(to right, ${currentColor}, ${currentColor}dd)`
+                    : `linear-gradient(to right, ${currentColor}, ${currentColor}dd)`,
+              }}
             >
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <FaChartPie className="text-xl" />
@@ -245,42 +250,106 @@ const Dashboard = () => {
                 />
               </div>
               <div className="space-y-3">
-                {dashboardData.pieChartData.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          backgroundColor: ["#F59E0B", "#3B82F6", "#10B981"][
-                            index
-                          ],
-                        }}
-                      />
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        {item.status}
-                      </span>
+                {dashboardData.pieChartData.map((item, index) => {
+                  const colors = [
+                    {
+                      bg: "#F59E0B",
+                      bgHover: "#F59E0B",
+                      lightBg: "rgba(245, 158, 11, 0.1)",
+                      darkBg: "rgba(245, 158, 11, 0.15)",
+                    },
+                    {
+                      bg: "#3B82F6",
+                      bgHover: "#3B82F6",
+                      lightBg: "rgba(59, 130, 246, 0.1)",
+                      darkBg: "rgba(59, 130, 246, 0.15)",
+                    },
+                    {
+                      bg: "#10B981",
+                      bgHover: "#10B981",
+                      lightBg: "rgba(16, 185, 129, 0.1)",
+                      darkBg: "rgba(16, 185, 129, 0.15)",
+                    },
+                  ];
+
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 transform hover:translate-x-1 ${
+                        currentMode === "Dark"
+                          ? `hover:bg-${colors[index].darkBg} bg-gray-700/30`
+                          : `hover:bg-${colors[index].lightBg} bg-gray-50`
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <span
+                            className="w-4 h-4 rounded-full block"
+                            style={{
+                              backgroundColor: colors[index].bg,
+                              boxShadow: `0 0 10px ${colors[index].bg}80`,
+                            }}
+                          />
+                          <span
+                            className="absolute -inset-1 rounded-full opacity-30 animate-pulse"
+                            style={{ backgroundColor: colors[index].bg }}
+                          />
+                        </div>
+                        <span
+                          className={`text-sm font-medium ${
+                            currentMode === "Dark"
+                              ? "text-gray-200"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {item.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`text-sm font-bold ${
+                            currentMode === "Dark"
+                              ? "text-white"
+                              : "text-gray-800"
+                          }`}
+                        >
+                          {item.count}
+                        </div>
+                        <div
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            currentMode === "Dark"
+                              ? `bg-${colors[index].darkBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                              : `bg-${colors[index].lightBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                          }`}
+                        >
+                          {Math.round(
+                            (item.count / dashboardData.taskStats?.total) *
+                              100 || 0
+                          )}
+                          %
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      <span className="font-semibold">{item.count}</span> (
-                      {Math.round(
-                        (item.count / dashboardData.taskStats?.total) * 100 || 0
-                      )}
-                      %)
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* Task Priority Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-xl">
             <div
-              className="p-4 text-white flex items-center justify-between"
-              style={{ backgroundColor: currentColor }}
+              className="p-5 text-white flex items-center justify-between bg-gradient-to-r"
+              style={{
+                backgroundImage:
+                  currentMode === "Dark"
+                    ? `linear-gradient(to right, ${currentColor}, ${currentColor}dd)`
+                    : `linear-gradient(to right, ${currentColor}, ${currentColor}dd)`,
+              }}
             >
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <FaChartBar className="text-xl" />
@@ -296,33 +365,137 @@ const Dashboard = () => {
                 />
               </div>
               <div className="space-y-3">
-                {dashboardData.barChartData.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          backgroundColor: ["#EF4444", "#F59E0B", "#10B981"][
-                            index
-                          ],
-                        }}
+                {dashboardData.barChartData.map((item, index) => {
+                  const colors = [
+                    {
+                      bg: "#EF4444",
+                      lightBg: "rgba(239, 68, 68, 0.1)",
+                      darkBg: "rgba(239, 68, 68, 0.15)",
+                    },
+                    {
+                      bg: "#F59E0B",
+                      lightBg: "rgba(245, 158, 11, 0.1)",
+                      darkBg: "rgba(245, 158, 11, 0.15)",
+                    },
+                    {
+                      bg: "#10B981",
+                      lightBg: "rgba(16, 185, 129, 0.1)",
+                      darkBg: "rgba(16, 185, 129, 0.15)",
+                    },
+                  ];
+
+                  const priorityIcons = [
+                    <svg
+                      key="high"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
                       />
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        {item.priority}
-                      </span>
+                    </svg>,
+                    <svg
+                      key="medium"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M18 12H6"
+                      />
+                    </svg>,
+                    <svg
+                      key="low"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>,
+                  ];
+
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 transform hover:translate-x-1 ${
+                        currentMode === "Dark"
+                          ? `hover:bg-${colors[index].darkBg} bg-gray-700/30`
+                          : `hover:bg-${colors[index].lightBg} bg-gray-50`
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-1.5 rounded-lg flex items-center justify-center ${
+                            currentMode === "Dark"
+                              ? `bg-${colors[index].darkBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                              : `bg-${colors[index].lightBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                          }`}
+                        >
+                          {priorityIcons[index]}
+                        </div>
+                        <span
+                          className={`text-sm font-medium ${
+                            currentMode === "Dark"
+                              ? "text-gray-200"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {item.priority}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`text-sm font-bold ${
+                            currentMode === "Dark"
+                              ? "text-white"
+                              : "text-gray-800"
+                          }`}
+                        >
+                          {item.count}
+                        </div>
+                        <div
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            currentMode === "Dark"
+                              ? `bg-${colors[index].darkBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                              : `bg-${colors[index].lightBg} text-${colors[
+                                  index
+                                ].bg.replace("#", "")}`
+                          }`}
+                        >
+                          {Math.round(
+                            (item.count / dashboardData.taskStats?.total) *
+                              100 || 0
+                          )}
+                          %
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      <span className="font-semibold">{item.count}</span> (
-                      {Math.round(
-                        (item.count / dashboardData.taskStats?.total) * 100 || 0
-                      )}
-                      %)
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -824,6 +997,7 @@ const Dashboard = () => {
                       ? "text-white bg-blue-600 hover:bg-blue-700"
                       : "text-white bg-blue-500 hover:bg-blue-600"
                   }`}
+                style={{ backgroundColor: currentColor }}
               >
                 <span>View Full Calendar</span>
                 <svg
