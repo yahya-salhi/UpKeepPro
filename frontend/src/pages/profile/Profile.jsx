@@ -6,7 +6,7 @@ import EditProfileModal from "./EditeProfileModal";
 import { Calendar, Edit, LinkIcon, ArrowLeft } from "lucide-react";
 import avatar from "../../data/avatar.jpg";
 import { formatMemberSinceDate } from "../../utils/date";
-import RightPanel from "../../pages/profile/RightPanel";
+// import RightPanel from "../../pages/profile/RightPanel";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import usefollow from "../../hooks/UseFollow";
 import toast from "react-hot-toast";
@@ -384,9 +384,9 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-1">
+        {/* <div className="lg:col-span-1">
           <RightPanel />
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -13,7 +13,6 @@ import {
   FaArrowDown,
   FaCalendarAlt,
   FaRegClock,
-  FaUserFriends,
 } from "react-icons/fa";
 import { BsBoxSeam } from "react-icons/bs";
 import { FiBarChart } from "react-icons/fi";
@@ -29,7 +28,7 @@ import { useStateContext } from "../contexts/ContextProvider";
 import product9 from "../data/product9.jpg";
 import { useQuery } from "@tanstack/react-query";
 import ChatInterface from "../components/ChatInterface";
-import RightPanel from "./profile/RightPanel";
+import WhoToFollowCarousel from "../components/WhoToFollowCarousel";
 
 const DropDown = ({ currentMode }) => (
   <div className="w-28 border-1 border-color px-2 py-1 rounded-md">
@@ -1020,20 +1019,9 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* RightPanel Component (Replacing MedicalPro Branding) */}
+          {/* Who to Follow Carousel */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <FaUserFriends
-                  className="text-xl"
-                  style={{ color: currentColor }}
-                />
-                Who to Follow
-              </h3>
-            </div>
-            <div className="space-y-4">
-              <RightPanel />
-            </div>
+            <WhoToFollowCarousel />
           </div>
 
           {/* Daily Activities */}
