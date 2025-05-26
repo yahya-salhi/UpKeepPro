@@ -14,7 +14,10 @@ const ChatInterface = () => {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll to bottom if there are messages to avoid auto-scrolling on mount
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   const scrollToBottom = () => {
