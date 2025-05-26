@@ -14,7 +14,13 @@ import { FiCreditCard } from "react-icons/fi";
 import { CiLogout } from "react-icons/ci";
 
 const UserProfile = () => {
-  const { currentColor, setActivePanel } = useStateContext();
+  const {
+    currentColor,
+    setActivePanel,
+    setIsClicked,
+    initialState,
+    closeDropdownsAndNavigate,
+  } = useStateContext();
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -86,7 +92,10 @@ const UserProfile = () => {
   ];
 
   return (
-    <div className="nav-item fixed right-1 top-16 bg-white dark:bg-gray-800 rounded-xl shadow-lg w-80 sm:w-96 transform transition-all duration-300 ease-in-out animate-fade-in">
+    <div
+      className="nav-item fixed right-1 top-16 bg-white dark:bg-gray-800 rounded-xl shadow-lg w-80 sm:w-96 transform transition-all duration-300 ease-in-out animate-fade-in"
+      data-dropdown-content="true"
+    >
       <div className="p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -96,7 +105,7 @@ const UserProfile = () => {
           <Button
             icon={<MdOutlineCancel />}
             color={currentColor}
-            onClick={() => window.history.back()}
+            onClick={() => setIsClicked(initialState)}
             bgHoverColor="light-gray"
             size="sm"
             borderRadius="full"
@@ -136,11 +145,11 @@ const UserProfile = () => {
             const handleClick = (e) => {
               if (item.link) {
                 e.preventDefault();
-                setActivePanel(null);
-                navigate(item.link);
+                closeDropdownsAndNavigate(navigate, item.link);
               } else if (item.action) {
                 item.action();
                 setActivePanel(null);
+                setIsClicked(initialState); // Close dropdown
               }
             };
 

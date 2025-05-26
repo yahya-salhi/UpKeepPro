@@ -26,11 +26,11 @@ export const ContextProvider = ({ children }) => {
     };
 
     // Listen for history changes
-    window.addEventListener('popstate', closeDropdownsOnNavigation);
-    
+    window.addEventListener("popstate", closeDropdownsOnNavigation);
+
     // Clean up
     return () => {
-      window.removeEventListener('popstate', closeDropdownsOnNavigation);
+      window.removeEventListener("popstate", closeDropdownsOnNavigation);
     };
   }, []);
 
@@ -38,24 +38,28 @@ export const ContextProvider = ({ children }) => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Skip if no dropdowns are open
-      if (!isClicked.chat && !isClicked.notification && !isClicked.userProfile) {
+      if (
+        !isClicked.chat &&
+        !isClicked.notification &&
+        !isClicked.userProfile
+      ) {
         return;
       }
-      
+
       // Check if the click was on a NavButton (which has its own click handler)
-      if (event.target.closest('[data-dropdown-toggle]')) {
+      if (event.target.closest("[data-dropdown-toggle]")) {
         return;
       }
-      
+
       // If click was outside dropdown content, close all dropdowns
-      if (!event.target.closest('[data-dropdown-content]')) {
+      if (!event.target.closest("[data-dropdown-content]")) {
         setIsClicked(initialState);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isClicked]);
 
@@ -64,7 +68,7 @@ export const ContextProvider = ({ children }) => {
     localStorage.setItem("themeMode", e.target.value);
     setThemeSettings(false);
   };
-  
+
   const setColor = (color) => {
     setCurrentColor(color);
     localStorage.setItem("colorMode", color);
@@ -77,13 +81,20 @@ export const ContextProvider = ({ children }) => {
       if (prev[clicked]) {
         return { ...initialState };
       }
-      
+
       // Otherwise, close all other items and open the clicked one
       return {
         ...initialState,
-        [clicked]: true
+        [clicked]: true,
       };
     });
+  };
+
+  // Helper function to close dropdowns and navigate
+  const closeDropdownsAndNavigate = (navigate, path) => {
+    setIsClicked(initialState);
+    setActivePanel(null);
+    navigate(path);
   };
 
   return (
@@ -105,6 +116,7 @@ export const ContextProvider = ({ children }) => {
         setThemeSettings,
         activePanel,
         setActivePanel,
+        closeDropdownsAndNavigate,
       }}
     >
       {children}

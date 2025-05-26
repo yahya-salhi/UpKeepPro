@@ -3,9 +3,11 @@ import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useStateContext } from "../../contexts/ContextProvider";
 import avatar from "../../data/avatar.jpg";
 const NotificationPage = () => {
   const queryClient = useQueryClient();
+  const { setIsClicked, initialState } = useStateContext();
   const { data: notifications, isLoading } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
@@ -43,7 +45,10 @@ const NotificationPage = () => {
 
   return (
     <>
-      <div className="nav-item absolute right-1 top-16 bg-white dark:bg-[#23272F] p-8 rounded-2xl w-full max-w-md shadow-xl border border-gray-200 dark:border-gray-700 transition-all duration-300">
+      <div
+        className="nav-item absolute right-1 top-16 bg-white dark:bg-[#23272F] p-8 rounded-2xl w-full max-w-md shadow-xl border border-gray-200 dark:border-gray-700 transition-all duration-300"
+        data-dropdown-content="true"
+      >
         <div className="flex items-center justify-between mb-6">
           <p className="font-semibold text-xl dark:text-gray-100 tracking-tight font-['Roboto','Inter','sans-serif']">
             Notifications
@@ -89,6 +94,7 @@ const NotificationPage = () => {
               <Link
                 to={`/profile/${notification.from.username}`}
                 className="flex items-center gap-3 flex-1 min-w-0"
+                onClick={() => setIsClicked(initialState)} // Close dropdown when navigating
               >
                 <div className="avatar relative">
                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/40 dark:border-primary/60 shadow-md">

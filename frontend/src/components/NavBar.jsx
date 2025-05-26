@@ -210,14 +210,7 @@ const Navbar = () => {
           </div>
         </TooltipComponent>
 
-        {isClicked.chat && (
-          // <div
-          //   className="dropdown-animation fixed right-5 top-16 bg-white dark:bg-secondary-dark-bg p-8 rounded-lg w-96 shadow-xl z-50"
-          //   data-dropdown-content="true"
-          // >
-          <NotificationMessage />
-          // </div>
-        )}
+        {isClicked.chat && <NotificationMessage />}
 
         {isClicked.notification && <NotificationsPage />}
 

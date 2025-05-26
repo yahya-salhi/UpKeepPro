@@ -9,7 +9,8 @@ import avatar from "../data/avatar.jpg";
 
 const NotificationMessage = () => {
   const queryClient = useQueryClient();
-  const { handleClick } = useStateContext();
+  const { setIsClicked, initialState, closeDropdownsAndNavigate } =
+    useStateContext();
   const navigate = useNavigate();
   const setSelectedUser = useChatStore((state) => state.setSelectedUser);
   const { data: notifications = [], isLoading } = useQuery({
@@ -47,7 +48,10 @@ const NotificationMessage = () => {
   });
 
   return (
-    <div className="nav-item absolute right-1 top-16 bg-white dark:bg-[#23272F] p-8 rounded-2xl w-full max-w-md shadow-xl border border-gray-200 dark:border-gray-700 transition-all duration-300">
+    <div
+      className="nav-item absolute right-1 top-16 bg-white dark:bg-[#23272F] p-8 rounded-2xl w-full max-w-md shadow-xl border border-gray-200 dark:border-gray-700 transition-all duration-300"
+      data-dropdown-content="true"
+    >
       <div className="flex items-center justify-between mb-6">
         <p className="font-semibold text-xl dark:text-gray-100 tracking-tight font-['Roboto','Inter','sans-serif']">
           Messages
@@ -75,14 +79,16 @@ const NotificationMessage = () => {
               className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-[#282C34] transition-colors cursor-pointer group"
               onClick={() => {
                 setSelectedUser(notification.from);
-                handleClick("chat");
-                navigate("/chat");
+                closeDropdownsAndNavigate(navigate, "/chat");
               }}
             >
               <Link
                 to={`/profile/${notification.from.username}`}
                 className="flex items-center gap-3 flex-1 min-w-0"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsClicked(initialState); // Close dropdown when navigating to profile
+                }}
               >
                 <div className="avatar relative">
                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/40 dark:border-primary/60 shadow-md">
