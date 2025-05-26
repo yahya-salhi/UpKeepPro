@@ -6,22 +6,23 @@ import {
   updateEvent,
   deleteEvent,
 } from "../controllers/events.controller.js"; // Import all controller functions
+import { protect } from "../middleware/protect.js";
 
 const router = express.Router();
 
 // GET /api/events
-router.get("/", getEvents);
+router.get("/", protect, getEvents);
 
 // GET /api/events/:id
-router.get("/:id", getEventById);
+router.get("/:id", protect, getEventById);
 
 // POST /api/events
-router.post("/", createEvent);
+router.post("/", protect, createEvent);
 
 // PUT /api/events/:id
-router.put("/:id", updateEvent);
+router.put("/:id", protect, updateEvent);
 
 // DELETE /api/events/:id
-router.delete("/:id", deleteEvent);
+router.delete("/:id", protect, deleteEvent);
 
 export default router;

@@ -117,10 +117,20 @@ const Navbar = () => {
   useEffect(() => {
     if (authUser?._id) {
       socket.emit("joinRoom", authUser._id);
-      socket.on("newMessageNotification", () => refetchMessageBadge());
+
+      socket.on("newMessageNotification", () => {
+        refetchMessageBadge();
+      });
+
+      socket.on("newEventNotification", () => {
+        refetch(); // Refetch general notifications for event reminders
+      });
     }
-    return () => socket.off("newMessageNotification");
-  }, [authUser, refetchMessageBadge, socket]);
+    return () => {
+      socket.off("newMessageNotification");
+      socket.off("newEventNotification");
+    };
+  }, [authUser, refetchMessageBadge, refetch, socket]);
 
   return (
     <div className="flex justify-between p-2 md:ml-6 md:mr-6 relative">
@@ -160,14 +170,16 @@ const Navbar = () => {
           dotColor={unreadData > 0 ? "#FF0000" : "#03C9D7"}
           customFunc={() => {
             handleClick("notification");
-            fetch("/api/notifications/read", { method: "PUT" }).then(refetch);
+            fetch("/api/notifications/read", { method: "PUT" }).then(() => {
+              refetch();
+            });
           }}
           color={currentColor}
           icon={
             <div className="relative">
               <RiNotification3Line />
               {unreadData > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full z-50 min-w-[20px] h-5 flex items-center justify-center font-bold shadow-lg">
                   {unreadData}
                 </span>
               )}

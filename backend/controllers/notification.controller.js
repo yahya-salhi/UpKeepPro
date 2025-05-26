@@ -4,12 +4,19 @@ export const getNotifications = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const notifications = await Notification.find({ to: userId }).populate({
-      path: "from",
-      select: "username profileImg",
-    });
+    const notifications = await Notification.find({ to: userId })
+      .populate({
+        path: "from",
+        select: "username profileImg",
+      })
+      .populate({
+        path: "eventId",
+        select: "title start end location",
+      })
+      .sort({ createdAt: -1 });
 
-    await Notification.updateMany({ to: userId }, { read: true });
+    // Don't automatically mark as read - let the frontend handle this explicitly
+    // await Notification.updateMany({ to: userId }, { read: true });
 
     res.status(200).json(notifications);
   } catch (error) {

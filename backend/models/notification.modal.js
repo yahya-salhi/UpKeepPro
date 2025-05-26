@@ -15,7 +15,26 @@ const notificationSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["follow", "like"],
+      enum: ["follow", "like", "event_reminder_1day", "event_reminder_1hour"],
+    },
+    eventId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+      required: function () {
+        return (
+          this.type === "event_reminder_1day" ||
+          this.type === "event_reminder_1hour"
+        );
+      },
+    },
+    message: {
+      type: String,
+      required: function () {
+        return (
+          this.type === "event_reminder_1day" ||
+          this.type === "event_reminder_1hour"
+        );
+      },
     },
     read: {
       type: Boolean,

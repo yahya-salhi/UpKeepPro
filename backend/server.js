@@ -21,6 +21,7 @@ import http from "http";
 import { Server } from "socket.io";
 import Message from "./models/message.modal.js";
 import MessageNotification from "./models/messagenotification.modal.js";
+import notificationService from "./services/notificationService.js";
 
 // Load environment variables
 env.config();

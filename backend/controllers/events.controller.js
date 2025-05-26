@@ -1,4 +1,5 @@
 import Event from "../models/events.modal.js";
+import notificationService from "../services/notificationService.js";
 
 // Fetch all events
 export const getEvents = async (req, res) => {
@@ -36,6 +37,10 @@ export const createEvent = async (req, res) => {
       location = "",
       status = "upcoming",
       priority = "medium",
+      notifications = {
+        oneDayBefore: true,
+        oneHourBefore: true,
+      },
     } = req.body;
 
     const newEvent = new Event({
@@ -46,8 +51,21 @@ export const createEvent = async (req, res) => {
       location,
       status,
       priority,
+      createdBy: req.user._id,
+      notifications: {
+        oneDayBefore: notifications.oneDayBefore,
+        oneHourBefore: notifications.oneHourBefore,
+        sent: {
+          oneDayBefore: false,
+          oneHourBefore: false,
+        },
+      },
     });
     await newEvent.save(); // Save it in the database
+
+    // Schedule notifications for this event
+    await notificationService.scheduleEventNotifications(newEvent._id);
+
     res.status(201).json(newEvent); // Return saved event data
   } catch (error) {
     console.error(error);
@@ -58,25 +76,58 @@ export const createEvent = async (req, res) => {
 // Update an event
 export const updateEvent = async (req, res) => {
   try {
-    const { title, start, end, description, location, status, priority } =
-      req.body;
+    const {
+      title,
+      start,
+      end,
+      description,
+      location,
+      status,
+      priority,
+      notifications,
+    } = req.body;
+
+    const updateData = {
+      ...(title !== undefined && { title }),
+      ...(start !== undefined && { start }),
+      ...(end !== undefined && { end }),
+      ...(description !== undefined && { description }),
+      ...(location !== undefined && { location }),
+      ...(status !== undefined && { status }),
+      ...(priority !== undefined && { priority }),
+    };
+
+    // Handle notification preferences update
+    if (notifications !== undefined) {
+      updateData.notifications = {
+        oneDayBefore: notifications.oneDayBefore,
+        oneHourBefore: notifications.oneHourBefore,
+        sent: {
+          oneDayBefore: false, // Reset sent flags when updating
+          oneHourBefore: false,
+        },
+      };
+    }
 
     const updatedEvent = await Event.findByIdAndUpdate(
       req.params.id,
-      {
-        ...(title !== undefined && { title }),
-        ...(start !== undefined && { start }),
-        ...(end !== undefined && { end }),
-        ...(description !== undefined && { description }),
-        ...(location !== undefined && { location }),
-        ...(status !== undefined && { status }),
-        ...(priority !== undefined && { priority }),
-      },
+      updateData,
       { new: true }
     );
+
     if (!updatedEvent) {
       return res.status(404).json({ message: "Event not found" });
     }
+
+    // Reschedule notifications if event time or notification preferences changed
+    if (
+      start !== undefined ||
+      end !== undefined ||
+      notifications !== undefined
+    ) {
+      await notificationService.scheduleEventNotifications(updatedEvent._id);
+    }
+
     res.status(200).json(updatedEvent);
   } catch (error) {
     console.error(error);
@@ -91,6 +142,10 @@ export const deleteEvent = async (req, res) => {
     if (!deletedEvent) {
       return res.status(404).json({ message: "Event not found" });
     }
+
+    // Cancel any pending notifications for this event
+    await notificationService.cancelEventNotifications(req.params.id);
+
     res.status(200).json({ message: "Event deleted successfully" });
   } catch (error) {
     console.error(error);
