@@ -1,10 +1,10 @@
 import Event from "../models/events.modal.js";
 import notificationService from "../services/notificationService.js";
 
-// Fetch all events
+// Fetch all events for the authenticated user
 export const getEvents = async (req, res) => {
   try {
-    const events = await Event.find(); // Fetch all events from the database
+    const events = await Event.find({ createdBy: req.user._id }); // Fetch only user's events
     res.status(200).json(events);
   } catch (error) {
     console.error(error);
@@ -12,12 +12,18 @@ export const getEvents = async (req, res) => {
   }
 };
 
-// Fetch a single event by ID
+// Fetch a single event by ID (only if owned by the user)
 export const getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id); // Find event by ID
+    const event = await Event.findOne({
+      _id: req.params.id,
+      createdBy: req.user._id,
+    }); // Find event by ID and verify ownership
+
     if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+      return res
+        .status(404)
+        .json({ message: "Event not found or access denied" });
     }
     res.status(200).json(event);
   } catch (error) {
@@ -73,7 +79,7 @@ export const createEvent = async (req, res) => {
   }
 };
 
-// Update an event
+// Update an event (only if owned by the user)
 export const updateEvent = async (req, res) => {
   try {
     const {
@@ -86,6 +92,18 @@ export const updateEvent = async (req, res) => {
       priority,
       notifications,
     } = req.body;
+
+    // First, verify the event exists and belongs to the user
+    const existingEvent = await Event.findOne({
+      _id: req.params.id,
+      createdBy: req.user._id,
+    });
+
+    if (!existingEvent) {
+      return res
+        .status(404)
+        .json({ message: "Event not found or access denied" });
+    }
 
     const updateData = {
       ...(title !== undefined && { title }),
@@ -109,15 +127,11 @@ export const updateEvent = async (req, res) => {
       };
     }
 
-    const updatedEvent = await Event.findByIdAndUpdate(
-      req.params.id,
+    const updatedEvent = await Event.findOneAndUpdate(
+      { _id: req.params.id, createdBy: req.user._id },
       updateData,
       { new: true }
     );
-
-    if (!updatedEvent) {
-      return res.status(404).json({ message: "Event not found" });
-    }
 
     // Reschedule notifications if event time or notification preferences changed
     if (
@@ -135,12 +149,18 @@ export const updateEvent = async (req, res) => {
   }
 };
 
-// Delete an event
+// Delete an event (only if owned by the user)
 export const deleteEvent = async (req, res) => {
   try {
-    const deletedEvent = await Event.findByIdAndDelete(req.params.id);
+    const deletedEvent = await Event.findOneAndDelete({
+      _id: req.params.id,
+      createdBy: req.user._id,
+    });
+
     if (!deletedEvent) {
-      return res.status(404).json({ message: "Event not found" });
+      return res
+        .status(404)
+        .json({ message: "Event not found or access denied" });
     }
 
     // Cancel any pending notifications for this event
