@@ -5,7 +5,7 @@ import { FiSettings } from "react-icons/fi";
 import { TooltipComponent } from "@syncfusion/ej2-react-popups";
 import { Loader } from "lucide-react";
 
-import { NavBar, Footer, Sidebar, ThemeSettings } from "./components";
+import { NavBar, Footer, Sidebar, ThemeSettings, NotFound } from "./components";
 import {
   Dashboard,
   SingUp,
@@ -269,6 +269,9 @@ function App() {
                 path="/stacked"
                 element={authUser ? <Stacked /> : <Navigate to="/login" />}
               /> */}
+
+              {/* 404 Error Route - Must be last */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
           </div>
