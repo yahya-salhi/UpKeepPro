@@ -565,3 +565,100 @@ export const getUserDashboardData = async (req, res) => {
     res.status(500).json({ message: "server error", error: error.message });
   }
 };
+
+//desc update individual checklist item
+//@route PATCH /api/tasks/:taskId/checklist/:todoIndex
+//@access Private
+export const updateChecklistItem = async (req, res) => {
+  try {
+    const { taskId, todoIndex } = req.params;
+    const { completed } = req.body;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(taskId)) {
+      return res.status(400).json({ message: "Invalid task ID format" });
+    }
+
+    // Validate todoIndex
+    const index = parseInt(todoIndex);
+    if (isNaN(index) || index < 0) {
+      return res.status(400).json({ message: "Invalid todo index" });
+    }
+
+    // Validate completed field
+    if (typeof completed !== "boolean") {
+      return res
+        .status(400)
+        .json({ message: "Completed field must be a boolean" });
+    }
+
+    const task = await Task.findById(taskId).populate(
+      "assignedTo",
+      "username email profileImg"
+    );
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Check if user is admin, creator, or assigned to the task
+    const isAdmin = req.user.role === "admin";
+    const isCreator = task.createdBy.toString() === req.user._id.toString();
+    const isAssigned = task.assignedTo.some(
+      (user) => user._id.toString() === req.user._id.toString()
+    );
+
+    if (!isAdmin && !isCreator && !isAssigned) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this task" });
+    }
+
+    // Check if todo index exists
+    if (index >= task.todocheklist.length) {
+      return res.status(400).json({ message: "Todo item not found" });
+    }
+
+    // Update the specific todo item
+    task.todocheklist[index].completed = completed;
+
+    // Calculate new task status based on checklist completion
+    const totalTodos = task.todocheklist.length;
+    const completedTodos = task.todocheklist.filter(
+      (todo) => todo.completed
+    ).length;
+
+    let newStatus = task.status; // Keep current status as default
+
+    if (totalTodos > 0) {
+      if (completedTodos === 0) {
+        newStatus = "pending";
+      } else if (completedTodos === totalTodos) {
+        newStatus = "done";
+      } else {
+        newStatus = "inprogress";
+      }
+    }
+
+    // Update task status if it changed
+    task.status = newStatus;
+
+    await task.save();
+
+    // Populate the task for response
+    const updatedTask = await Task.findById(taskId).populate(
+      "assignedTo",
+      "username email profileImg"
+    );
+
+    res.status(200).json({
+      message: "Checklist item updated successfully",
+      task: updatedTask,
+      statusChanged: newStatus !== req.body.originalStatus,
+    });
+  } catch (error) {
+    console.error("Error in updateChecklistItem:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};

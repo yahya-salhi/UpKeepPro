@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import TaskListTable from "@/components/kanban/TaskListTable";
 import MyTask from "./MyTask";
-import ViewTaskDetails from "./ViewTaskDetails";
+import TaskDetailsViewer from "./TaskDetailsViewer";
 import PieChart from "./PieChart";
 import BarChart from "./BarChart";
 import { useUserDashboardData } from "../../hooks/useUserDashboardData";
@@ -316,19 +316,21 @@ function UserKanban() {
                 </div>
               </>
             ) : activeView === "mytasks" ? (
-              <MyTask onSelectTask={setSelectedTask} />
+              <MyTask
+                onSelectTask={(task) => {
+                  setSelectedTask(task);
+                  setActiveView("taskdetails");
+                }}
+              />
+            ) : activeView === "taskdetails" ? (
+              <TaskDetailsViewer
+                task={selectedTask}
+                onClose={() => {
+                  setSelectedTask(null);
+                  setActiveView("mytasks");
+                }}
+              />
             ) : null}
-
-            {/* Task Details Modal */}
-            {selectedTask && (
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-2">Task Details</h3>
-                <ViewTaskDetails
-                  task={selectedTask}
-                  onClose={() => setSelectedTask(null)}
-                />
-              </div>
-            )}
           </div>
         </div>
       </main>

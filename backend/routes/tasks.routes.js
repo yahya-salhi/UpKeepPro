@@ -12,6 +12,7 @@ import {
   getTaskById,
   updateTaskStatus,
   updateTaskChecklist,
+  updateChecklistItem,
 } from "../controllers/tasks.controller.js";
 
 const router = express.Router();
@@ -24,5 +25,6 @@ router.put("/:id", protect, updateTask);
 router.delete("/:id", protect, authorizeAdmin, deleteTask);
 router.put("/:id/status", protect, updateTaskStatus); // This is correct
 router.put("/:id/todo", protect, updateTaskChecklist);
+router.patch("/:taskId/checklist/:todoIndex", protect, updateChecklistItem);
 
 export default router;

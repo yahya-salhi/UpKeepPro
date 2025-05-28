@@ -194,7 +194,7 @@ function ManageTask() {
                 }
                 attachments={item.attachments?.length || 0}
                 completedTodoCount={item.completedTodoCount || 0}
-                todochecklist={item.todochecklist || []}
+                todochecklist={item.todocheklist || []}
                 onClick={() => handleClick(item)}
               />
             ))}
