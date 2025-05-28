@@ -1,4 +1,6 @@
 import Task from "../models/task.modal.js";
+import Notification from "../models/notification.modal.js";
+import User from "../models/user.modal.js";
 import mongoose from "mongoose";
 //@desc get all tasks(admin:all,user:only assigned tasks)
 //@route GET /api/tasks
@@ -657,6 +659,86 @@ export const updateChecklistItem = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in updateChecklistItem:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
+//desc upload user submissions for a task
+//@route POST /api/tasks/:taskId/submissions
+//@access Private
+export const uploadUserSubmissions = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(taskId)) {
+      return res.status(400).json({ message: "Invalid task ID format" });
+    }
+
+    const task = await Task.findById(taskId).populate(
+      "assignedTo",
+      "username email profileImg"
+    );
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Check if user is admin, creator, or assigned to the task
+    const isAdmin = req.user.role === "admin";
+    const isCreator = task.createdBy.toString() === req.user._id.toString();
+    const isAssigned = task.assignedTo.some(
+      (user) => user._id.toString() === req.user._id.toString()
+    );
+
+    if (!isAdmin && !isCreator && !isAssigned) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to upload files to this task" });
+    }
+
+    // Check if files were uploaded
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
+    }
+
+    // Process uploaded files
+    const submissions = req.files.map((file) => ({
+      name: file.originalname,
+      type: file.mimetype,
+      size: file.size,
+      data: file.buffer.toString("base64"),
+      uploadedAt: new Date(),
+      uploadedBy: req.user._id,
+    }));
+
+    // Add submissions to task
+    if (!task.userSubmissions) {
+      task.userSubmissions = [];
+    }
+    task.userSubmissions.push(...submissions);
+
+    await task.save();
+
+    // Populate the task for response
+    const updatedTask = await Task.findById(taskId).populate(
+      "assignedTo",
+      "username email profileImg"
+    );
+
+    res.status(200).json({
+      message: `${submissions.length} file(s) uploaded successfully`,
+      task: updatedTask,
+      uploadedFiles: submissions.map((sub) => ({
+        name: sub.name,
+        type: sub.type,
+        size: sub.size,
+        uploadedAt: sub.uploadedAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Error in uploadUserSubmissions:", error);
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });

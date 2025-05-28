@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   X,
   Calendar,
@@ -7,6 +7,9 @@ import {
   Paperclip,
   CheckSquare,
   ArrowLeft,
+  Download,
+  Upload,
+  Plus,
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -17,6 +20,8 @@ import avatar from "../../data/avatar.jpg";
 function TaskDetailsViewer({ task, onClose }) {
   const queryClient = useQueryClient();
   const [localTask, setLocalTask] = useState(task);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Mutation for updating checklist items
   const updateChecklistMutation = useMutation({
@@ -63,6 +68,112 @@ function TaskDetailsViewer({ task, onClose }) {
       todoIndex,
       completed: !currentCompleted,
     });
+  };
+
+  // Mutation for uploading user submissions
+  const uploadSubmissionMutation = useMutation({
+    mutationFn: async ({ taskId, files }) => {
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const response = await fetch(`/api/tasks/${taskId}/submissions`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to upload files");
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setLocalTask(data.task);
+      queryClient.invalidateQueries({ queryKey: ["userTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Files uploaded successfully");
+      setIsUploading(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to upload files");
+      setIsUploading(false);
+    },
+  });
+
+  // Handle file download
+  const handleDownload = (attachment) => {
+    try {
+      // Clean and validate base64 data
+      let base64Data = attachment.data;
+
+      // Remove data URL prefix if present (e.g., "data:image/png;base64,")
+      if (base64Data.includes(",")) {
+        base64Data = base64Data.split(",")[1];
+      }
+
+      // Remove any whitespace or invalid characters
+      base64Data = base64Data.replace(/[^A-Za-z0-9+/=]/g, "");
+
+      // Validate base64 format
+      if (!base64Data || base64Data.length === 0) {
+        throw new Error("Invalid or empty base64 data");
+      }
+
+      // Add padding if necessary
+      while (base64Data.length % 4) {
+        base64Data += "=";
+      }
+
+      // Convert base64 to blob using fetch API (more reliable)
+      const dataUrl = `data:${
+        attachment.type || "application/octet-stream"
+      };base64,${base64Data}`;
+
+      fetch(dataUrl)
+        .then((res) => res.blob())
+        .then((blob) => {
+          // Create download link
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = attachment.name || "download";
+          link.style.display = "none";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          toast.success(`Downloaded ${attachment.name}`);
+        })
+        .catch((error) => {
+          console.error("Blob conversion error:", error);
+          toast.error("Failed to process file for download");
+        });
+    } catch (error) {
+      toast.error("Failed to download file");
+      console.error("Download error:", error);
+    }
+  };
+
+  // Handle file upload
+  const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+    uploadSubmissionMutation.mutate({
+      taskId: localTask._id,
+      files,
+    });
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   if (!task) {
@@ -317,18 +428,18 @@ function TaskDetailsViewer({ task, onClose }) {
               </div>
             )}
 
-            {/* Attachments */}
-            {task.attchments && task.attchments.length > 0 && (
+            {/* Original Attachments */}
+            {localTask.attchments && localTask.attchments.length > 0 && (
               <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                   <Paperclip size={18} />
-                  Attachments ({task.attchments.length})
+                  Original Attachments ({localTask.attchments.length})
                 </h3>
                 <div className="space-y-2">
-                  {task.attchments.map((file, index) => (
+                  {localTask.attchments.map((file, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600"
+                      className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                     >
                       <Paperclip size={16} className="text-gray-400" />
                       <div className="flex-1 min-w-0">
@@ -339,11 +450,90 @@ function TaskDetailsViewer({ task, onClose }) {
                           {(file.size / 1024).toFixed(1)} KB • {file.type}
                         </p>
                       </div>
+                      <button
+                        onClick={() => handleDownload(file)}
+                        className="flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors text-sm"
+                      >
+                        <Download size={14} />
+                        Download
+                      </button>
                     </div>
                   ))}
                 </div>
               </div>
             )}
+
+            {/* User Submissions */}
+            <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                <Upload size={18} />
+                My Submissions ({localTask.userSubmissions?.length || 0})
+              </h3>
+
+              {/* Upload Section */}
+              <div className="mb-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  accept="*/*"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading || uploadSubmissionMutation.isLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isUploading || uploadSubmissionMutation.isLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Plus size={16} />
+                  )}
+                  {isUploading || uploadSubmissionMutation.isLoading
+                    ? "Uploading..."
+                    : "Upload Files"}
+                </button>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Upload modified files or additional documents
+                </p>
+              </div>
+
+              {/* Submitted Files */}
+              {localTask.userSubmissions &&
+              localTask.userSubmissions.length > 0 ? (
+                <div className="space-y-2">
+                  {localTask.userSubmissions.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600"
+                    >
+                      <Paperclip size={16} className="text-green-500" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                          {file.name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {(file.size / 1024).toFixed(1)} KB • {file.type} •
+                          Uploaded {moment(file.uploadedAt).fromNow()}
+                        </p>
+                      </div>
+                      <span className="text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded">
+                        Submitted
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                  <Upload size={24} className="mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No files submitted yet</p>
+                  <p className="text-xs">
+                    Upload modified files to share with admin
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

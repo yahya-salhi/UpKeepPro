@@ -28,6 +28,16 @@ const taskSchema = new mongoose.Schema(
         uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       },
     ],
+    userSubmissions: [
+      {
+        name: { type: String, required: true },
+        type: { type: String, required: true },
+        size: { type: Number, required: true },
+        data: { type: String, required: true }, // Base64 encoded file data
+        uploadedAt: { type: Date, default: Date.now },
+        uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
     todocheklist: [todoSchema],
     progress: {
       type: Number,
