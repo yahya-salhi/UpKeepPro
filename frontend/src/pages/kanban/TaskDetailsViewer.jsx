@@ -95,7 +95,14 @@ function TaskDetailsViewer({ task, onClose }) {
       setLocalTask(data.task);
       queryClient.invalidateQueries({ queryKey: ["userTasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Files uploaded successfully");
+      queryClient.invalidateQueries({ queryKey: ["userDashboardData"] });
+
+      const fileCount = data.uploadedFiles?.length || 1;
+      const fileText = fileCount === 1 ? "file" : "files";
+      toast.success(
+        `${fileCount} ${fileText} uploaded and sent to admin successfully!`,
+        { duration: 4000 }
+      );
       setIsUploading(false);
     },
     onError: (error) => {
@@ -491,11 +498,11 @@ function TaskDetailsViewer({ task, onClose }) {
                     <Plus size={16} />
                   )}
                   {isUploading || uploadSubmissionMutation.isLoading
-                    ? "Uploading..."
-                    : "Upload Files"}
+                    ? "Uploading & Sending to Admin..."
+                    : "Upload & Send to Admin"}
                 </button>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Upload modified files or additional documents
+                  Files will be automatically sent to admin upon upload
                 </p>
               </div>
 
@@ -529,7 +536,7 @@ function TaskDetailsViewer({ task, onClose }) {
                   <Upload size={24} className="mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No files submitted yet</p>
                   <p className="text-xs">
-                    Upload modified files to share with admin
+                    Upload files to automatically send them to admin
                   </p>
                 </div>
               )}

@@ -1,6 +1,7 @@
 import Task from "../models/task.modal.js";
 import Notification from "../models/notification.modal.js";
 import User from "../models/user.modal.js";
+import { io } from "../lib/socket.js";
 import mongoose from "mongoose";
 //@desc get all tasks(admin:all,user:only assigned tasks)
 //@route GET /api/tasks
@@ -603,7 +604,7 @@ export const updateChecklistItem = async (req, res) => {
     }
 
     // Check if user is admin, creator, or assigned to the task
-    const isAdmin = req.user.role === "admin";
+    const isAdmin = req.user.role === "REPI" || req.user.role === "CC";
     const isCreator = task.createdBy.toString() === req.user._id.toString();
     const isAssigned = task.assignedTo.some(
       (user) => user._id.toString() === req.user._id.toString()
@@ -686,7 +687,7 @@ export const uploadUserSubmissions = async (req, res) => {
     }
 
     // Check if user is admin, creator, or assigned to the task
-    const isAdmin = req.user.role === "admin";
+    const isAdmin = req.user.role === "REPI" || req.user.role === "CC";
     const isCreator = task.createdBy.toString() === req.user._id.toString();
     const isAssigned = task.assignedTo.some(
       (user) => user._id.toString() === req.user._id.toString()
@@ -720,6 +721,49 @@ export const uploadUserSubmissions = async (req, res) => {
     task.userSubmissions.push(...submissions);
 
     await task.save();
+
+    // Create notifications for admin users
+    try {
+      const adminUsers = await User.find({
+        role: { $in: ["REPI", "CC"] },
+      });
+
+      const notifications = adminUsers.map((admin) => ({
+        from: req.user._id,
+        to: admin._id,
+        type: "file_submission",
+        message: `${req.user.username} uploaded ${submissions.length} file(s) to task "${task.title}"`,
+        data: {
+          taskId: task._id,
+          taskTitle: task.title,
+          submittedBy: req.user.username,
+          fileCount: submissions.length,
+          fileNames: submissions.map((sub) => sub.name),
+        },
+        read: false,
+        createdAt: new Date(),
+      }));
+
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+
+        // Send real-time notifications to admin users via socket
+        if (io) {
+          adminUsers.forEach((admin) => {
+            io.to(admin._id.toString()).emit("newFileSubmissionNotification", {
+              type: "file_submission",
+              message: `${req.user.username} uploaded ${submissions.length} file(s) to task "${task.title}"`,
+              taskId: task._id,
+              taskTitle: task.title,
+              submittedBy: req.user.username,
+              fileCount: submissions.length,
+            });
+          });
+        }
+      }
+    } catch (notificationError) {
+      // Don't fail the main operation if notification creation fails
+    }
 
     // Populate the task for response
     const updatedTask = await Task.findById(taskId).populate(

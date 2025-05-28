@@ -19,7 +19,12 @@ const ChatContainer = () => {
 
   // Initialize socket
   useEffect(() => {
-    socketRef.current = io("http://localhost:5000"); // Initialize socket and store it in the ref
+    socketRef.current = io("http://localhost:5000", {
+      transports: ["websocket", "polling"], // Allow both transports for Firefox compatibility
+      forceNew: true,
+      reconnection: true,
+      timeout: 5000,
+    }); // Initialize socket and store it in the ref
 
     // Set up connection and error handling
     socketRef.current.on("connect", () => {

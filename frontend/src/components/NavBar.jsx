@@ -8,6 +8,7 @@ import { io } from "socket.io-client";
 import avatar from "../data/avatar.jpg";
 import { useStateContext } from "../contexts/ContextProvider";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import NotificationsPage from "../pages/notification/NotificationsPage";
 
 import UserProfile from "../components/UserProfile";
@@ -36,7 +37,13 @@ const NavButton = ({ title, customFunc, icon, color, dotColor }) => (
 
 const Navbar = () => {
   const socket = useRef(
-    io("http://localhost:5000", { withCredentials: true })
+    io("http://localhost:5000", {
+      withCredentials: true,
+      transports: ["websocket", "polling"], // Allow both transports for Firefox compatibility
+      forceNew: true,
+      reconnection: true,
+      timeout: 5000,
+    })
   ).current;
   const {
     currentColor,
@@ -116,19 +123,34 @@ const Navbar = () => {
 
   useEffect(() => {
     if (authUser?._id) {
-      socket.emit("joinRoom", authUser._id);
+      socket.on("connect", () => {
+        socket.emit("joinRoom", authUser._id);
+      });
 
       socket.on("newMessageNotification", () => {
         refetchMessageBadge();
       });
 
       socket.on("newEventNotification", () => {
-        refetch(); // Refetch general notifications for event reminders
+        refetch();
+      });
+
+      socket.on("newFileSubmissionNotification", (data) => {
+        refetch();
+        if (data.message) {
+          toast.success(
+            `New file submission: ${data.submittedBy} uploaded ${data.fileCount} file(s) to "${data.taskTitle}"`
+          );
+        }
       });
     }
     return () => {
+      socket.off("connect");
+      socket.off("connect_error");
+      socket.off("disconnect");
       socket.off("newMessageNotification");
       socket.off("newEventNotification");
+      socket.off("newFileSubmissionNotification");
     };
   }, [authUser, refetchMessageBadge, refetch, socket]);
 
