@@ -144,6 +144,7 @@ function CreateTask() {
     onSuccess: () => {
       toast.success(`Task ${taskId ? "updated" : "created"} successfully`);
       queryClient.invalidateQueries(["tasks"]);
+      queryClient.invalidateQueries(["userDashboardData"]); // Invalidate user dashboard data so it refreshes for the user
       navigate("/kanban");
     },
     onError: (error) => {
@@ -179,6 +180,7 @@ function CreateTask() {
       toast.success("Task deleted successfully");
       setOpenDeleteTask(false);
       queryClient.invalidateQueries(["tasks"]);
+      queryClient.invalidateQueries(["userDashboardData"]); // Invalidate user dashboard data so it refreshes for the user
       navigate("/kanban");
     },
     onError: (error) => {

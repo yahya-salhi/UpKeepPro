@@ -1,28 +1,30 @@
-function Progress({ progress }) {
+function Progress({ progress, status }) {
   const getProgressColors = () => {
-    // If task is complete (100%), show green
-    if (progress === 100) {
-      return {
-        bg: "bg-green-100 dark:bg-green-900/20",
-        bar: "bg-green-500",
-        text: "text-green-700 dark:text-green-400",
-      };
-    }
-    // If task has no progress (0%), show blue
-    else if (progress === 0) {
-      return {
-        bg: "bg-blue-100 dark:bg-blue-900/20",
-        bar: "bg-blue-500",
-        text: "text-blue-700 dark:text-blue-400",
-      };
-    }
-    // For tasks in progress (1-99%), show yellow
-    else {
-      return {
-        bg: "bg-yellow-100 dark:bg-yellow-900/20",
-        bar: "bg-yellow-500", // Solid yellow for better progress visibility
-        text: "text-yellow-700 dark:text-yellow-400",
-      };
+    // Use task status to determine colors, not completion percentage
+    const statusKey = status?.toLowerCase() || "pending";
+
+    switch (statusKey) {
+      case "done":
+      case "completed":
+        return {
+          bg: "bg-green-100 dark:bg-green-900/20",
+          bar: "bg-green-500",
+          text: "text-green-700 dark:text-green-400",
+        };
+      case "inprogress":
+      case "in-progress":
+        return {
+          bg: "bg-yellow-100 dark:bg-yellow-900/20",
+          bar: "bg-yellow-500",
+          text: "text-yellow-700 dark:text-yellow-400",
+        };
+      case "pending":
+      default:
+        return {
+          bg: "bg-blue-100 dark:bg-blue-900/20",
+          bar: "bg-blue-500",
+          text: "text-blue-700 dark:text-blue-400",
+        };
     }
   };
 

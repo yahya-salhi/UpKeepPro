@@ -28,6 +28,7 @@ import { useQuery } from "@tanstack/react-query";
 import CreateTask from "./pages/kanban/CreateTask";
 import ManageTask from "./pages/kanban/ManageTask";
 import ManageUsers from "./pages/kanban/ManageUsers";
+import UserKanban from "./pages/kanban/UserKanban";
 
 function App() {
   const {
@@ -193,6 +194,10 @@ function App() {
                     <Navigate to="/login" />
                   )
                 }
+              />
+              <Route
+                path="/userkanban"
+                element={authUser ? <UserKanban /> : <Navigate to="/login" />}
               />
               <Route
                 path="/editor"
