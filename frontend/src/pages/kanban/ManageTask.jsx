@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { LuFileSpreadsheet, LuRefreshCw } from "react-icons/lu";
 import TaskStatusTabs from "../../components/kanban/TaskStatusTabs";
 import TaskCard from "../../components/kanban/TaskCard";
+import avatar from "../../data/avatar.jpg";
 
 function ManageTask() {
   const STATUS_MAP = {
@@ -188,7 +189,8 @@ function ManageTask() {
                 createdAt={item.createdAt}
                 dueDate={item.dueDate}
                 assignedTo={
-                  item.assignedTo?.map((user) => user.profileImg) || []
+                  item.assignedTo?.map((user) => user.profileImg || avatar) ||
+                  []
                 }
                 attachments={item.attachments?.length || 0}
                 completedTodoCount={item.completedTodoCount || 0}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import TaskListTable from "@/components/kanban/TaskListTable";
+import MyTask from "./MyTask";
 import ViewTaskDetails from "./ViewTaskDetails";
 import PieChart from "./PieChart";
 import BarChart from "./BarChart";
@@ -24,6 +25,7 @@ function UserKanban() {
   const { data, isLoading, isError, error, refetch } =
     useUserDashboardData(userId);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [activeView, setActiveView] = useState("dashboard"); // "dashboard" or "mytasks"
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -136,30 +138,22 @@ function UserKanban() {
             <nav className="flex space-x-4">
               <button
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                  location.pathname === "/userkanban"
+                  activeView === "dashboard"
                     ? "bg-blue-600 text-white hover:bg-blue-700"
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
-                onClick={() => navigate("/userkanban")}
+                onClick={() => setActiveView("dashboard")}
               >
                 <Home size={18} />
                 <span>Dashboard</span>
               </button>
               <button
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                  location.pathname === "/userkanban"
+                  activeView === "mytasks"
                     ? "bg-orange-600 text-white hover:bg-orange-700"
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
-                onClick={() => {
-                  // Scroll to Recent Tasks section since My Tasks section was removed
-                  const recentTasksSection = document.querySelector(
-                    "#recent-tasks-section"
-                  );
-                  if (recentTasksSection) {
-                    recentTasksSection.scrollIntoView({ behavior: "smooth" });
-                  }
-                }}
+                onClick={() => setActiveView("mytasks")}
               >
                 <ListTodo size={18} />
                 <span>My Tasks</span>
@@ -184,132 +178,146 @@ function UserKanban() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
           <div className="p-6 space-y-6">
-            {/* Dashboard Header */}
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                My Dashboard Overview
-              </h2>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard
-                title="Total Tasks"
-                value={data.stats.total}
-                color="blue"
-                icon={<LucideListTodo className="h-5 w-5 text-blue-600" />}
-              />
-              <StatCard
-                title="Pending"
-                value={data.stats.pending}
-                color="yellow"
-                icon={<LucideListTodo className="h-5 w-5 text-yellow-600" />}
-              />
-              <StatCard
-                title="In Progress"
-                value={data.stats.inProgress}
-                color="orange"
-                icon={<LucideListTodo className="h-5 w-5 text-orange-600" />}
-              />
-              <StatCard
-                title="Completed"
-                value={data.stats.completed}
-                color="green"
-                icon={<LucideListTodo className="h-5 w-5 text-green-600" />}
-              />
-            </div>
-
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Pie Chart */}
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                    <LucidePieChart className="h-5 w-5 mr-2 text-blue-600" />
-                    Task Status
-                  </h3>
+            {activeView === "dashboard" ? (
+              <>
+                {/* Dashboard Header */}
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    My Dashboard Overview
+                  </h2>
                 </div>
-                <div className="h-64">
-                  <PieChart
-                    data={data.pieChartData}
-                    colors={["#F59E0B", "#3B82F6", "#10B981"]}
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <StatCard
+                    title="Total Tasks"
+                    value={data.stats.total}
+                    color="blue"
+                    icon={<LucideListTodo className="h-5 w-5 text-blue-600" />}
+                  />
+                  <StatCard
+                    title="Pending"
+                    value={data.stats.pending}
+                    color="yellow"
+                    icon={
+                      <LucideListTodo className="h-5 w-5 text-yellow-600" />
+                    }
+                  />
+                  <StatCard
+                    title="In Progress"
+                    value={data.stats.inProgress}
+                    color="orange"
+                    icon={
+                      <LucideListTodo className="h-5 w-5 text-orange-600" />
+                    }
+                  />
+                  <StatCard
+                    title="Completed"
+                    value={data.stats.completed}
+                    color="green"
+                    icon={<LucideListTodo className="h-5 w-5 text-green-600" />}
                   />
                 </div>
-                <div className="mt-6 flex justify-center gap-4 flex-wrap">
-                  {data.pieChartData.map((item, index) => (
-                    <div key={index} className="flex items-center">
-                      <div
-                        className="w-3 h-3 rounded-full mr-2"
-                        style={{
-                          backgroundColor: ["#F59E0B", "#3B82F6", "#10B981"][
-                            index
-                          ],
-                        }}
-                      />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {item.status}: {item.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Bar Chart */}
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                    <LucideBarChart2 className="h-5 w-5 mr-2 text-blue-600" />
-                    Task Priority
-                  </h3>
-                </div>
-                <div className="h-64">
-                  <BarChart
-                    data={data.barChartData}
-                    colors={["#EF4444", "#F59E0B", "#10B981"]}
-                  />
-                </div>
-                <div className="mt-6 flex justify-center gap-4 flex-wrap">
-                  {data.barChartData.map((item, index) => (
-                    <div key={index} className="flex items-center">
-                      <div
-                        className="w-3 h-3 rounded-full mr-2"
-                        style={{
-                          backgroundColor: ["#EF4444", "#F59E0B", "#10B981"][
-                            index
-                          ],
-                        }}
-                      />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {item.priority}: {item.count}
-                      </span>
+                {/* Charts Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Pie Chart */}
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                        <LucidePieChart className="h-5 w-5 mr-2 text-blue-600" />
+                        Task Status
+                      </h3>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                    <div className="h-64">
+                      <PieChart
+                        data={data.pieChartData}
+                        colors={["#F59E0B", "#3B82F6", "#10B981"]}
+                      />
+                    </div>
+                    <div className="mt-6 flex justify-center gap-4 flex-wrap">
+                      {data.pieChartData.map((item, index) => (
+                        <div key={index} className="flex items-center">
+                          <div
+                            className="w-3 h-3 rounded-full mr-2"
+                            style={{
+                              backgroundColor: [
+                                "#F59E0B",
+                                "#3B82F6",
+                                "#10B981",
+                              ][index],
+                            }}
+                          />
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {item.status}: {item.count}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-            {/* Recent Tasks */}
-            <div
-              id="recent-tasks-section"
-              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm"
-            >
-              <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                  <LucideListTodo className="h-5 w-5 mr-2 text-blue-600" />
-                  Recent Tasks
-                </h3>
-                <button
-                  onClick={() => setSelectedTask(null)}
-                  className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  {/* Bar Chart */}
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                        <LucideBarChart2 className="h-5 w-5 mr-2 text-blue-600" />
+                        Task Priority
+                      </h3>
+                    </div>
+                    <div className="h-64">
+                      <BarChart
+                        data={data.barChartData}
+                        colors={["#EF4444", "#F59E0B", "#10B981"]}
+                      />
+                    </div>
+                    <div className="mt-6 flex justify-center gap-4 flex-wrap">
+                      {data.barChartData.map((item, index) => (
+                        <div key={index} className="flex items-center">
+                          <div
+                            className="w-3 h-3 rounded-full mr-2"
+                            style={{
+                              backgroundColor: [
+                                "#EF4444",
+                                "#F59E0B",
+                                "#10B981",
+                              ][index],
+                            }}
+                          />
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {item.priority}: {item.count}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Tasks */}
+                <div
+                  id="recent-tasks-section"
+                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm"
                 >
-                  <span>View All</span>
-                  <LucideArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="p-5">
-                <TaskListTable tabledata={data.recentTasks} />
-              </div>
-            </div>
+                  <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                      <LucideListTodo className="h-5 w-5 mr-2 text-blue-600" />
+                      Recent Tasks
+                    </h3>
+                    <button
+                      onClick={() => setSelectedTask(null)}
+                      className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      <span>View All</span>
+                      <LucideArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="p-5">
+                    <TaskListTable tabledata={data.recentTasks} />
+                  </div>
+                </div>
+              </>
+            ) : activeView === "mytasks" ? (
+              <MyTask onSelectTask={setSelectedTask} />
+            ) : null}
 
             {/* Task Details Modal */}
             {selectedTask && (

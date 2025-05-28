@@ -4,6 +4,7 @@ import { useController } from "react-hook-form";
 import { ChevronDown, Check } from "lucide-react";
 import Modal from "./Modal";
 import Button from "../../components/Button";
+import avatar from "../../data/avatar.jpg";
 
 function SelectUsers({ control, name, rules, disabled }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -71,7 +72,7 @@ function SelectUsers({ control, name, rules, disabled }) {
                   className="flex items-center gap-1 bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded-full text-xs"
                 >
                   <img
-                    src={user?.profileImg || "/default-avatar.png"}
+                    src={user?.profileImg || avatar}
                     alt={user?.username || "User"}
                     className="w-4 h-4 rounded-full"
                   />
@@ -113,7 +114,7 @@ function SelectUsers({ control, name, rules, disabled }) {
                 >
                   <div className="flex items-center gap-3">
                     <img
-                      src={user?.profileImg || "/default-avatar.png"}
+                      src={user?.profileImg || avatar}
                       alt={user?.username || "User"}
                       className="w-8 h-8 rounded-full"
                     />
