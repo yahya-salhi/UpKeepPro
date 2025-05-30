@@ -1,14 +1,25 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, BarChart3 } from "lucide-react";
+import {
+  Send,
+  Bot,
+  User,
+  Loader2,
+  BarChart3,
+  Users,
+  Database,
+  TrendingUp,
+  RefreshCw,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 const UserDataChatbot = () => {
+  const [activeTab, setActiveTab] = useState("user-queries");
   const [messages, setMessages] = useState([
     {
       id: 1,
       type: "bot",
       content:
-        '👋 Hello! I\'m your **Professional User Analytics Assistant**. I provide comprehensive, real-time insights about your application users.\n\n🎯 **My Capabilities:**\n• **👥 User Status**: Who\'s online, offline, available, or busy\n• **👑 Role Management**: Admin users, role distributions, and permissions\n• **🏢 Department Analytics**: Grade/department breakdowns and statistics\n• **📊 Complete Overviews**: Full analytics dashboards with detailed insights\n\n✨ **Try asking**: "Who\'s online right now?" or "Show me admin users" or "User status overview"',
+        "👋 Hello! I'm your **Professional User Analytics Assistant**. Choose a category above to get started:\n\n**👥 User Queries**: Basic user counts, roles, and status\n**📊 Real-time Data**: Live MongoDB data with auto-refresh\n**📈 Analytics**: Trends, insights, and breakdowns\n\nSelect a tab above or ask me anything!",
       timestamp: new Date(),
       meta: { isUserDataQuery: false },
     },
@@ -16,14 +27,40 @@ const UserDataChatbot = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (shouldAutoScroll && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Check if user is near the bottom of the chat
+  const checkScrollPosition = () => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        messagesContainerRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShouldAutoScroll(isNearBottom);
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Only auto-scroll if user is near the bottom or it's the first message
+    if (messages.length <= 1 || shouldAutoScroll) {
+      scrollToBottom();
+    }
+  }, [messages, shouldAutoScroll]);
+
+  // Add scroll event listener to detect user scrolling
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", checkScrollPosition);
+      return () => container.removeEventListener("scroll", checkScrollPosition);
+    }
+  }, []);
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -38,6 +75,9 @@ const UserDataChatbot = () => {
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
+
+    // Force auto-scroll when user sends a message
+    setShouldAutoScroll(true);
 
     try {
       const response = await fetch("/api/chat/send-message", {
@@ -95,43 +135,119 @@ const UserDataChatbot = () => {
     });
   };
 
-  const suggestedQuestions = [
-    "Who's online right now?",
-    "Show me admin users",
-    "User status overview",
-    "Who is available?",
-    "Show me offline users",
-    "Role distribution",
-    "How many users are unavailable?",
-    "Department breakdown",
-  ];
+  // Categorized suggested questions
+  const questionCategories = {
+    "user-queries": {
+      title: "👥 User Queries",
+      icon: Users,
+      questions: [
+        "How many users are in my app?",
+        "Who's online right now?",
+        "Show me admin users",
+        "Who is available?",
+        "Show me offline users",
+        "How many users are unavailable?",
+      ],
+    },
+    "real-time": {
+      title: "📊 Real-time Data",
+      icon: Database,
+      questions: [
+        "User status overview",
+        "Role distribution",
+        "Department breakdown",
+        "Current online users",
+        "Available users right now",
+        "Live user statistics",
+      ],
+    },
+    analytics: {
+      title: "📈 Analytics",
+      icon: TrendingUp,
+      questions: [
+        "User trends this week",
+        "Weekly activity report",
+        "Peak activity hours",
+        "User engagement trends",
+        "Department analytics",
+        "Growth patterns",
+      ],
+    },
+  };
+
+  const currentQuestions = questionCategories[activeTab]?.questions || [];
 
   const handleSuggestedQuestion = (question) => {
     setInputMessage(question);
   };
 
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+
+    // Add a helpful message when switching tabs
+    const category = questionCategories[newTab];
+    const helpMessage = {
+      id: Date.now(),
+      type: "bot",
+      content: `🎯 **${category.title}** selected! Here are some questions you can ask in this category. Click any suggestion below or type your own question.`,
+      timestamp: new Date(),
+      meta: { isUserDataQuery: false, isTabSwitch: true },
+    };
+
+    setMessages((prev) => [...prev, helpMessage]);
+  };
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-lg shadow-lg">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full">
-          <Bot className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        {/* Title Bar */}
+        <div className="flex items-center gap-3 p-4">
+          <div className="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full">
+            <Bot className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900 dark:text-white">
+              User Data Assistant
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Professional analytics and insights
+            </p>
+          </div>
+          <div className="ml-auto">
+            <RefreshCw className="w-5 h-5 text-gray-400" />
+          </div>
         </div>
-        <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white">
-            User Data Assistant
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Ask me about your app's users
-          </p>
-        </div>
-        <div className="ml-auto">
-          <BarChart3 className="w-5 h-5 text-gray-400" />
+
+        {/* Tab Navigation */}
+        <div className="flex border-t border-gray-200 dark:border-gray-700">
+          {Object.entries(questionCategories).map(([key, category]) => {
+            const IconComponent = category.icon;
+            const isActive = activeTab === key;
+
+            return (
+              <button
+                key={key}
+                onClick={() => handleTabChange(key)}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
+                }`}
+              >
+                <IconComponent className="w-4 h-4" />
+                <span className="hidden sm:inline">{category.title}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0"
+      >
         {messages.map((message) => (
           <div
             key={message.id}
@@ -146,7 +262,7 @@ const UserDataChatbot = () => {
             )}
 
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+              className={`max-w-2xl lg:max-w-4xl px-5 py-4 rounded-lg ${
                 message.type === "user"
                   ? "bg-blue-600 text-white"
                   : message.isError
@@ -154,7 +270,7 @@ const UserDataChatbot = () => {
                   : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
               }`}
             >
-              <div className="text-sm whitespace-pre-wrap">
+              <div className="text-base leading-relaxed whitespace-pre-wrap">
                 {/* Render markdown-style formatting for user data responses */}
                 {message.meta?.isUserDataQuery ? (
                   <div
@@ -191,6 +307,15 @@ const UserDataChatbot = () => {
                     </p>
                   </div>
                 )}
+
+              {/* Show indicator for tab switch messages */}
+              {message.meta?.isTabSwitch && (
+                <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                  <p className="font-medium text-blue-800 dark:text-blue-200 flex items-center gap-1">
+                    <span>🎯</span> Category Selected
+                  </p>
+                </div>
+              )}
             </div>
 
             {message.type === "user" && (
@@ -218,17 +343,23 @@ const UserDataChatbot = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested Questions - Always visible */}
-      <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700">
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-          💡 Quick Questions:
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {suggestedQuestions.map((question, index) => (
+      {/* Categorized Suggested Questions - Compact */}
+      <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
+        <div className="flex items-center gap-2 mb-2">
+          {React.createElement(questionCategories[activeTab]?.icon || Users, {
+            className: "w-4 h-4 text-blue-600 dark:text-blue-400",
+          })}
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {questionCategories[activeTab]?.title} - Quick Questions:
+          </p>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-1">
+          {currentQuestions.slice(0, 6).map((question, index) => (
             <button
               key={index}
               onClick={() => handleSuggestedQuestion(question)}
-              className="text-xs px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors border border-blue-200 dark:border-blue-800"
+              className="text-xs px-2 py-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-300 transition-colors border border-gray-200 dark:border-gray-600 text-left truncate"
+              title={question}
             >
               {question}
             </button>
@@ -237,7 +368,7 @@ const UserDataChatbot = () => {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="flex gap-2">
           <textarea
             value={inputMessage}

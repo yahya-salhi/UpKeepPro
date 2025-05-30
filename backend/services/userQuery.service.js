@@ -1,4 +1,5 @@
 import User from "../models/user.modal.js";
+import WeeklyAnalyticsService from "./weeklyAnalytics.service.js";
 
 /**
  * Service for parsing user questions and querying MongoDB for user data
@@ -172,6 +173,23 @@ class UserQueryService {
           /user analytics/i,
         ],
         intent: "user_status_overview",
+      },
+
+      // Weekly trends analytics
+      weeklyTrends: {
+        patterns: [
+          /user trends this week/i,
+          /weekly trends/i,
+          /this week.*trends/i,
+          /weekly activity/i,
+          /week.*activity/i,
+          /weekly report/i,
+          /this week.*activity/i,
+          /weekly user.*patterns/i,
+          /activity.*this week/i,
+          /weekly analytics/i,
+        ],
+        intent: "weekly_trends_analysis",
       },
     };
 
@@ -383,6 +401,22 @@ class UserQueryService {
             },
           };
           contextMessage = `Complete user overview: ${total} total, ${online} online, ${available} available.`;
+          break;
+
+        case "weekly_trends_analysis":
+          const weeklyAnalytics =
+            await WeeklyAnalyticsService.generateWeeklyTrends();
+          if (weeklyAnalytics.success) {
+            result = weeklyAnalytics.data;
+            contextMessage = `Weekly trends analysis for ${weeklyAnalytics.data.weekPeriod.start} to ${weeklyAnalytics.data.weekPeriod.end}.`;
+          } else {
+            return {
+              success: false,
+              error: weeklyAnalytics.error,
+              contextMessage: "Unable to generate weekly trends analysis.",
+              queryInfo: parsedQuery,
+            };
+          }
           break;
 
         default:
@@ -647,6 +681,56 @@ ${gradeList}
 
 *Last updated: ${new Date().toLocaleString()}*`;
 
+      case "weekly_trends":
+        const weekData = data;
+        const dailyList = weekData.dailyBreakdown
+          .map(
+            (day) =>
+              `• **${day.day}**: ${day.logins} logins, ${day.avgOnline} avg online`
+          )
+          .join("\n");
+
+        const getTrendIcon = (trend) =>
+          trend.direction === "up" ? "📈" : "📉";
+        const getTrendText = (trend) => {
+          const icon = getTrendIcon(trend);
+          const sign = trend.direction === "up" ? "+" : "";
+          return `${sign}${trend.change}% ${icon}`;
+        };
+
+        const peakTime = weekData.peakActivity.peakHour.time;
+        const lowTime = weekData.peakActivity.lowHour.time;
+
+        return `📈 **Weekly User Activity Report**
+*${weekData.weekPeriod.start} - ${weekData.weekPeriod.end}*
+
+**📊 Daily Activity Breakdown:**
+${dailyList}
+
+**⏰ Peak Activity Analysis:**
+• **Most Active**: ${peakTime} (${
+          weekData.peakActivity.peakHour.activity
+        } activities)
+• **Least Active**: ${lowTime} (${
+          weekData.peakActivity.lowHour.activity
+        } activities)
+
+**📈 Weekly Insights:**
+• **Total Unique Users**: ${weekData.thisWeek.uniqueUsers} users
+• **Total Logins**: ${weekData.thisWeek.totalLogins} this week
+• **Average Session**: ${weekData.thisWeek.avgSessionHours} hours
+• **New Users**: ${weekData.thisWeek.newUsers} joined this week
+• **Currently Online**: ${weekData.thisWeek.onlineUsers} users
+• **Available**: ${weekData.thisWeek.availableUsers} users
+
+**📊 Trends vs Last Week:**
+• **Logins**: ${getTrendText(weekData.trends.logins)}
+• **Unique Users**: ${getTrendText(weekData.trends.uniqueUsers)}
+• **New Users**: ${getTrendText(weekData.trends.newUsers)}
+• **Session Duration**: ${getTrendText(weekData.trends.sessionDuration)}
+
+*Report generated: ${new Date().toLocaleString()}*`;
+
       default:
         return (
           contextMessage ||
@@ -746,6 +830,18 @@ ${gradeList}
       /full report/i,
       /user analytics/i,
       /dashboard/i,
+
+      // Weekly trends and analytics
+      /user trends this week/i,
+      /weekly trends/i,
+      /this week.*trends/i,
+      /weekly activity/i,
+      /week.*activity/i,
+      /weekly report/i,
+      /this week.*activity/i,
+      /weekly user.*patterns/i,
+      /activity.*this week/i,
+      /weekly analytics/i,
 
       // General user queries
       /show.*users/i,
