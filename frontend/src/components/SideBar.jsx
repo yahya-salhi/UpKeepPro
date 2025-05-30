@@ -15,6 +15,7 @@ import {
 import { RiStockLine } from "react-icons/ri";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { BsBarChart, BsKanban } from "react-icons/bs";
+import { Bot } from "lucide-react";
 import { GiLouvrePyramid } from "react-icons/gi";
 import { VscTools } from "react-icons/vsc";
 import { FiUserCheck } from "react-icons/fi";
@@ -55,6 +56,10 @@ const links = [
       {
         name: "Chat",
         icon: <IoChatbubbleEllipsesOutline />,
+      },
+      {
+        name: "ai-chat",
+        icon: <Bot />,
       },
       {
         name: "calendar",

@@ -15,6 +15,7 @@ export { default as Scheduler } from "./Scheduler";
 // export { default as Pyramid } from "./Charts/Pyramid";
 // export { default as Stacked } from "./Charts/Stacked";
 export { default as Chat } from "./chat/Chat";
+export { default as AIChat } from "./AIChat";
 export { default as Login } from "../pages/auth/login/Login";
 export { default as SingUp } from "./SignUp";
 export { default as Profile } from "../pages/profile/Profile";

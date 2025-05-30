@@ -12,6 +12,7 @@ import {
   getUsers,
   getUsersTasks,
   getUserTaskById,
+  getUserStats,
 } from "../controllers/user.controller.js";
 import { authorizeAdmin } from "../middleware/authorizeAdmin.js";
 
@@ -29,6 +30,7 @@ router.get("/online", protect, getOnlineUsers);
 router.get("/count", protect, getUserCount);
 router.get("/all", protect, getUsers);
 router.get("/users-tasks", protect, authorizeAdmin, getUsersTasks);
+router.get("/stats", protect, getUserStats);
 router.get("/:id", protect, getUserTaskById);
 
 export default router;

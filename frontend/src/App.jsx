@@ -16,6 +16,7 @@ import {
   Tooling,
   Editor,
   Chat,
+  AIChat,
   Login,
   Profile,
   ToolingExitForm,
@@ -235,6 +236,10 @@ function App() {
               <Route
                 path="chat"
                 element={authUser ? <Chat /> : <Navigate to="/login" />}
+              />
+              <Route
+                path="ai-chat"
+                element={authUser ? <AIChat /> : <Navigate to="/login" />}
               />
               {/* <Route
                 path="settings"

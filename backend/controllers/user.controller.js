@@ -355,3 +355,45 @@ export const getUserTaskById = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const getUserStats = async (req, res) => {
+  try {
+    // Get total user count
+    const totalUsers = await User.countDocuments();
+
+    // Get online users count
+    const onlineUsers = await User.countDocuments({ isOnline: true });
+
+    // Get available users count
+    const availableUsers = await User.countDocuments({
+      availability: "available",
+    });
+
+    // Get users by role
+    const roleStats = await User.aggregate([
+      { $group: { _id: "$role", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+
+    // Get users by grade (using grade as location/department)
+    const gradeStats = await User.aggregate([
+      { $group: { _id: "$grade", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalUsers,
+        onlineUsers,
+        availableUsers,
+        roleDistribution: roleStats,
+        gradeDistribution: gradeStats,
+        lastUpdated: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user stats:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

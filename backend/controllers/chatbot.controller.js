@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ollamaService } from "../services/ollama.service.js";
 import ISO21001Service from "../services/iso21001.service.js";
+import UserQueryService from "../services/userQuery.service.js";
 
 /**
  * Send message to chatbot and get AI response
@@ -17,11 +18,33 @@ export const sendMessage = async (req, res) => {
       });
     }
 
-    // Validate if query is ISO21001 related
-    const validation = ISO21001Service.validateQuery(message);
+    // Check if this is a user data query
+    const isUserDataQuery = UserQueryService.isUserDataQuery(message);
+    let aiResponse;
+    let userDataContext = null;
+    let validation = {
+      isRelevant: false,
+      confidence: 0,
+      categories: [],
+      isGreeting: false,
+    };
 
-    // Get response from AI
-    const aiResponse = await ollamaService.generateResponse(message);
+    if (isUserDataQuery) {
+      // Handle user data query directly without ISO21001 processing
+      const parsedQuery = UserQueryService.parseUserQuestion(message);
+      const queryResult = await UserQueryService.executeUserQuery(parsedQuery);
+
+      // Generate a direct, human-readable response for user data
+      aiResponse = UserQueryService.generateDirectResponse(
+        message,
+        queryResult
+      );
+      userDataContext = queryResult;
+    } else {
+      // Handle ISO21001 queries with the existing system
+      validation = ISO21001Service.validateQuery(message);
+      aiResponse = await ollamaService.generateResponse(message);
+    }
 
     res.status(200).json({
       success: true,
@@ -32,6 +55,8 @@ export const sendMessage = async (req, res) => {
           confidence: validation.confidence,
           categories: validation.categories,
           isGreeting: validation.isGreeting,
+          isUserDataQuery,
+          userDataContext,
         },
       },
     });
