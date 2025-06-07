@@ -128,7 +128,8 @@ const UserProfile = () => {
               <UserStatus isOnline={authUser?.isOnline} />
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-0.5">
-              {authUser?.grade}
+              {authUser?.grade ||
+                (authUser?.role === "STAG" ? "Student" : "No rank assigned")}
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">
               {authUser?.email}

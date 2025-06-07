@@ -30,6 +30,13 @@ import CreateTask from "./pages/kanban/CreateTask";
 import ManageTask from "./pages/kanban/ManageTask";
 import ManageUsers from "./pages/kanban/ManageUsers";
 import UserKanban from "./pages/kanban/UserKanban";
+import TestManagement from "./pages/Test/TestManagement";
+import CreateTest from "./pages/Test/CreateTest";
+import TakeTest from "./pages/Test/TakeTest";
+import EditTest from "./pages/Test/EditTest";
+import TestResults from "./pages/Test/TestResults";
+import MyResults from "./pages/Test/MyResults";
+import TestResultsDashboard from "./pages/Test/TestResultsDashboard";
 
 function App() {
   const {
@@ -240,6 +247,68 @@ function App() {
               <Route
                 path="ai-chat"
                 element={authUser ? <AIChat /> : <Navigate to="/login" />}
+              />
+
+              {/* Test Routes */}
+              <Route
+                path="/tests"
+                element={
+                  authUser ? <TestManagement /> : <Navigate to="/login" />
+                }
+              />
+              <Route
+                path="/tests/create"
+                element={
+                  authUser && (authUser.role === "FORM" || authUser.isAdmin) ? (
+                    <CreateTest />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+              <Route
+                path="/tests/:testId/take"
+                element={
+                  authUser && authUser.role === "STAG" ? (
+                    <TakeTest />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+              <Route
+                path="/tests/:testId/edit"
+                element={
+                  authUser && (authUser.role === "FORM" || authUser.isAdmin) ? (
+                    <EditTest />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+              <Route
+                path="/tests/:testId/results/:attemptId"
+                element={authUser ? <TestResults /> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/my-results"
+                element={
+                  authUser && authUser.role === "STAG" ? (
+                    <MyResults />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+              <Route
+                path="/test-results-dashboard"
+                element={
+                  authUser && (authUser.role === "FORM" || authUser.isAdmin) ? (
+                    <TestResultsDashboard />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
               />
               {/* <Route
                 path="settings"

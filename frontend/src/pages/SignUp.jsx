@@ -103,7 +103,8 @@ function SignUp() {
 
     // Role and grade validation
     if (!formData.role) return toast.error("Role is required");
-    if (!formData.grade) return toast.error("Grade is required");
+    if (formData.role !== "STAG" && !formData.grade)
+      return toast.error("Military rank is required for this role");
 
     return true;
   };
@@ -116,6 +117,16 @@ function SignUp() {
     } else {
       toast.dismiss("email-error");
     }
+  };
+
+  const handleRoleChange = (e) => {
+    const role = e.target.value;
+    setFormData({
+      ...formData,
+      role,
+      // Clear grade when switching to STAG role
+      grade: role === "STAG" ? "" : formData.grade,
+    });
   };
 
   const handlePasswordChange = (e) => {
@@ -287,9 +298,7 @@ function SignUp() {
                     id="role"
                     className="block w-full pl-3 pr-10 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors appearance-none"
                     value={formData.role}
-                    onChange={(e) =>
-                      setFormData({ ...formData, role: e.target.value })
-                    }
+                    onChange={handleRoleChange}
                   >
                     <option disabled value="">
                       Select role
@@ -301,6 +310,7 @@ function SignUp() {
                     <option value="RLOG">RLOG</option>
                     <option value="CAR">CAR</option>
                     <option value="REP">REP</option>
+                    <option value="STAG">STAG</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg
@@ -324,7 +334,12 @@ function SignUp() {
               {/* Grade */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Military Rank
+                  {formData.role === "STAG"
+                    ? "Level/Grade (Optional)"
+                    : "Military Rank"}
+                  {formData.role !== "STAG" && (
+                    <span className="text-red-500 ml-1">*</span>
+                  )}
                 </label>
                 <div className="relative">
                   <select
@@ -335,20 +350,39 @@ function SignUp() {
                     }
                   >
                     <option disabled value="">
-                      Select rank
+                      {formData.role === "STAG"
+                        ? "Select level (optional)"
+                        : "Select rank"}
                     </option>
-                    <option value="SGT">SGT</option>
-                    <option value="SGT/C">SGT/C</option>
-                    <option value="ADJ">ADJ</option>
-                    <option value="ADJ/C">ADJ/C</option>
-                    <option value="ADJ/M">ADJ/M</option>
-                    <option value="S/LT">S/LT</option>
-                    <option value="LT">LT</option>
-                    <option value="CPT">CPT</option>
-                    <option value="CMD">CMD</option>
-                    <option value="COL">LT/COL</option>
-                    <option value="COL/M">COL</option>
-                    <option value="COL/M">COL/M</option>
+                    {formData.role === "STAG" ? (
+                      <>
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Expert">Expert</option>
+                        <option value="Level 1">Level 1</option>
+                        <option value="Level 2">Level 2</option>
+                        <option value="Level 3">Level 3</option>
+                        <option value="Level 4">Level 4</option>
+                        <option value="Trainee">Trainee</option>
+                        <option value="Student">Student</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="SGT">SGT</option>
+                        <option value="SGT/C">SGT/C</option>
+                        <option value="ADJ">ADJ</option>
+                        <option value="ADJ/C">ADJ/C</option>
+                        <option value="ADJ/M">ADJ/M</option>
+                        <option value="S/LT">S/LT</option>
+                        <option value="LT">LT</option>
+                        <option value="CPT">CPT</option>
+                        <option value="CMD">CMD</option>
+                        <option value="COL">LT/COL</option>
+                        <option value="COL/M">COL</option>
+                        <option value="COL/M">COL/M</option>
+                      </>
+                    )}
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg

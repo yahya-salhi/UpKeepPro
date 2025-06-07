@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema(
     // Role field to handle different types of users
     role: {
       type: String,
-      enum: ["CC", "REPI", "RM", "FORM", "RLOG", "CAR", "REP"],
+      enum: ["CC", "REPI", "RM", "FORM", "RLOG", "CAR", "REP", "STAG"],
       default: "REPI",
       required: true,
     },
@@ -33,7 +33,12 @@ const userSchema = new mongoose.Schema(
     },
     grade: {
       type: String,
-      required: true,
+      required: function () {
+        return this.role !== "STAG"; // Grade not required for stagiaires
+      },
+      default: function () {
+        return this.role === "STAG" ? "Stagiaire" : undefined;
+      },
     },
     password: {
       type: String,
@@ -100,6 +105,14 @@ const userSchema = new mongoose.Schema(
 );
 userSchema.methods.isAdmin = function () {
   return this.role === "CC" || this.role === "REPI"; // Returns true if the user has an admin role
+};
+
+userSchema.methods.isFormateur = function () {
+  return this.role === "FORM"; // Returns true if the user is a formateur
+};
+
+userSchema.methods.isStagiaire = function () {
+  return this.role === "STAG"; // Returns true if the user is a stagiaire
 };
 const User = mongoose.model("User", userSchema);
 

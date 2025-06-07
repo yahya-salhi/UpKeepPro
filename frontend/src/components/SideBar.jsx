@@ -20,6 +20,9 @@ import { GiLouvrePyramid } from "react-icons/gi";
 import { VscTools } from "react-icons/vsc";
 import { FiUserCheck } from "react-icons/fi";
 import { GoChecklist } from "react-icons/go";
+import { HiOutlineClipboardDocumentCheck } from "react-icons/hi2";
+import { HiOutlineChartBar } from "react-icons/hi2";
+import { HiOutlineDocumentChartBar } from "react-icons/hi2";
 import { useQueryClient } from "@tanstack/react-query";
 
 const links = [
@@ -85,6 +88,18 @@ const links = [
         name: "ExitTooling",
         icon: <VscTools />,
       },
+      {
+        name: "tests",
+        icon: <HiOutlineClipboardDocumentCheck />,
+      },
+      {
+        name: "my-results",
+        icon: <HiOutlineChartBar />,
+      },
+      {
+        name: "test-results-dashboard",
+        icon: <HiOutlineDocumentChartBar />,
+      },
     ],
   },
   {
@@ -142,6 +157,10 @@ function SideBar() {
   const shouldShowLink = (linkName) => {
     if (linkName === "kanban") return authUser?.isAdmin;
     if (linkName === "userkanban") return !authUser?.isAdmin;
+    if (linkName === "tests") return true; // All authenticated users can access tests
+    if (linkName === "my-results") return authUser?.role === "STAG"; // Only stagiaires can see their results
+    if (linkName === "test-results-dashboard")
+      return authUser?.role === "FORM" || authUser?.isAdmin; // Only formateurs and admins
     return true;
   };
 

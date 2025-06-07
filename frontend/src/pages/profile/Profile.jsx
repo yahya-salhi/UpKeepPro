@@ -24,7 +24,7 @@ const ProfileHeader = ({ user, onBack }) => (
       <div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            {user.grade}
+            {user.grade || (user.role === "STAG" ? "Student" : "No rank")}
           </span>
           {user.username}
         </h2>

@@ -40,6 +40,13 @@ export const signup = async (req, res) => {
         .status(400)
         .json({ error: "Password must be at least 6 characters long" });
     }
+
+    // Validate grade requirement based on role
+    if (role !== "STAG" && !grade) {
+      return res
+        .status(400)
+        .json({ error: "Military rank is required for this role" });
+    }
     /// hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -48,7 +55,7 @@ export const signup = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      grade,
+      grade: role === "STAG" ? grade || "Stagiaire" : grade,
       role,
       createdBy: adminId,
       createdAt: new Date(),

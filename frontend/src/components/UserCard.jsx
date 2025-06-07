@@ -70,7 +70,7 @@ const UserCard = ({ user, index }) => {
               isDarkMode ? "text-white" : "text-gray-900"
             }`}
           >
-            {user.grade}
+            {user.grade || (user.role === "STAG" ? "Student" : "User")}
           </h3>
           <p
             className={`text-sm mb-3 ${

@@ -181,7 +181,13 @@ const EditProfileModal = ({ authUser }) => {
                 Military Information
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Military Rank">
+                <FormField
+                  label={
+                    authUser?.role === "STAG"
+                      ? "Level/Grade (Optional)"
+                      : "Military Rank"
+                  }
+                >
                   <select
                     value={formData.grade}
                     onChange={(e) =>
@@ -189,25 +195,46 @@ const EditProfileModal = ({ authUser }) => {
                     }
                     className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                   >
-                    <option value="">Select Rank</option>
-                    {[
-                      "SGT",
-                      "SGT/C",
-                      "ADJ",
-                      "ADJ/C",
-                      "ADJ/M",
-                      "S/LT",
-                      "LT",
-                      "CPT",
-                      "CMD",
-                      "LT/COL",
-                      "COL",
-                      "COL/M",
-                    ].map((rank) => (
-                      <option key={rank} value={rank}>
-                        {rank}
-                      </option>
-                    ))}
+                    <option value="">
+                      {authUser?.role === "STAG"
+                        ? "Select level (optional)"
+                        : "Select Rank"}
+                    </option>
+                    {authUser?.role === "STAG"
+                      ? [
+                          "Beginner",
+                          "Intermediate",
+                          "Advanced",
+                          "Expert",
+                          "Level 1",
+                          "Level 2",
+                          "Level 3",
+                          "Level 4",
+                          "Trainee",
+                          "Student",
+                        ].map((level) => (
+                          <option key={level} value={level}>
+                            {level}
+                          </option>
+                        ))
+                      : [
+                          "SGT",
+                          "SGT/C",
+                          "ADJ",
+                          "ADJ/C",
+                          "ADJ/M",
+                          "S/LT",
+                          "LT",
+                          "CPT",
+                          "CMD",
+                          "LT/COL",
+                          "COL",
+                          "COL/M",
+                        ].map((rank) => (
+                          <option key={rank} value={rank}>
+                            {rank}
+                          </option>
+                        ))}
                   </select>
                 </FormField>
 
