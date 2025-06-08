@@ -21,6 +21,7 @@ import {
 } from "../ui/card";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
+import toast from "react-hot-toast";
 
 const QCMEditor = ({ question, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -174,7 +175,7 @@ const QCMEditor = ({ question, onSave, onCancel }) => {
   const handleSave = () => {
     const error = validateQuestion();
     if (error) {
-      alert(error);
+      toast.error(error);
       return;
     }
 

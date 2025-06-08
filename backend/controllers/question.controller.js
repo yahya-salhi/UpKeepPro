@@ -43,6 +43,18 @@ export const createQuestion = async (req, res) => {
       });
     }
 
+    // Validate category
+    const validCategories = [
+      "Test",
+      "Exam",
+      "Rattrapage",
+      "Exercice",
+      "Quiz",
+      "Pré-Test",
+    ];
+    const validCategory =
+      category && validCategories.includes(category) ? category : "Test";
+
     const newQuestion = new Question({
       question,
       questionType: questionType || "multiple-choice",
@@ -51,7 +63,7 @@ export const createQuestion = async (req, res) => {
       points: points || 1,
       difficulty: difficulty || "medium",
       timeLimit: timeLimit || 0,
-      category: category || "General",
+      category: validCategory,
       tags: tags || [],
       createdBy: req.user._id,
     });
@@ -245,11 +257,31 @@ export const updateQuestion = async (req, res) => {
       });
     }
 
-    const updatedQuestion = await Question.findByIdAndUpdate(
-      id,
-      { ...req.body },
-      { new: true, runValidators: true }
-    ).populate("createdBy", "username email");
+    // Validate and sanitize the update data
+    const updateData = { ...req.body };
+
+    // Ensure category is valid if provided
+    const validCategories = [
+      "Test",
+      "Exam",
+      "Rattrapage",
+      "Exercice",
+      "Quiz",
+      "Pré-Test",
+    ];
+    if (updateData.category !== undefined) {
+      if (
+        !updateData.category ||
+        !validCategories.includes(updateData.category)
+      ) {
+        updateData.category = "Test"; // Default to "Test" if invalid
+      }
+    }
+
+    const updatedQuestion = await Question.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).populate("createdBy", "username email");
 
     res.status(200).json({
       success: true,

@@ -3,6 +3,7 @@ import { HiMiniPlus } from "react-icons/hi2";
 import { LuTrash2, LuPaperclip } from "react-icons/lu";
 import { useController } from "react-hook-form";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 // Helper function to get file size in readable format
 const formatFileSize = (bytes) => {
@@ -64,12 +65,12 @@ function AttachmentsInput({ control, name, disabled }) {
 
     for (const file of files) {
       if (!allowedTypes.includes(file.type)) {
-        alert(`File type ${file.type} is not supported`);
+        toast.error(`File type ${file.type} is not supported`);
         continue;
       }
 
       if (file.size > maxSize) {
-        alert(`File ${file.name} is too large. Maximum size is 5MB`);
+        toast.error(`File ${file.name} is too large. Maximum size is 5MB`);
         continue;
       }
 
@@ -91,7 +92,7 @@ function AttachmentsInput({ control, name, disabled }) {
         field.onChange([...field.value, newAttachment]);
       } catch (error) {
         console.error("Error processing file:", error);
-        alert(`Error processing file ${file.name}`);
+        toast.error(`Error processing file ${file.name}`);
       }
     }
   };

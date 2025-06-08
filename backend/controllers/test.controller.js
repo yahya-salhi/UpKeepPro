@@ -258,11 +258,31 @@ export const updateTest = async (req, res) => {
       });
     }
 
-    const updatedTest = await Test.findByIdAndUpdate(
-      id,
-      { ...req.body },
-      { new: true, runValidators: true }
-    )
+    // Validate and sanitize the update data
+    const updateData = { ...req.body };
+
+    // Ensure category is valid if provided
+    const validCategories = [
+      "Test",
+      "Exam",
+      "Rattrapage",
+      "Exercice",
+      "Quiz",
+      "Pré-Test",
+    ];
+    if (updateData.category !== undefined) {
+      if (
+        !updateData.category ||
+        !validCategories.includes(updateData.category)
+      ) {
+        updateData.category = "Test"; // Default to "Test" if invalid
+      }
+    }
+
+    const updatedTest = await Test.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    })
       .populate("createdBy", "username email")
       .populate("assignedTo", "username email");
 
