@@ -11,6 +11,7 @@ import {
   getTestById,
   updateTest,
   deleteTest,
+  bulkDeleteTests,
   publishTest,
 } from "../controllers/test.controller.js";
 import {
@@ -68,6 +69,7 @@ router.get(
 // Test Management Routes (Formateurs and Admins only) - /:id routes MUST BE LAST
 router.post("/", authorizeFormateur, createTest);
 router.get("/", getTests);
+router.delete("/bulk", authorizeFormateur, bulkDeleteTests); // Bulk delete route BEFORE /:id
 router.get("/:id", getTestById);
 router.put("/:id", authorizeFormateur, updateTest);
 router.delete("/:id", authorizeFormateur, deleteTest);

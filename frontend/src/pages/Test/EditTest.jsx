@@ -232,9 +232,62 @@ const EditTest = () => {
   };
 
   const handleDeleteQuestion = (questionId) => {
-    if (window.confirm("Are you sure you want to delete this question?")) {
-      deleteQuestionMutation.mutate(questionId);
-    }
+    toast(
+      (t) => (
+        <div className="flex flex-col space-y-3">
+          <div className="flex items-center space-x-2">
+            <div className="flex-shrink-0">
+              <svg
+                className="w-6 h-6 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">Delete Question</p>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete this question?
+              </p>
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+            This action cannot be undone and will permanently remove the
+            question from the test.
+          </div>
+          <div className="flex space-x-2 justify-end">
+            <button
+              className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              onClick={() => {
+                toast.dismiss(t.id);
+                deleteQuestionMutation.mutate(questionId);
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+        style: {
+          maxWidth: "400px",
+        },
+      }
+    );
   };
 
   const handlePublishTest = () => {

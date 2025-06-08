@@ -81,41 +81,176 @@ const TestManagement = () => {
     },
   });
 
-  // Handle delete with confirmation
-  const handleDeleteTest = (test) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${test.title}"?\n\nThis action cannot be undone and will permanently remove:\n- The test and all its questions\n- All student attempts and results\n- All associated data`
-    );
+  // Optimized bulk delete mutation using dedicated backend endpoint
+  const { mutate: bulkDeleteTests, isPending: isBulkDeleting } = useMutation({
+    mutationFn: async (testIds) => {
+      const response = await fetch("/api/tests/bulk", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ testIds }),
+      });
 
-    if (confirmDelete) {
-      toast.loading("Deleting test...", { id: `delete-${test._id}` });
-      deleteTest(test._id);
-    }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete tests");
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast.dismiss("bulk-delete");
+      toast.success(`🎉 ${data.deletedCount} test(s) deleted successfully!`, {
+        duration: 4000,
+      });
+      queryClient.invalidateQueries({ queryKey: ["tests"] });
+      setSelectedTests([]);
+    },
+    onError: (error) => {
+      toast.dismiss("bulk-delete");
+      toast.error(error.message || "Failed to delete tests", {
+        duration: 6000,
+      });
+      // Refresh the list to show current state
+      queryClient.invalidateQueries({ queryKey: ["tests"] });
+    },
+  });
+
+  // Handle delete with confirmation using react-hot-toast
+  const handleDeleteTest = (test) => {
+    toast(
+      (t) => (
+        <div className="flex flex-col space-y-3">
+          <div className="flex items-center space-x-2">
+            <div className="flex-shrink-0">
+              <svg
+                className="w-6 h-6 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">Delete Test</p>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete "{test.title}"?
+              </p>
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+            This action cannot be undone and will permanently remove:
+            <br />• The test and all its questions
+            <br />• All student attempts and results
+            <br />• All associated data
+          </div>
+          <div className="flex space-x-2 justify-end">
+            <button
+              className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              onClick={() => {
+                toast.dismiss(t.id);
+                toast.loading("Deleting test...", { id: `delete-${test._id}` });
+                deleteTest(test._id);
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+        style: {
+          maxWidth: "400px",
+        },
+      }
+    );
   };
 
-  // Handle bulk delete
+  // Handle bulk delete with react-hot-toast confirmation
   const handleBulkDelete = () => {
     if (selectedTests.length === 0) {
       toast.error("Please select tests to delete");
       return;
     }
 
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete ${selectedTests.length} test(s)?\n\nThis action cannot be undone and will permanently remove all selected tests and their data.`
+    toast(
+      (t) => (
+        <div className="flex flex-col space-y-3">
+          <div className="flex items-center space-x-2">
+            <div className="flex-shrink-0">
+              <svg
+                className="w-6 h-6 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">
+                Delete Multiple Tests
+              </p>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete {selectedTests.length} test(s)?
+              </p>
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+            This action cannot be undone and will permanently remove all
+            selected tests and their data.
+          </div>
+          <div className="flex space-x-2 justify-end">
+            <button
+              className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              onClick={() => {
+                toast.dismiss(t.id);
+                toast.loading(`Deleting ${selectedTests.length} tests...`, {
+                  id: "bulk-delete",
+                });
+
+                // Use the optimized bulk delete mutation
+                bulkDeleteTests(selectedTests);
+              }}
+            >
+              Delete All
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+        style: {
+          maxWidth: "400px",
+        },
+      }
     );
-
-    if (confirmDelete) {
-      toast.loading(`Deleting ${selectedTests.length} tests...`, {
-        id: "bulk-delete",
-      });
-
-      // Delete tests one by one
-      selectedTests.forEach((testId) => {
-        deleteTest(testId);
-      });
-
-      setSelectedTests([]);
-    }
   };
 
   // Handle select all tests
@@ -294,10 +429,10 @@ const TestManagement = () => {
                   variant="destructive"
                   size="sm"
                   onClick={handleBulkDelete}
-                  disabled={isDeleting}
+                  disabled={isDeleting || isBulkDeleting}
                 >
                   <Trash2 size={14} className="mr-1" />
-                  Delete Selected
+                  {isBulkDeleting ? "Deleting..." : "Delete Selected"}
                 </Button>
               </div>
             </div>

@@ -288,9 +288,8 @@ export const deleteTest = async (req, res) => {
       });
     }
 
-    // Check permissions
-    const canDelete =
-      test.createdBy.toString() === user._id.toString() || user.isAdmin();
+    // Check permissions - Formateurs and Admins can delete ANY test
+    const canDelete = user.role === "FORM" || user.isAdmin();
 
     if (!canDelete) {
       return res.status(403).json({
@@ -299,26 +298,67 @@ export const deleteTest = async (req, res) => {
       });
     }
 
-    // Prevent deletion if test has attempts
-    if (test.totalAttempts > 0) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Cannot delete test that has been attempted by users. Archive it instead.",
-      });
-    }
+    // Delete all related test attempts first
+    await TestAttempt.deleteMany({ test: id });
 
+    // Delete the test
     await Test.findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,
-      message: "Test deleted successfully",
+      message: "Test and all related data deleted successfully",
     });
   } catch (error) {
     console.error("Error deleting test:", error);
     res.status(500).json({
       success: false,
       message: "Failed to delete test",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Bulk delete tests
+// @route   DELETE /api/tests/bulk
+// @access  Private (Formateurs and Admins)
+export const bulkDeleteTests = async (req, res) => {
+  try {
+    const { testIds } = req.body;
+    const user = req.user;
+
+    if (!testIds || !Array.isArray(testIds) || testIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Test IDs array is required",
+      });
+    }
+
+    // Check permissions - Formateurs and Admins can delete ANY test
+    const canDelete = user.role === "FORM" || user.isAdmin();
+
+    if (!canDelete) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete tests",
+      });
+    }
+
+    // Delete all related test attempts first
+    await TestAttempt.deleteMany({ test: { $in: testIds } });
+
+    // Delete all tests
+    const deleteResult = await Test.deleteMany({ _id: { $in: testIds } });
+
+    res.status(200).json({
+      success: true,
+      message: `${deleteResult.deletedCount} test(s) and all related data deleted successfully`,
+      deletedCount: deleteResult.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error bulk deleting tests:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete tests",
       error: error.message,
     });
   }

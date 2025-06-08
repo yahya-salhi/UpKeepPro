@@ -35,7 +35,7 @@ export const createQuestion = async (req, res) => {
     }
 
     // Validate correct answers
-    const correctOptions = options.filter(option => option.isCorrect);
+    const correctOptions = options.filter((option) => option.isCorrect);
     if (correctOptions.length === 0) {
       return res.status(400).json({
         success: false,
@@ -62,7 +62,11 @@ export const createQuestion = async (req, res) => {
     // If testId is provided, add question to test
     if (testId) {
       const test = await Test.findById(testId);
-      if (test && (test.createdBy.toString() === req.user._id.toString() || req.user.isAdmin())) {
+      if (
+        test &&
+        (test.createdBy.toString() === req.user._id.toString() ||
+          req.user.isAdmin())
+      ) {
         test.questions.push(savedQuestion._id);
         test.totalQuestions = test.questions.length;
         await test.save();
@@ -175,7 +179,10 @@ export const getQuestionById = async (req, res) => {
     const { id } = req.params;
     const user = req.user;
 
-    const question = await Question.findById(id).populate("createdBy", "username email");
+    const question = await Question.findById(id).populate(
+      "createdBy",
+      "username email"
+    );
 
     if (!question) {
       return res.status(404).json({
@@ -185,7 +192,7 @@ export const getQuestionById = async (req, res) => {
     }
 
     // Check permissions
-    const canView = 
+    const canView =
       question.createdBy._id.toString() === user._id.toString() ||
       user.isAdmin() ||
       user.role === "FORM";
@@ -228,10 +235,8 @@ export const updateQuestion = async (req, res) => {
       });
     }
 
-    // Check permissions
-    const canEdit = 
-      question.createdBy.toString() === user._id.toString() ||
-      user.isAdmin();
+    // Check permissions - Formateurs and Admins can edit ANY question
+    const canEdit = user.role === "FORM" || user.isAdmin();
 
     if (!canEdit) {
       return res.status(403).json({
@@ -278,10 +283,8 @@ export const deleteQuestion = async (req, res) => {
       });
     }
 
-    // Check permissions
-    const canDelete = 
-      question.createdBy.toString() === user._id.toString() ||
-      user.isAdmin();
+    // Check permissions - Formateurs and Admins can delete ANY question
+    const canDelete = user.role === "FORM" || user.isAdmin();
 
     if (!canDelete) {
       return res.status(403).json({
@@ -291,10 +294,7 @@ export const deleteQuestion = async (req, res) => {
     }
 
     // Remove question from any tests
-    await Test.updateMany(
-      { questions: id },
-      { $pull: { questions: id } }
-    );
+    await Test.updateMany({ questions: id }, { $pull: { questions: id } });
 
     // Update totalQuestions count for affected tests
     const affectedTests = await Test.find({ questions: { $ne: id } });
