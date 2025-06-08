@@ -57,7 +57,7 @@ const TestManagement = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 300); // 300ms delay
+    }, 500); // Increased delay to 500ms for better performance
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
@@ -266,12 +266,12 @@ const TestManagement = () => {
     );
   };
 
-  // Handle select all tests
-  const handleSelectAll = () => {
-    if (selectedTests.length === tests.length) {
+  // Handle select all tests - moved after tests definition to avoid dependency issues
+  const handleSelectAll = (currentTests) => {
+    if (selectedTests.length === currentTests.length) {
       setSelectedTests([]);
     } else {
-      setSelectedTests(tests.map((test) => test._id));
+      setSelectedTests(currentTests.map((test) => test._id));
     }
   };
 
@@ -310,7 +310,9 @@ const TestManagement = () => {
 
       if (categoryFilter !== "all") params.append("category", categoryFilter);
 
-      const response = await fetch(`/api/tests?${params.toString()}`, {
+      const url = `/api/tests?${params.toString()}`;
+
+      const response = await fetch(url, {
         credentials: "include",
       });
 
@@ -318,8 +320,11 @@ const TestManagement = () => {
         throw new Error("Failed to fetch tests");
       }
 
-      return response.json();
+      const data = await response.json();
+      return data;
     },
+    staleTime: 30000, // Cache for 30 seconds
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   const handlePublishTest = async (testId) => {
@@ -1173,7 +1178,7 @@ const TestManagement = () => {
                 <Checkbox
                   id="select-all"
                   checked={selectedTests.length === tests.length}
-                  onCheckedChange={handleSelectAll}
+                  onCheckedChange={() => handleSelectAll(tests)}
                 />
                 <label
                   htmlFor="select-all"
