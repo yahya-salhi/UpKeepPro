@@ -45,7 +45,7 @@ const EditTest = () => {
     maxAttempts: 1,
     startDate: "",
     endDate: "",
-    category: "General",
+    category: "Test",
     tags: [],
   });
 
@@ -398,6 +398,28 @@ const EditTest = () => {
                   }
                   rows={3}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={testData.category}
+                  onValueChange={(value) =>
+                    handleInputChange("category", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Test">Test</SelectItem>
+                    <SelectItem value="Exam">Exam</SelectItem>
+                    <SelectItem value="Rattrapage">Rattrapage</SelectItem>
+                    <SelectItem value="Exercice">Exercice</SelectItem>
+                    <SelectItem value="Quiz">Quiz</SelectItem>
+                    <SelectItem value="Pré-Test">Pré-Test</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

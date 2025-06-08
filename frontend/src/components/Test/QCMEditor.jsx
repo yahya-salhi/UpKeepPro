@@ -34,7 +34,7 @@ const QCMEditor = ({ question, onSave, onCancel }) => {
     points: question?.points || 1,
     difficulty: question?.difficulty || "medium",
     timeLimit: question?.timeLimit || 0,
-    category: question?.category || "General",
+    category: question?.category || "Test",
     tags: question?.tags || [],
   });
 

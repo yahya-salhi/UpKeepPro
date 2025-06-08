@@ -85,15 +85,8 @@ const testSchema = new mongoose.Schema(
     // Categories and tags
     category: {
       type: String,
-      enum: [
-        "Technical",
-        "Safety",
-        "Compliance",
-        "General",
-        "Training",
-        "Assessment",
-      ],
-      default: "General",
+      enum: ["Test", "Exam", "Rattrapage", "Exercice", "Quiz", "Pré-Test"],
+      default: "Test",
     },
     tags: [
       {

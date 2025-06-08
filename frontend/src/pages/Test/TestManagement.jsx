@@ -1208,12 +1208,12 @@ const TestManagement = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="Technical">Technical</SelectItem>
-                <SelectItem value="Safety">Safety</SelectItem>
-                <SelectItem value="Compliance">Compliance</SelectItem>
-                <SelectItem value="General">General</SelectItem>
-                <SelectItem value="Training">Training</SelectItem>
-                <SelectItem value="Assessment">Assessment</SelectItem>
+                <SelectItem value="Test">Test</SelectItem>
+                <SelectItem value="Exam">Exam</SelectItem>
+                <SelectItem value="Rattrapage">Rattrapage</SelectItem>
+                <SelectItem value="Exercice">Exercice</SelectItem>
+                <SelectItem value="Quiz">Quiz</SelectItem>
+                <SelectItem value="Pré-Test">Pré-Test</SelectItem>
               </SelectContent>
             </Select>
           </div>
