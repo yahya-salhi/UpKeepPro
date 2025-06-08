@@ -4,12 +4,12 @@ import { RiNotification3Line } from "react-icons/ri";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { TooltipComponent } from "@syncfusion/ej2-react-popups";
 import { useEffect, useRef } from "react";
-import { io } from "socket.io-client";
 import avatar from "../data/avatar.jpg";
 import { useStateContext } from "../contexts/ContextProvider";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import NotificationsPage from "../pages/notification/NotificationsPage";
+import { useAuthStore } from "../store/useAuthStore";
 
 import UserProfile from "../components/UserProfile";
 import NotificationMessage from "./NotificationMessage";
@@ -36,15 +36,7 @@ const NavButton = ({ title, customFunc, icon, color, dotColor }) => (
 );
 
 const Navbar = () => {
-  const socket = useRef(
-    io("http://localhost:5000", {
-      withCredentials: true,
-      transports: ["websocket", "polling"], // Allow both transports for Firefox compatibility
-      forceNew: true,
-      reconnection: true,
-      timeout: 5000,
-    })
-  ).current;
+  const { socket } = useAuthStore();
   const {
     currentColor,
     activeMenu,
@@ -122,11 +114,7 @@ const Navbar = () => {
   });
 
   useEffect(() => {
-    if (authUser?._id) {
-      socket.on("connect", () => {
-        socket.emit("joinRoom", authUser._id);
-      });
-
+    if (authUser?._id && socket) {
       socket.on("newMessageNotification", () => {
         refetchMessageBadge();
       });
@@ -152,15 +140,34 @@ const Navbar = () => {
           });
         }
       });
+
+      socket.on("newTaskCompletionNotification", (data) => {
+        refetch();
+        if (data.message) {
+          toast.success(`Task completed: ${data.message}`, {
+            duration: 4000,
+          });
+        }
+      });
+
+      socket.on("newTaskEditNotification", (data) => {
+        refetch();
+        if (data.message) {
+          toast.info(`Task updated: ${data.message}`, {
+            duration: 4000,
+          });
+        }
+      });
     }
     return () => {
-      socket.off("connect");
-      socket.off("connect_error");
-      socket.off("disconnect");
-      socket.off("newMessageNotification");
-      socket.off("newEventNotification");
-      socket.off("newFileSubmissionNotification");
-      socket.off("newTaskAssignmentNotification");
+      if (socket) {
+        socket.off("newMessageNotification");
+        socket.off("newEventNotification");
+        socket.off("newFileSubmissionNotification");
+        socket.off("newTaskAssignmentNotification");
+        socket.off("newTaskCompletionNotification");
+        socket.off("newTaskEditNotification");
+      }
     };
   }, [authUser, refetchMessageBadge, refetch, socket]);
 

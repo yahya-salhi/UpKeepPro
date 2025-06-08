@@ -23,6 +23,8 @@ const notificationSchema = new mongoose.Schema(
         "file_submission",
         "task_assignment",
         "task_update",
+        "task_completion",
+        "task_edited",
       ],
     },
     eventId: {
@@ -43,7 +45,9 @@ const notificationSchema = new mongoose.Schema(
           this.type === "event_reminder_1hour" ||
           this.type === "file_submission" ||
           this.type === "task_assignment" ||
-          this.type === "task_update"
+          this.type === "task_update" ||
+          this.type === "task_completion" ||
+          this.type === "task_edited"
         );
       },
     },

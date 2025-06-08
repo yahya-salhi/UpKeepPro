@@ -14,12 +14,12 @@ export const signup = async (req, res) => {
     if (!email || !emailRegex.test(email)) {
       return res.status(400).json({ error: "Invalid email address" });
     }
-    // Check if admin exists and has REPI role
+    // Check if admin exists and has REPI or CC role
     const adminUser = await User.findById(adminId);
-    if (!adminUser || adminUser.role !== "REPI") {
+    if (!adminUser || (adminUser.role !== "REPI" && adminUser.role !== "CC")) {
       return res
         .status(403)
-        .json({ error: "Only REPI admins can create users" });
+        .json({ error: "Only REPI or CC admins can create users" });
     }
 
     //check if email already exists

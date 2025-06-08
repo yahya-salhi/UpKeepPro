@@ -12,7 +12,7 @@ export const authorizeAdmin = async (req, res, next) => {
       return res.status(403).json({ error: "User nott found." });
     }
 
-    if (user.role !== "REPI") {
+    if (user.role !== "REPI" && user.role !== "CC") {
       console.log(`Access denied for role: ${user.role}`);
       return res.status(403).json({ error: "Access denied. Admins only." });
     }

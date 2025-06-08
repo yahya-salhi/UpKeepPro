@@ -1,8 +1,127 @@
 import Task from "../models/task.modal.js";
 import Notification from "../models/notification.modal.js";
 import User from "../models/user.modal.js";
-import { io } from "../lib/socket.js";
 import mongoose from "mongoose";
+import { io } from "../server.js";
+
+// Helper function to notify admins when a task is completed by a user
+const notifyAdminsOfTaskCompletion = async (task, completedByUser) => {
+  try {
+    // Find all admin users (REPI and CC roles)
+    const adminUsers = await User.find({
+      role: { $in: ["REPI", "CC"] },
+    });
+
+    if (adminUsers.length === 0) return;
+
+    // Create notifications for all admins
+    const notifications = adminUsers.map((admin) => ({
+      from: completedByUser._id,
+      to: admin._id,
+      type: "task_completion",
+      message: `${completedByUser.username} has completed the task: "${task.title}"`,
+      data: {
+        taskId: task._id,
+        taskTitle: task.title,
+        taskPriority: task.priority,
+        taskDueDate: task.dueDate,
+        completedBy: completedByUser.username,
+        completedAt: new Date(),
+      },
+      read: false,
+      createdAt: new Date(),
+    }));
+
+    // Save notifications to database
+    await Notification.insertMany(notifications);
+
+    // Send real-time notifications to admins via socket
+    if (io) {
+      adminUsers.forEach((admin) => {
+        io.to(admin._id.toString()).emit("newTaskCompletionNotification", {
+          type: "task_completion",
+          message: `${completedByUser.username} has completed the task: "${task.title}"`,
+          taskId: task._id,
+          taskTitle: task.title,
+          taskPriority: task.priority,
+          taskDueDate: task.dueDate,
+          completedBy: completedByUser.username,
+          completedAt: new Date(),
+        });
+      });
+    }
+  } catch (error) {
+    console.error("Error notifying admins of task completion:", error);
+    // Don't throw error to avoid breaking the main operation
+  }
+};
+
+// Helper function to notify users when admins edit their tasks
+const notifyUsersOfTaskEdit = async (task, editedByAdmin, changes) => {
+  try {
+    // Get all assigned users
+    const assignedUsers = await User.find({
+      _id: { $in: task.assignedTo },
+    });
+
+    if (assignedUsers.length === 0) return;
+
+    // Create a summary of changes
+    const changesList = [];
+    if (changes.title) changesList.push("title");
+    if (changes.description) changesList.push("description");
+    if (changes.priority) changesList.push("priority");
+    if (changes.dueDate) changesList.push("due date");
+    if (changes.checklist) changesList.push("checklist");
+    if (changes.attachments) changesList.push("attachments");
+
+    const changesText =
+      changesList.length > 0 ? ` (Updated: ${changesList.join(", ")})` : "";
+
+    // Create notifications for all assigned users
+    const notifications = assignedUsers.map((user) => ({
+      from: editedByAdmin._id,
+      to: user._id,
+      type: "task_edited",
+      message: `Admin ${editedByAdmin.username} has updated your task: "${task.title}"${changesText}`,
+      data: {
+        taskId: task._id,
+        taskTitle: task.title,
+        taskPriority: task.priority,
+        taskDueDate: task.dueDate,
+        editedBy: editedByAdmin.username,
+        editedAt: new Date(),
+        changes: changesList,
+      },
+      read: false,
+      createdAt: new Date(),
+    }));
+
+    // Save notifications to database
+    await Notification.insertMany(notifications);
+
+    // Send real-time notifications to users via socket
+    if (io) {
+      assignedUsers.forEach((user) => {
+        io.to(user._id.toString()).emit("newTaskEditNotification", {
+          type: "task_edited",
+          message: `Admin ${editedByAdmin.username} has updated your task: "${task.title}"${changesText}`,
+          taskId: task._id,
+          taskTitle: task.title,
+          taskPriority: task.priority,
+          taskDueDate: task.dueDate,
+          editedBy: editedByAdmin.username,
+          editedAt: new Date(),
+          changes: changesList,
+        });
+      });
+    }
+  } catch (error) {
+    console.error("Error notifying users of task edit:", error);
+    // Don't throw error to avoid breaking the main operation
+  }
+};
+
 //@desc get all tasks(admin:all,user:only assigned tasks)
 //@route GET /api/tasks
 //@access Private
@@ -10,17 +129,6 @@ import mongoose from "mongoose";
 export const getTasks = async (req, res) => {
   try {
     const { status } = req.query;
-    console.log("API Request - getTasks:", {
-      statusFromQuery: status,
-      user: {
-        id: req.user._id,
-        role: req.user.role,
-      },
-    });
-
-    // Get all unique status values from the database to debug
-    const allStatusValues = await Task.distinct("status");
-    console.log("All status values in database:", allStatusValues);
 
     let filter = {};
     if (status && status !== "all") {
@@ -33,43 +141,22 @@ export const getTasks = async (req, res) => {
       else if (status === "done") dbStatus = "done";
 
       filter.status = dbStatus;
-      console.log(
-        `Filtering tasks by status: "${status}" (mapped to "${dbStatus}" in database)`
-      );
     }
-
-    // Log filter to debug
-    console.log("Database filter:", filter);
 
     let tasks;
     if (req.user.role === "REPI" || req.user.role === "CC") {
-      console.log("Admin user, fetching all tasks with filter");
       tasks = await Task.find(filter).populate(
         "assignedTo",
         "name email role grade profileImg"
       );
     } else {
-      console.log("Regular user, fetching only assigned tasks with filter");
       tasks = await Task.find({
         ...filter,
         assignedTo: req.user._id,
       }).populate("assignedTo", "name email role grade profileImg");
     }
 
-    console.log(`Found ${tasks.length} tasks matching filter`);
-
-    // Show sample of tasks found (first 2)
-    if (tasks.length > 0) {
-      console.log(
-        "Sample tasks:",
-        tasks.slice(0, 2).map((t) => ({
-          id: t._id,
-          title: t.title,
-          status: t.status,
-          createdAt: t.createdAt,
-        }))
-      );
-    } //add completed todocheklist count and progress to each task
+    //add completed todocheklist count and progress to each task
     tasks = await Promise.all(
       tasks.map(async (task) => {
         const totalCount = task.todocheklist.length;
@@ -131,14 +218,6 @@ export const getTasks = async (req, res) => {
         : { assignedTo: req.user._id }),
     });
 
-    // Log counts for debugging
-    console.log("Task counts:", {
-      all: allTasks,
-      pending: pendingTask,
-      inProgress: inProgressTask,
-      completed: completedTask,
-    });
-
     const responseData = {
       tasks,
       statusSummary: {
@@ -148,11 +227,6 @@ export const getTasks = async (req, res) => {
         completedTask,
       },
     };
-
-    console.log(
-      "Sending response with status summary:",
-      responseData.statusSummary
-    );
 
     res.json(responseData);
   } catch (error) {
@@ -311,6 +385,29 @@ export const updateTask = async (req, res) => {
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
+
+    // Track changes for notification purposes (only if admin is making changes)
+    const isAdminEdit = req.user.role === "REPI" || req.user.role === "CC";
+    const changes = {};
+
+    // Detect changes in task fields
+    if (req.body.title && req.body.title !== task.title) {
+      changes.title = true;
+    }
+    if (req.body.description && req.body.description !== task.description) {
+      changes.description = true;
+    }
+    if (req.body.priority && req.body.priority !== task.priority) {
+      changes.priority = true;
+    }
+    if (
+      req.body.dueDate &&
+      new Date(req.body.dueDate).getTime() !== new Date(task.dueDate).getTime()
+    ) {
+      changes.dueDate = true;
+    }
+
+    // Update task fields
     task.title = req.body.title || task.title;
     task.description = req.body.description || task.description;
     task.priority = req.body.priority || task.priority;
@@ -318,6 +415,22 @@ export const updateTask = async (req, res) => {
 
     // Update checklist and recalculate progress
     if (req.body.todocheklist) {
+      // Check if checklist has changed
+      const oldChecklistLength = task.todocheklist.length;
+      const newChecklistLength = req.body.todocheklist.length;
+      if (oldChecklistLength !== newChecklistLength) {
+        changes.checklist = true;
+      } else {
+        // Check if checklist items have changed
+        const checklistChanged = task.todocheklist.some((item, index) => {
+          const newItem = req.body.todocheklist[index];
+          return !newItem || item.title !== newItem.title;
+        });
+        if (checklistChanged) {
+          changes.checklist = true;
+        }
+      }
+
       task.todocheklist = req.body.todocheklist;
       const completedCount = task.todocheklist.filter(
         (item) => item.completed
@@ -339,6 +452,13 @@ export const updateTask = async (req, res) => {
 
     // Handle attachment updates
     if (req.body.attchments) {
+      // Check if attachments have changed
+      const oldAttachmentCount = task.attchments.length;
+      const newAttachmentCount = req.body.attchments.length;
+      if (oldAttachmentCount !== newAttachmentCount) {
+        changes.attachments = true;
+      }
+
       // Keep existing attachments and add new ones with proper metadata
       const newAttachments = req.body.attchments.map((attachment) => ({
         ...attachment,
@@ -415,6 +535,17 @@ export const updateTask = async (req, res) => {
     }
 
     const updatedTask = await task.save();
+
+    // Notify assigned users if admin made significant changes
+    if (isAdminEdit && Object.keys(changes).length > 0) {
+      try {
+        await notifyUsersOfTaskEdit(updatedTask, req.user, changes);
+      } catch (notificationError) {
+        console.error("Error notifying users of task edit:", notificationError);
+        // Don't fail the main operation if notification creation fails
+      }
+    }
+
     res.json({
       message: "Task updated successfully",
       updatedTask,
@@ -502,6 +633,9 @@ export const updateTaskChecklist = async (req, res) => {
       totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
     task.progress = progress;
 
+    // Check if task status is changing to "done" and notify admins
+    const wasTaskCompleted = task.status !== "done" && progress === 100;
+
     // Update status based on progress percentage
     if (progress === 0) {
       task.status = "pending";
@@ -512,6 +646,15 @@ export const updateTaskChecklist = async (req, res) => {
     }
 
     await task.save();
+
+    // Notify admins if task was just completed by a user (not admin)
+    if (
+      wasTaskCompleted &&
+      req.user.role !== "REPI" &&
+      req.user.role !== "CC"
+    ) {
+      await notifyAdminsOfTaskCompletion(task, req.user);
+    }
     const updatedTask = await Task.findById(req.params.id).populate(
       "assignedTo",
       "name email role grade profileImg"
@@ -743,6 +886,10 @@ export const updateChecklistItem = async (req, res) => {
 
     let newStatus = task.status; // Keep current status as default
 
+    // Check if task is being completed by a user
+    const wasTaskCompleted =
+      task.status !== "done" && completedTodos === totalTodos && totalTodos > 0;
+
     if (totalTodos > 0) {
       if (completedTodos === 0) {
         newStatus = "pending";
@@ -757,6 +904,15 @@ export const updateChecklistItem = async (req, res) => {
     task.status = newStatus;
 
     await task.save();
+
+    // Notify admins if task was just completed by a user (not admin)
+    if (
+      wasTaskCompleted &&
+      req.user.role !== "REPI" &&
+      req.user.role !== "CC"
+    ) {
+      await notifyAdminsOfTaskCompletion(task, req.user);
+    }
 
     // Populate the task for response
     const updatedTask = await Task.findById(taskId).populate(

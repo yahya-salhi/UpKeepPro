@@ -192,6 +192,64 @@ const NotificationPage = () => {
                     </span>
                   </div>
                 </div>
+              ) : notification.type === "task_completion" ? (
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="avatar relative">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-green-400/40 dark:border-green-500/60 shadow-md bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-green-600 dark:text-green-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex flex-col min-w-0 justify-center">
+                    <span className="font-semibold text-base text-gray-900 dark:text-gray-100 truncate font-['Roboto','Inter','sans-serif']">
+                      Task Completed
+                    </span>
+                    <span className="text-sm text-gray-500 dark:text-gray-300 mt-0.5 flex items-center gap-1">
+                      <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                      <span>{notification.message}</span>
+                    </span>
+                  </div>
+                </div>
+              ) : notification.type === "task_edited" ? (
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="avatar relative">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-orange-400/40 dark:border-orange-500/60 shadow-md bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-orange-600 dark:text-orange-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex flex-col min-w-0 justify-center">
+                    <span className="font-semibold text-base text-gray-900 dark:text-gray-100 truncate font-['Roboto','Inter','sans-serif']">
+                      Task Updated
+                    </span>
+                    <span className="text-sm text-gray-500 dark:text-gray-300 mt-0.5 flex items-center gap-1">
+                      <span className="inline-block w-2 h-2 bg-orange-500 rounded-full mr-1"></span>
+                      <span>{notification.message}</span>
+                    </span>
+                  </div>
+                </div>
               ) : (
                 <Link
                   to={`/profile/${notification.from.username}`}
@@ -245,6 +303,18 @@ const NotificationPage = () => {
                       {notification.type === "task_update" && (
                         <>
                           <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                          <span>{notification.message}</span>
+                        </>
+                      )}
+                      {notification.type === "task_completion" && (
+                        <>
+                          <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                          <span>{notification.message}</span>
+                        </>
+                      )}
+                      {notification.type === "task_edited" && (
+                        <>
+                          <span className="inline-block w-2 h-2 bg-orange-500 rounded-full mr-1"></span>
                           <span>{notification.message}</span>
                         </>
                       )}

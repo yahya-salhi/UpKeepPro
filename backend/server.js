@@ -47,6 +47,9 @@ const io = new Server(server, {
   pingInterval: 25000,
 });
 
+// Export io instance for use in other modules
+export { io };
+
 // Middleware
 app.use(cookieParser());
 app.use(express.json({ limit: "5mb" })); // Parse JSON request bodies

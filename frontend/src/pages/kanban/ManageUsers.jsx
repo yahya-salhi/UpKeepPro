@@ -26,8 +26,13 @@ function ManageUsers() {
             user.completedTasks > 0
         );
         setAllUsers(usersWithTasks);
-      } catch {
-        setError("Failed to load users");
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        setError(
+          `Failed to load users: ${
+            error.response?.data?.error || error.message
+          }`
+        );
       } finally {
         setLoading(false);
       }
