@@ -158,6 +158,7 @@ function MyTask({ onSelectTask }) {
                 attachments={item.attachments?.length || 0}
                 completedTodoCount={item.completedTodoCount || 0}
                 todochecklist={item.todocheklist || []}
+                userSubmissions={item.userSubmissions || []}
                 onClick={() => handleClick(item)}
               />
             ))}

@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import Progress from "./Progress";
 import { LuAlbum } from "react-icons/lu";
+import { Upload } from "lucide-react";
 import moment from "moment";
 import AvatarGroup from "./AvatarGroup";
 
@@ -42,6 +43,7 @@ const TaskCard = React.memo(function TaskCard({
   attachments,
   completedTodoCount,
   todochecklist,
+  userSubmissions,
   onClick,
 }) {
   const statusKey = useMemo(() => status?.toLowerCase() || "default", [status]);
@@ -146,13 +148,25 @@ const TaskCard = React.memo(function TaskCard({
       </div>
 
       <div className="px-4 py-3 bg-gray-50 flex justify-between items-center mt-auto">
-        {assignedTo?.length > 0 && <AvatarGroup avatars={assignedTo} />}
-        {hasAttachments && (
-          <div className="flex items-center gap-1">
-            <LuAlbum className="text-gray-500 w-4 h-4" />
-            <span className="text-xs text-gray-500">{attachments}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {assignedTo?.length > 0 && <AvatarGroup avatars={assignedTo} />}
+        </div>
+        <div className="flex items-center gap-3">
+          {hasAttachments && (
+            <div className="flex items-center gap-1">
+              <LuAlbum className="text-gray-500 w-4 h-4" />
+              <span className="text-xs text-gray-500">{attachments}</span>
+            </div>
+          )}
+          {userSubmissions && userSubmissions.length > 0 && (
+            <div className="flex items-center gap-1">
+              <Upload className="text-green-500 w-4 h-4" />
+              <span className="text-xs text-green-600 font-medium">
+                {userSubmissions.length} submitted
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
