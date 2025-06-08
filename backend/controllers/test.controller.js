@@ -122,11 +122,21 @@ export const getTests = async (req, res) => {
     if (status) filter.status = status;
     if (category) filter.category = category;
     if (assignedTo) filter.assignedTo = assignedTo;
+
+    // Search filter - combine with existing filters instead of overriding
     if (search) {
-      filter.$or = [
+      const searchConditions = [
         { title: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
       ];
+
+      // If there's already an $or condition (for role-based filtering), combine them
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: searchConditions }];
+        delete filter.$or;
+      } else {
+        filter.$or = searchConditions;
+      }
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -415,6 +425,113 @@ export const publishTest = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to publish test",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Archive test
+// @route   PATCH /api/tests/:id/archive
+// @access  Private (Formateurs and Admins)
+export const archiveTest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    const test = await Test.findById(id);
+
+    if (!test) {
+      return res.status(404).json({
+        success: false,
+        message: "Test not found",
+      });
+    }
+
+    // Check permissions - Formateurs and Admins can archive ANY test
+    const canArchive = user.role === "FORM" || user.isAdmin();
+
+    if (!canArchive) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to archive this test",
+      });
+    }
+
+    // Cannot archive a test that's already archived
+    if (test.status === "archived") {
+      return res.status(400).json({
+        success: false,
+        message: "Test is already archived",
+      });
+    }
+
+    test.status = "archived";
+    await test.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Test archived successfully",
+      data: test,
+    });
+  } catch (error) {
+    console.error("Error archiving test:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to archive test",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Unarchive test
+// @route   PATCH /api/tests/:id/unarchive
+// @access  Private (Formateurs and Admins)
+export const unarchiveTest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+
+    const test = await Test.findById(id);
+
+    if (!test) {
+      return res.status(404).json({
+        success: false,
+        message: "Test not found",
+      });
+    }
+
+    // Check permissions - Formateurs and Admins can unarchive ANY test
+    const canUnarchive = user.role === "FORM" || user.isAdmin();
+
+    if (!canUnarchive) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to unarchive this test",
+      });
+    }
+
+    // Can only unarchive archived tests
+    if (test.status !== "archived") {
+      return res.status(400).json({
+        success: false,
+        message: "Test is not archived",
+      });
+    }
+
+    // Unarchive to draft status (formateur can then publish if needed)
+    test.status = "draft";
+    await test.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Test unarchived successfully. Status set to draft.",
+      data: test,
+    });
+  } catch (error) {
+    console.error("Error unarchiving test:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to unarchive test",
       error: error.message,
     });
   }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -16,6 +16,7 @@ import {
   BarChart3,
   MoreVertical,
   Copy,
+  Download,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -45,11 +46,21 @@ import {
 
 const TestManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedTests, setSelectedTests] = useState([]);
   const queryClient = useQueryClient();
   const authUser = queryClient.getQueryData(["authUser"]);
+
+  // Debounce search term to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Check if user is formateur or admin
   const isFormateur = authUser?.role === "FORM" || authUser?.isAdmin;
@@ -278,11 +289,15 @@ const TestManagement = () => {
   } = useQuery({
     queryKey: [
       "tests",
-      { search: searchTerm, status: statusFilter, category: categoryFilter },
+      {
+        search: debouncedSearchTerm,
+        status: statusFilter,
+        category: categoryFilter,
+      },
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (searchTerm) params.append("search", searchTerm);
+      if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (categoryFilter !== "all") params.append("category", categoryFilter);
 
@@ -321,6 +336,114 @@ const TestManagement = () => {
     }
   };
 
+  // Archive test functionality
+  const handleArchiveTest = (test) => {
+    toast(
+      (t) => (
+        <div className="flex flex-col space-y-3">
+          <div className="flex items-center space-x-2">
+            <div className="flex-shrink-0">
+              <svg
+                className="w-6 h-6 text-orange-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 8l4 4 4-4m0 0l4-4 4 4M9 16l.01.01M15 16l.01.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">Archive Test</p>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to archive "{test.title}"?
+              </p>
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+            Archived tests cannot be taken by students but can be unarchived
+            later.
+          </div>
+          <div className="flex space-x-2 justify-end">
+            <button
+              className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+              onClick={() => {
+                toast.dismiss(t.id);
+                archiveTestMutation.mutate(test._id);
+              }}
+            >
+              Archive
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+        style: {
+          maxWidth: "400px",
+        },
+      }
+    );
+  };
+
+  // Archive test mutation
+  const archiveTestMutation = useMutation({
+    mutationFn: async (testId) => {
+      const response = await fetch(`/api/tests/${testId}/archive`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to archive test");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("Test archived successfully!");
+      queryClient.invalidateQueries({ queryKey: ["tests"] });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to archive test");
+    },
+  });
+
+  // Unarchive test mutation
+  const unarchiveTestMutation = useMutation({
+    mutationFn: async (testId) => {
+      const response = await fetch(`/api/tests/${testId}/unarchive`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to unarchive test");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("Test unarchived successfully! Status set to draft.");
+      queryClient.invalidateQueries({ queryKey: ["tests"] });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to unarchive test");
+    },
+  });
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       draft: { color: "bg-gray-100 text-gray-800", icon: Edit },
@@ -345,6 +468,578 @@ const TestManagement = () => {
       month: "short",
       day: "numeric",
     });
+  };
+
+  // Export tests to Word document
+  const handleExportTests = async () => {
+    if (selectedTests.length === 0) {
+      toast.error("Please select tests to export");
+      return;
+    }
+
+    try {
+      toast.loading("Preparing export...", { id: "export-tests" });
+
+      // Fetch detailed test data with questions
+      const exportPromises = selectedTests.map(async (testId) => {
+        const response = await fetch(`/api/tests/${testId}`, {
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error(`Failed to fetch test ${testId}`);
+        return response.json();
+      });
+
+      const testsData = await Promise.all(exportPromises);
+
+      // Import docx library dynamically
+      const {
+        Document,
+        Packer,
+        Paragraph,
+        TextRun,
+        HeadingLevel,
+        AlignmentType,
+        BorderStyle,
+        Table,
+        TableRow,
+        TableCell,
+        WidthType,
+        Header,
+        Footer,
+        PageNumber,
+        NumberFormat,
+      } = await import("docx");
+
+      // Create Word document with professional styling
+      const doc = new Document({
+        styles: {
+          paragraphStyles: [
+            {
+              id: "testTitle",
+              name: "Test Title",
+              basedOn: "Normal",
+              next: "Normal",
+              run: {
+                size: 28,
+                bold: true,
+                font: "Times New Roman",
+              },
+              paragraph: {
+                spacing: { before: 240, after: 120 },
+                alignment: AlignmentType.CENTER,
+              },
+            },
+            {
+              id: "questionText",
+              name: "Question Text",
+              basedOn: "Normal",
+              run: {
+                size: 24,
+                font: "Times New Roman",
+              },
+              paragraph: {
+                spacing: { before: 120, after: 60 },
+              },
+            },
+            {
+              id: "optionText",
+              name: "Option Text",
+              basedOn: "Normal",
+              run: {
+                size: 22,
+                font: "Times New Roman",
+              },
+              paragraph: {
+                spacing: { after: 40 },
+                indent: { left: 360 },
+              },
+            },
+          ],
+        },
+        sections: [
+          {
+            properties: {
+              page: {
+                margin: {
+                  top: 1440, // 1 inch
+                  right: 1440, // 1 inch
+                  bottom: 1440, // 1 inch
+                  left: 1440, // 1 inch
+                },
+              },
+            },
+            headers: {
+              default: new Header({
+                children: [
+                  // Header table with professional format
+                  new Table({
+                    rows: [
+                      // First row: TEST, RATTRAPAGE, EXAMEN
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "TEST",
+                                    bold: true,
+                                    size: 24,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                            width: { size: 33, type: WidthType.PERCENTAGE },
+                          }),
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "RATTRAPAGE",
+                                    bold: true,
+                                    size: 24,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                            width: { size: 34, type: WidthType.PERCENTAGE },
+                          }),
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "EXAMEN",
+                                    bold: true,
+                                    size: 24,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                            width: { size: 33, type: WidthType.PERCENTAGE },
+                          }),
+                        ],
+                      }),
+                      // Second row: Date, Duration, Pages
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: `DATE : ${new Date().toLocaleDateString(
+                                      "fr-FR"
+                                    )}`,
+                                    size: 20,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                          }),
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: `DUREE : ${Math.ceil(
+                                      testsData.reduce(
+                                        (max, testData) =>
+                                          Math.max(max, testData.data.duration),
+                                        0
+                                      ) / 60
+                                    )
+                                      .toString()
+                                      .padStart(2, "0")}HEURE`,
+                                    size: 20,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                          }),
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: `Nbre PAGE : ${Math.max(
+                                      1,
+                                      Math.ceil(
+                                        testsData.reduce(
+                                          (total, testData) =>
+                                            total +
+                                            testData.data.questions.length,
+                                          0
+                                        ) / 10
+                                      )
+                                    )
+                                      .toString()
+                                      .padStart(2, "0")}`,
+                                    size: 20,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      // Third row: Sector information
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "SECTEUR :    ELECT              CM              STAGE   2ième BTP M.M.S.I",
+                                    size: 18,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                                alignment: AlignmentType.LEFT,
+                              }),
+                            ],
+                            columnSpan: 3,
+                          }),
+                        ],
+                      }),
+                      // Fourth row: Subject
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: `MATIERE : ${testsData
+                                      .map((testData) => testData.data.category)
+                                      .join(", ")
+                                      .toUpperCase()}`,
+                                    size: 18,
+                                    font: "Times New Roman",
+                                    bold: true,
+                                  }),
+                                ],
+                                alignment: AlignmentType.LEFT,
+                              }),
+                            ],
+                            columnSpan: 3,
+                          }),
+                        ],
+                      }),
+                      // Fifth row: Document authorization
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "DOCUMENT AUTORISE : OUI            NON",
+                                    size: 18,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                                alignment: AlignmentType.LEFT,
+                              }),
+                            ],
+                            columnSpan: 3,
+                          }),
+                        ],
+                      }),
+                      // Sixth row: Signatures
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "FORMATEUR",
+                                    size: 16,
+                                    font: "Times New Roman",
+                                    bold: true,
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                          }),
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "CHEF SECTEUR",
+                                    size: 16,
+                                    font: "Times New Roman",
+                                    bold: true,
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                          }),
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "RCOE",
+                                    size: 16,
+                                    font: "Times New Roman",
+                                    bold: true,
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      // Seventh row: Names
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "A/M SALHI",
+                                    size: 16,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                          }),
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "",
+                                    size: 16,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                              }),
+                            ],
+                          }),
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "CHEF DU CENTRE",
+                                    size: 16,
+                                    font: "Times New Roman",
+                                    bold: true,
+                                  }),
+                                ],
+                                alignment: AlignmentType.CENTER,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      // Student info row
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [
+                              new Paragraph({
+                                children: [
+                                  new TextRun({
+                                    text: "NOM ………………………………………………….	PRENOM………….……………………..…………….	NOTE  ……... /20",
+                                    size: 16,
+                                    font: "Times New Roman",
+                                  }),
+                                ],
+                                alignment: AlignmentType.LEFT,
+                              }),
+                            ],
+                            columnSpan: 3,
+                          }),
+                        ],
+                      }),
+                    ],
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                  }),
+                ],
+              }),
+            },
+            footers: {
+              default: new Footer({
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: "Page ",
+                        font: "Times New Roman",
+                        size: 20,
+                      }),
+                      new TextRun({
+                        children: [PageNumber.CURRENT],
+                        font: "Times New Roman",
+                        size: 20,
+                      }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                ],
+              }),
+            },
+            children: [
+              // Tests content - Start directly with questions since header has all info
+              ...testsData.flatMap((testData, index) => {
+                const test = testData.data;
+                return [
+                  // Instructions section (if any test has instructions)
+                  ...(test.instructions
+                    ? [
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: "INSTRUCTIONS:",
+                              bold: true,
+                              font: "Times New Roman",
+                              size: 24,
+                            }),
+                          ],
+                          spacing: { before: 240, after: 120 },
+                        }),
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: test.instructions,
+                              font: "Times New Roman",
+                              size: 22,
+                            }),
+                          ],
+                          spacing: { after: 240 },
+                        }),
+                      ]
+                    : []),
+                  // Questions section
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: "QUESTIONS:",
+                        bold: true,
+                        font: "Times New Roman",
+                        size: 26,
+                      }),
+                    ],
+                    spacing: { before: 360, after: 240 },
+                    alignment: AlignmentType.LEFT,
+                  }),
+
+                  // Questions with professional formatting
+                  ...test.questions.flatMap((question, qIndex) => [
+                    // Question number and text
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: `${qIndex + 1}. `,
+                          bold: true,
+                          font: "Times New Roman",
+                          size: 24,
+                        }),
+                        new TextRun({
+                          text: question.question,
+                          font: "Times New Roman",
+                          size: 24,
+                        }),
+                      ],
+                      style: "questionText",
+                      spacing: { before: 240, after: 120 },
+                    }),
+
+                    // Answer options with proper formatting
+                    ...question.options.map((option, oIndex) => {
+                      const optionLetter = String.fromCharCode(97 + oIndex); // a, b, c, d
+                      return new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: `${optionLetter}) `,
+                            bold: true,
+                            font: "Times New Roman",
+                            size: 22,
+                          }),
+                          new TextRun({
+                            text: option.text,
+                            font: "Times New Roman",
+                            size: 22,
+                            bold: option.isCorrect,
+                            underline: option.isCorrect ? {} : undefined,
+                          }),
+                        ],
+                        style: "optionText",
+                        spacing: { after: 80 },
+                      });
+                    }),
+
+                    // Add space after each question
+                    new Paragraph({
+                      children: [new TextRun({ text: "" })],
+                      spacing: { after: 120 },
+                    }),
+                  ]),
+
+                  // Page break between tests (except last)
+                  ...(index < testsData.length - 1
+                    ? [
+                        new Paragraph({
+                          children: [new TextRun({ text: "", break: 1 })],
+                          pageBreakBefore: true,
+                        }),
+                      ]
+                    : []),
+                ];
+              }),
+            ],
+          },
+        ],
+      });
+
+      // Generate and download
+      const blob = await Packer.toBlob(doc);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `tests-export-${
+        new Date().toISOString().split("T")[0]
+      }.docx`;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.dismiss("export-tests");
+      toast.success(
+        `🎉 ${selectedTests.length} test(s) exported successfully!`
+      );
+    } catch (error) {
+      toast.dismiss("export-tests");
+      toast.error("Failed to export tests: " + error.message);
+      console.error("Export error:", error);
+    }
   };
 
   if (isLoading) {
@@ -389,6 +1084,15 @@ const TestManagement = () => {
                 View Results
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={handleExportTests}
+              disabled={selectedTests.length === 0}
+            >
+              <Download size={16} />
+              Export Test
+            </Button>
             <Link to="/tests/create">
               <Button className="flex items-center gap-2">
                 <Plus size={16} />
@@ -425,6 +1129,15 @@ const TestManagement = () => {
                 </Button>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportTests}
+                  disabled={selectedTests.length === 0}
+                >
+                  <Download size={14} className="mr-1" />
+                  Export Selected
+                </Button>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -471,6 +1184,11 @@ const TestManagement = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
+                {searchTerm !== debouncedSearchTerm && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  </div>
+                )}
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -583,6 +1301,25 @@ const TestManagement = () => {
                             Copy Link
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          {test.status === "archived" ? (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                unarchiveTestMutation.mutate(test._id)
+                              }
+                              className="text-blue-600 focus:text-blue-600"
+                            >
+                              <Archive className="mr-2 h-4 w-4" />
+                              Unarchive Test
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => handleArchiveTest(test)}
+                              className="text-orange-600 focus:text-orange-600"
+                            >
+                              <Archive className="mr-2 h-4 w-4" />
+                              Archive Test
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={() => handleDeleteTest(test)}
                             className="text-red-600 focus:text-red-600"
@@ -649,15 +1386,26 @@ const TestManagement = () => {
                       </>
                     ) : isStagiaire ? (
                       <>
-                        <Link to={`/tests/${test._id}/take`} className="flex-1">
-                          <Button
-                            className="w-full"
-                            disabled={test.status !== "published"}
+                        {test.status === "archived" ? (
+                          <div className="flex-1 text-center py-2">
+                            <span className="text-sm text-gray-500 italic">
+                              Test is archived and not available
+                            </span>
+                          </div>
+                        ) : (
+                          <Link
+                            to={`/tests/${test._id}/take`}
+                            className="flex-1"
                           >
-                            <Play size={14} className="mr-1" />
-                            Take Test
-                          </Button>
-                        </Link>
+                            <Button
+                              className="w-full"
+                              disabled={test.status !== "published"}
+                            >
+                              <Play size={14} className="mr-1" />
+                              Take Test
+                            </Button>
+                          </Link>
+                        )}
                         <Link to={`/tests/${test._id}/view`}>
                           <Button variant="outline" size="sm">
                             <Eye size={14} />

@@ -20,6 +20,15 @@ export const startTestAttempt = async (req, res) => {
       });
     }
 
+    // Check if test is archived
+    if (test.status === "archived") {
+      return res.status(403).json({
+        success: false,
+        message:
+          "This test has been archived and is no longer available for taking",
+      });
+    }
+
     // Check if user can take the test
     if (!test.canUserTakeTest(userId)) {
       return res.status(403).json({

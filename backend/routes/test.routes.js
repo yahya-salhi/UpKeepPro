@@ -13,6 +13,8 @@ import {
   deleteTest,
   bulkDeleteTests,
   publishTest,
+  archiveTest,
+  unarchiveTest,
 } from "../controllers/test.controller.js";
 import {
   createQuestion,
@@ -74,5 +76,7 @@ router.get("/:id", getTestById);
 router.put("/:id", authorizeFormateur, updateTest);
 router.delete("/:id", authorizeFormateur, deleteTest);
 router.patch("/:id/publish", authorizeFormateur, publishTest);
+router.patch("/:id/archive", authorizeFormateur, archiveTest);
+router.patch("/:id/unarchive", authorizeFormateur, unarchiveTest);
 
 export default router;
