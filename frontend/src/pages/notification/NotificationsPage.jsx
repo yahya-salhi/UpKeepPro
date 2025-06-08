@@ -160,6 +160,38 @@ const NotificationPage = () => {
                     </span>
                   </div>
                 </div>
+              ) : notification.type === "task_assignment" ||
+                notification.type === "task_update" ? (
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="avatar relative">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-400/40 dark:border-blue-500/60 shadow-md bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-blue-600 dark:text-blue-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex flex-col min-w-0 justify-center">
+                    <span className="font-semibold text-base text-gray-900 dark:text-gray-100 truncate font-['Roboto','Inter','sans-serif']">
+                      {notification.type === "task_assignment"
+                        ? "New Task Assignment"
+                        : "Task Update"}
+                    </span>
+                    <span className="text-sm text-gray-500 dark:text-gray-300 mt-0.5 flex items-center gap-1">
+                      <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                      <span>{notification.message}</span>
+                    </span>
+                  </div>
+                </div>
               ) : (
                 <Link
                   to={`/profile/${notification.from.username}`}
@@ -202,6 +234,18 @@ const NotificationPage = () => {
                         <>
                           <span className="inline-block w-2 h-2 bg-orange-500 rounded-full mr-1"></span>
                           <span>Event reminder: {notification.message}</span>
+                        </>
+                      )}
+                      {notification.type === "task_assignment" && (
+                        <>
+                          <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                          <span>{notification.message}</span>
+                        </>
+                      )}
+                      {notification.type === "task_update" && (
+                        <>
+                          <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                          <span>{notification.message}</span>
                         </>
                       )}
                     </span>

@@ -143,6 +143,15 @@ const Navbar = () => {
           );
         }
       });
+
+      socket.on("newTaskAssignmentNotification", (data) => {
+        refetch();
+        if (data.message) {
+          toast.success(`New task assignment: ${data.message}`, {
+            duration: 4000,
+          });
+        }
+      });
     }
     return () => {
       socket.off("connect");
@@ -151,6 +160,7 @@ const Navbar = () => {
       socket.off("newMessageNotification");
       socket.off("newEventNotification");
       socket.off("newFileSubmissionNotification");
+      socket.off("newTaskAssignmentNotification");
     };
   }, [authUser, refetchMessageBadge, refetch, socket]);
 

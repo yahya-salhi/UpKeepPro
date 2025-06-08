@@ -232,6 +232,54 @@ export const createTask = async (req, res) => {
       attchments: processedAttachments,
     });
 
+    // Create notifications for assigned users
+    try {
+      const assignedUsers = await User.find({
+        _id: { $in: assignedToIds },
+      });
+
+      const notifications = assignedUsers.map((user) => ({
+        from: req.user._id,
+        to: user._id,
+        type: "task_assignment",
+        message: `You have been assigned a new task: "${title}"`,
+        data: {
+          taskId: task._id,
+          taskTitle: title,
+          taskPriority: priority,
+          taskDueDate: dueDate,
+          assignedBy: req.user.username,
+        },
+        read: false,
+        createdAt: new Date(),
+      }));
+
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+
+        // Send real-time notifications to assigned users via socket
+        if (io) {
+          assignedUsers.forEach((user) => {
+            io.to(user._id.toString()).emit("newTaskAssignmentNotification", {
+              type: "task_assignment",
+              message: `You have been assigned a new task: "${title}"`,
+              taskId: task._id,
+              taskTitle: title,
+              taskPriority: priority,
+              taskDueDate: dueDate,
+              assignedBy: req.user.username,
+            });
+          });
+        }
+      }
+    } catch (notificationError) {
+      console.error(
+        "Error creating task assignment notifications:",
+        notificationError
+      );
+      // Don't fail the main operation if notification creation fails
+    }
+
     res.status(201).json({
       message: "Task created successfully",
       task: {
@@ -300,9 +348,72 @@ export const updateTask = async (req, res) => {
       task.attchments = newAttachments;
     }
 
+    // Handle assignedTo updates and send notifications to newly assigned users
     if (req.body.assignedTo) {
+      const oldAssignedTo = task.assignedTo.map((id) => id.toString());
+      const newAssignedTo = req.body.assignedTo.map((id) => id.toString());
+
+      // Find newly assigned users (users in new list but not in old list)
+      const newlyAssignedUsers = newAssignedTo.filter(
+        (userId) => !oldAssignedTo.includes(userId)
+      );
+
       task.assignedTo = req.body.assignedTo;
+
+      // Send notifications to newly assigned users
+      if (newlyAssignedUsers.length > 0) {
+        try {
+          const assignedUsers = await User.find({
+            _id: { $in: newlyAssignedUsers },
+          });
+
+          const notifications = assignedUsers.map((user) => ({
+            from: req.user._id,
+            to: user._id,
+            type: "task_update",
+            message: `You have been assigned to task: "${task.title}"`,
+            data: {
+              taskId: task._id,
+              taskTitle: task.title,
+              taskPriority: task.priority,
+              taskDueDate: task.dueDate,
+              assignedBy: req.user.username,
+            },
+            read: false,
+            createdAt: new Date(),
+          }));
+
+          if (notifications.length > 0) {
+            await Notification.insertMany(notifications);
+
+            // Send real-time notifications to newly assigned users via socket
+            if (io) {
+              assignedUsers.forEach((user) => {
+                io.to(user._id.toString()).emit(
+                  "newTaskAssignmentNotification",
+                  {
+                    type: "task_update",
+                    message: `You have been assigned to task: "${task.title}"`,
+                    taskId: task._id,
+                    taskTitle: task.title,
+                    taskPriority: task.priority,
+                    taskDueDate: task.dueDate,
+                    assignedBy: req.user.username,
+                  }
+                );
+              });
+            }
+          }
+        } catch (notificationError) {
+          console.error(
+            "Error creating task update notifications:",
+            notificationError
+          );
+          // Don't fail the main operation if notification creation fails
+        }
+      }
     }
+
     const updatedTask = await task.save();
     res.json({
       message: "Task updated successfully",
