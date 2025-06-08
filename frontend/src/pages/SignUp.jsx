@@ -356,16 +356,12 @@ function SignUp() {
                     </option>
                     {formData.role === "STAG" ? (
                       <>
-                        <option value="Beginner">Beginner</option>
-                        <option value="Intermediate">Intermediate</option>
-                        <option value="Advanced">Advanced</option>
-                        <option value="Expert">Expert</option>
-                        <option value="Level 1">Level 1</option>
-                        <option value="Level 2">Level 2</option>
-                        <option value="Level 3">Level 3</option>
-                        <option value="Level 4">Level 4</option>
-                        <option value="Trainee">Trainee</option>
-                        <option value="Student">Student</option>
+                        <option value="BTP MMSI">BTP MMSI</option>
+                        <option value="BTP TSS">BTP TSS</option>
+                        <option value="CAP SOUDURE">CAP SOUDURE</option>
+                        <option value="CAP ALUM">CAP ALUM</option>
+                        <option value="CC SOUDURE">CC SOUDURE</option>
+                        <option value="CC ALUM">CC ALUM</option>
                       </>
                     ) : (
                       <>

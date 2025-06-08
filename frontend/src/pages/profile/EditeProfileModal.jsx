@@ -202,16 +202,12 @@ const EditProfileModal = ({ authUser }) => {
                     </option>
                     {authUser?.role === "STAG"
                       ? [
-                          "Beginner",
-                          "Intermediate",
-                          "Advanced",
-                          "Expert",
-                          "Level 1",
-                          "Level 2",
-                          "Level 3",
-                          "Level 4",
-                          "Trainee",
-                          "Student",
+                          "BTP MMSI",
+                          "BTP TSS",
+                          "CAP SOUDURE",
+                          "CAP ALUM",
+                          "CC SOUDURE",
+                          "CC ALUM",
                         ].map((level) => (
                           <option key={level} value={level}>
                             {level}
