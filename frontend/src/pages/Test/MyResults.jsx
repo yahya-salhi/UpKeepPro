@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { 
-  Eye, 
-  Calendar, 
-  Clock, 
-  Trophy, 
+import {
+  Eye,
+  Calendar,
+  Clock,
+  Trophy,
   Target,
   CheckCircle,
   XCircle,
   Filter,
-  Search
+  Search,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -35,17 +35,27 @@ const MyResults = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
 
-  const { data: resultsData, isLoading, error } = useQuery({
-    queryKey: ["myTestResults", { search: searchTerm, status: statusFilter, sort: sortBy }],
+  const {
+    data: resultsData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: [
+      "myTestResults",
+      { search: searchTerm, status: statusFilter, sort: sortBy },
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
       if (statusFilter !== "all") params.append("status", statusFilter);
       params.append("sort", sortBy);
 
-      const response = await fetch(`/api/tests/my-results?${params.toString()}`, {
-        credentials: "include",
-      });
+      const response = await fetch(
+        `/api/tests/my-results?${params.toString()}`,
+        {
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch test results");
@@ -68,7 +78,7 @@ const MyResults = () => {
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
@@ -77,7 +87,11 @@ const MyResults = () => {
 
   const getScoreBadge = (score, passingScore, passed) => {
     if (passed) {
-      return <Badge className="bg-green-100 text-green-800">Passed ({score}%)</Badge>;
+      return (
+        <Badge className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+          Passed ({score}%)
+        </Badge>
+      );
     } else {
       return <Badge variant="destructive">Failed ({score}%)</Badge>;
     }
@@ -127,7 +141,10 @@ const MyResults = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={16}
+                />
                 <Input
                   placeholder="Search tests..."
                   value={searchTerm}
@@ -165,7 +182,7 @@ const MyResults = () => {
       {results.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
-            <div className="text-gray-400 mb-4">
+            <div className="text-gray-400 dark:text-gray-500 mb-4">
               <Trophy size={48} className="mx-auto" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -182,7 +199,10 @@ const MyResults = () => {
       ) : (
         <div className="space-y-4">
           {results.map((result) => (
-            <Card key={result._id} className="hover:shadow-lg transition-shadow">
+            <Card
+              key={result._id}
+              className="hover:shadow-lg transition-shadow"
+            >
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -191,37 +211,54 @@ const MyResults = () => {
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {result.test.title}
                       </h3>
-                      {getScoreBadge(result.score, result.test.passingScore, result.passed)}
+                      {getScoreBadge(
+                        result.score,
+                        result.test.passingScore,
+                        result.passed
+                      )}
                     </div>
-                    
+
                     <p className="text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
                       {result.test.description}
                     </p>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <Calendar size={14} className="text-gray-500" />
+                        <Calendar
+                          size={14}
+                          className="text-gray-500 dark:text-gray-400"
+                        />
                         <span className="text-gray-600 dark:text-gray-400">
                           {formatDate(result.completedAt || result.endTime)}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
-                        <Clock size={14} className="text-gray-500" />
+                        <Clock
+                          size={14}
+                          className="text-gray-500 dark:text-gray-400"
+                        />
                         <span className="text-gray-600 dark:text-gray-400">
                           {formatTime(result.timeSpent)}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
-                        <Target size={14} className="text-gray-500" />
+                        <Target
+                          size={14}
+                          className="text-gray-500 dark:text-gray-400"
+                        />
                         <span className="text-gray-600 dark:text-gray-400">
-                          {result.answeredQuestions}/{result.totalQuestions} questions
+                          {result.answeredQuestions}/{result.totalQuestions}{" "}
+                          questions
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
-                        <Trophy size={14} className="text-gray-500" />
+                        <Trophy
+                          size={14}
+                          className="text-gray-500 dark:text-gray-400"
+                        />
                         <span className="text-gray-600 dark:text-gray-400">
                           {result.earnedPoints}/{result.totalPoints} points
                         </span>
@@ -230,13 +267,19 @@ const MyResults = () => {
                   </div>
 
                   <div className="flex flex-col gap-2 ml-4">
-                    <Link to={`/tests/${result.test._id}/results/${result._id}`}>
-                      <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <Link
+                      to={`/tests/${result.test._id}/results/${result._id}`}
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
                         <Eye size={14} />
                         View Details
                       </Button>
                     </Link>
-                    
+
                     {result.test.allowRetake && !result.passed && (
                       <Link to={`/tests/${result.test._id}/take`}>
                         <Button size="sm" className="flex items-center gap-2">
@@ -258,7 +301,9 @@ const MyResults = () => {
         <Card>
           <CardHeader>
             <CardTitle>Performance Summary</CardTitle>
-            <CardDescription>Your overall test performance statistics</CardDescription>
+            <CardDescription>
+              Your overall test performance statistics
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -270,28 +315,36 @@ const MyResults = () => {
                   Tests Taken
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {results.filter(r => r.passed).length}
+                  {results.filter((r) => r.passed).length}
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Tests Passed
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
-                  {Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length)}%
+                  {Math.round(
+                    results.reduce((sum, r) => sum + r.score, 0) /
+                      results.length
+                  )}
+                  %
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Average Score
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">
-                  {Math.round((results.filter(r => r.passed).length / results.length) * 100)}%
+                  {Math.round(
+                    (results.filter((r) => r.passed).length / results.length) *
+                      100
+                  )}
+                  %
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Pass Rate

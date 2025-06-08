@@ -151,13 +151,15 @@ const TestManagement = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-gray-900">Delete Test</p>
-              <p className="text-sm text-gray-600">
+              <p className="font-semibold text-gray-900 dark:text-gray-100">
+                Delete Test
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Are you sure you want to delete "{test.title}"?
               </p>
             </div>
           </div>
-          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded">
             This action cannot be undone and will permanently remove:
             <br />• The test and all its questions
             <br />• All student attempts and results
@@ -165,7 +167,7 @@ const TestManagement = () => {
           </div>
           <div className="flex space-x-2 justify-end">
             <button
-              className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+              className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               onClick={() => toast.dismiss(t.id)}
             >
               Cancel
@@ -219,21 +221,21 @@ const TestManagement = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold text-gray-900 dark:text-gray-100">
                 Delete Multiple Tests
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Are you sure you want to delete {selectedTests.length} test(s)?
               </p>
             </div>
           </div>
-          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded">
             This action cannot be undone and will permanently remove all
             selected tests and their data.
           </div>
           <div className="flex space-x-2 justify-end">
             <button
-              className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+              className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               onClick={() => toast.dismiss(t.id)}
             >
               Cancel
@@ -291,14 +293,21 @@ const TestManagement = () => {
       "tests",
       {
         search: debouncedSearchTerm,
-        status: statusFilter,
+        status: isStagiaire ? "published" : statusFilter,
         category: categoryFilter,
       },
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
-      if (statusFilter !== "all") params.append("status", statusFilter);
+
+      // For stagiaires, always filter to published tests only
+      if (isStagiaire) {
+        params.append("status", "published");
+      } else if (statusFilter !== "all") {
+        params.append("status", statusFilter);
+      }
+
       if (categoryFilter !== "all") params.append("category", categoryFilter);
 
       const response = await fetch(`/api/tests?${params.toString()}`, {
@@ -358,19 +367,21 @@ const TestManagement = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-gray-900">Archive Test</p>
-              <p className="text-sm text-gray-600">
+              <p className="font-semibold text-gray-900 dark:text-gray-100">
+                Archive Test
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Are you sure you want to archive "{test.title}"?
               </p>
             </div>
           </div>
-          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded">
             Archived tests cannot be taken by students but can be unarchived
             later.
           </div>
           <div className="flex space-x-2 justify-end">
             <button
-              className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+              className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               onClick={() => toast.dismiss(t.id)}
             >
               Cancel
@@ -1191,17 +1202,20 @@ const TestManagement = () => {
                 )}
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Status filter - Only visible to formateurs and admins */}
+            {!isStagiaire && (
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Category" />
@@ -1224,7 +1238,7 @@ const TestManagement = () => {
       {tests.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
-            <div className="text-gray-400 mb-4">
+            <div className="text-gray-400 dark:text-gray-500 mb-4">
               <CheckCircle size={48} className="mx-auto" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -1388,7 +1402,7 @@ const TestManagement = () => {
                       <>
                         {test.status === "archived" ? (
                           <div className="flex-1 text-center py-2">
-                            <span className="text-sm text-gray-500 italic">
+                            <span className="text-sm text-gray-500 dark:text-gray-400 italic">
                               Test is archived and not available
                             </span>
                           </div>

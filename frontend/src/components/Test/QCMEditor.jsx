@@ -263,7 +263,7 @@ const QCMEditor = ({ question, onSave, onCancel }) => {
         <div className="space-y-2">
           <Label>Question *</Label>
           {useRichText ? (
-            <div className="bg-white rounded-lg border">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
               <ReactQuill
                 value={formData.questionHtml}
                 onChange={(value) => handleInputChange("questionHtml", value)}

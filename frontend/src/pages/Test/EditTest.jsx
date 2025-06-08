@@ -252,19 +252,21 @@ const EditTest = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-gray-900">Delete Question</p>
-              <p className="text-sm text-gray-600">
+              <p className="font-semibold text-gray-900 dark:text-gray-100">
+                Delete Question
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Are you sure you want to delete this question?
               </p>
             </div>
           </div>
-          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded">
             This action cannot be undone and will permanently remove the
             question from the test.
           </div>
           <div className="flex space-x-2 justify-end">
             <button
-              className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+              className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               onClick={() => toast.dismiss(t.id)}
             >
               Cancel
@@ -480,7 +482,7 @@ const EditTest = () => {
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               </div>
             ) : questions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <p>No questions yet. Add your first question to get started!</p>
               </div>
             ) : (
@@ -495,14 +497,14 @@ const EditTest = () => {
                             {question.questionType}
                           </Badge>
                           <Badge variant="outline">{question.difficulty}</Badge>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
                             {question.points} pts
                           </span>
                         </div>
                         <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
                           {question.question || "Rich text question"}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {question.options.length} options
                         </p>
                       </div>

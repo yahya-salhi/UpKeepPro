@@ -318,7 +318,7 @@ const TakeTest = () => {
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-6">
         <div
           className="bg-primary h-2 rounded-full transition-all duration-300"
           style={{
@@ -346,7 +346,7 @@ const TakeTest = () => {
               {currentQuestion.options.map((option, index) => (
                 <label
                   key={index}
-                  className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="flex items-center space-x-3 p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <input
                     type={

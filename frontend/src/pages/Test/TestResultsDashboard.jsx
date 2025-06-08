@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { 
-  Eye, 
-  Download, 
-  Filter, 
-  Search, 
-  Users, 
+import {
+  Eye,
+  Download,
+  Filter,
+  Search,
+  Users,
   TrendingUp,
   TrendingDown,
   BarChart3,
@@ -15,7 +15,7 @@ import {
   Trophy,
   Target,
   CheckCircle,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -43,8 +43,20 @@ const TestResultsDashboard = () => {
   const [sortBy, setSortBy] = useState("recent");
 
   // Fetch all test results for formateur's tests
-  const { data: resultsData, isLoading, error } = useQuery({
-    queryKey: ["formateurResults", { search: searchTerm, test: testFilter, status: statusFilter, sort: sortBy }],
+  const {
+    data: resultsData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: [
+      "formateurResults",
+      {
+        search: searchTerm,
+        test: testFilter,
+        status: statusFilter,
+        sort: sortBy,
+      },
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
@@ -52,9 +64,12 @@ const TestResultsDashboard = () => {
       if (statusFilter !== "all") params.append("status", statusFilter);
       params.append("sort", sortBy);
 
-      const response = await fetch(`/api/tests/formateur-results?${params.toString()}`, {
-        credentials: "include",
-      });
+      const response = await fetch(
+        `/api/tests/formateur-results?${params.toString()}`,
+        {
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch test results");
@@ -91,7 +106,7 @@ const TestResultsDashboard = () => {
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
@@ -100,7 +115,11 @@ const TestResultsDashboard = () => {
 
   const getScoreBadge = (score, passingScore, passed) => {
     if (passed) {
-      return <Badge className="bg-green-100 text-green-800">Passed ({score}%)</Badge>;
+      return (
+        <Badge className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+          Passed ({score}%)
+        </Badge>
+      );
     } else {
       return <Badge variant="destructive">Failed ({score}%)</Badge>;
     }
@@ -118,15 +137,19 @@ const TestResultsDashboard = () => {
     // Create CSV export
     const results = resultsData?.data?.results || [];
     const csvContent = [
-      ["Student", "Test", "Score", "Status", "Time Spent", "Completed At"].join(","),
-      ...results.map(result => [
-        result.user.username,
-        result.test.title,
-        `${result.score}%`,
-        result.passed ? "Passed" : "Failed",
-        formatTime(result.timeSpent),
-        formatDate(result.endTime)
-      ].join(","))
+      ["Student", "Test", "Score", "Status", "Time Spent", "Completed At"].join(
+        ","
+      ),
+      ...results.map((result) =>
+        [
+          result.user.username,
+          result.test.title,
+          `${result.score}%`,
+          result.passed ? "Passed" : "Failed",
+          formatTime(result.timeSpent),
+          formatDate(result.endTime),
+        ].join(",")
+      ),
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -249,7 +272,10 @@ const TestResultsDashboard = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={16}
+                />
                 <Input
                   placeholder="Search by student name..."
                   value={searchTerm}
@@ -258,7 +284,7 @@ const TestResultsDashboard = () => {
                 />
               </div>
             </div>
-            
+
             <Select value={testFilter} onValueChange={setTestFilter}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Filter by test" />
@@ -304,7 +330,7 @@ const TestResultsDashboard = () => {
       {results.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
-            <div className="text-gray-400 mb-4">
+            <div className="text-gray-400 dark:text-gray-500 mb-4">
               <BarChart3 size={48} className="mx-auto" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -326,7 +352,10 @@ const TestResultsDashboard = () => {
           <CardContent>
             <div className="space-y-4">
               {results.map((result) => (
-                <div key={result._id} className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
+                <div
+                  key={result._id}
+                  className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -339,7 +368,11 @@ const TestResultsDashboard = () => {
                             {result.test.title}
                           </p>
                         </div>
-                        {getScoreBadge(result.score, result.test.passingScore, result.passed)}
+                        {getScoreBadge(
+                          result.score,
+                          result.test.passingScore,
+                          result.passed
+                        )}
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 dark:text-gray-400">
@@ -353,11 +386,16 @@ const TestResultsDashboard = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <Target size={14} />
-                          <span>{result.answeredQuestions}/{result.totalQuestions} questions</span>
+                          <span>
+                            {result.answeredQuestions}/{result.totalQuestions}{" "}
+                            questions
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Trophy size={14} />
-                          <span>{result.earnedPoints}/{result.totalPoints} points</span>
+                          <span>
+                            {result.earnedPoints}/{result.totalPoints} points
+                          </span>
                         </div>
                       </div>
 
@@ -371,8 +409,14 @@ const TestResultsDashboard = () => {
                     </div>
 
                     <div className="ml-4">
-                      <Link to={`/tests/${result.test._id}/results/${result._id}`}>
-                        <Button variant="outline" size="sm" className="flex items-center gap-2">
+                      <Link
+                        to={`/tests/${result.test._id}/results/${result._id}`}
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
                           <Eye size={14} />
                           View Details
                         </Button>
