@@ -155,7 +155,7 @@ const TestManagement = () => {
                 Delete Test
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Are you sure you want to delete "{test.title}"?
+                Are you sure you want to delete &quot;{test.title}&quot;?
               </p>
             </div>
           </div>
@@ -376,7 +376,7 @@ const TestManagement = () => {
                 Archive Test
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Are you sure you want to archive "{test.title}"?
+                Are you sure you want to archive &quot;{test.title}&quot;?
               </p>
             </div>
           </div>
@@ -1077,377 +1077,409 @@ const TestManagement = () => {
   const tests = testsData?.data?.tests || [];
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {isStagiaire ? "Available Tests" : "Test Management"}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {isFormateur
-              ? "Create and manage tests for your students"
-              : isStagiaire
-              ? "Take tests and view your progress"
-              : "View and take available tests"}
-          </p>
-        </div>
-        {isFormateur && (
-          <div className="flex gap-2">
-            <Link to="/test-results-dashboard">
-              <Button variant="outline" className="flex items-center gap-2">
-                <BarChart3 size={16} />
-                View Results
-              </Button>
-            </Link>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={handleExportTests}
-              disabled={selectedTests.length === 0}
-            >
-              <Download size={16} />
-              Export Test
-            </Button>
-            <Link to="/tests/create">
-              <Button className="flex items-center gap-2">
-                <Plus size={16} />
-                Create Test
-              </Button>
-            </Link>
-          </div>
-        )}
-        {isStagiaire && (
-          <Link to="/my-results">
-            <Button variant="outline" className="flex items-center gap-2">
-              <BarChart3 size={16} />
-              My Results
-            </Button>
-          </Link>
-        )}
-      </div>
-
-      {/* Bulk Actions Toolbar */}
-      {isFormateur && selectedTests.length > 0 && (
-        <Card className="mb-4">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium">
-                  {selectedTests.length} test(s) selected
-                </span>
+    <div className="min-h-screen bg-gray-50 dark:bg-main-dark-bg">
+      <div className="p-6 space-y-8">
+        {/* Header */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                {isStagiaire ? "Available Tests" : "Test Management"}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                {isFormateur
+                  ? "Create, manage, and monitor tests for your students with comprehensive analytics"
+                  : isStagiaire
+                  ? "Discover available tests, track your progress, and view your results"
+                  : "Browse and take available tests to assess your knowledge"}
+              </p>
+            </div>
+            {isFormateur && (
+              <div className="flex flex-wrap gap-3">
+                <Link to="/test-results-dashboard">
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    <BarChart3 size={16} />
+                    View Results
+                  </Button>
+                </Link>
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedTests([])}
-                >
-                  Clear Selection
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
+                  className="flex items-center gap-2 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
                   onClick={handleExportTests}
                   disabled={selectedTests.length === 0}
                 >
-                  <Download size={14} className="mr-1" />
-                  Export Selected
+                  <Download size={16} />
+                  Export Test
                 </Button>
+                <Link to="/tests/create">
+                  <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200">
+                    <Plus size={16} />
+                    Create Test
+                  </Button>
+                </Link>
+              </div>
+            )}
+            {isStagiaire && (
+              <Link to="/my-results">
                 <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkDelete}
-                  disabled={isDeleting || isBulkDeleting}
+                  variant="outline"
+                  className="flex items-center gap-2 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                 >
-                  <Trash2 size={14} className="mr-1" />
-                  {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+                  <BarChart3 size={16} />
+                  My Results
                 </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {isFormateur && tests.length > 0 && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="select-all"
-                  checked={selectedTests.length === tests.length}
-                  onCheckedChange={() => handleSelectAll(tests)}
-                />
-                <label
-                  htmlFor="select-all"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Select All
-                </label>
-              </div>
-            )}
-            <div className="flex-1">
-              <div className="relative">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={16}
-                />
-                <Input
-                  placeholder="Search tests..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-                {searchTerm !== debouncedSearchTerm && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* Status filter - Only visible to formateurs and admins */}
-            {!isStagiaire && (
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="Test">Test</SelectItem>
-                <SelectItem value="Exam">Exam</SelectItem>
-                <SelectItem value="Rattrapage">Rattrapage</SelectItem>
-                <SelectItem value="Exercice">Exercice</SelectItem>
-                <SelectItem value="Quiz">Quiz</SelectItem>
-                <SelectItem value="Pré-Test">Pré-Test</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tests Grid */}
-      {tests.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <div className="text-gray-400 dark:text-gray-500 mb-4">
-              <CheckCircle size={48} className="mx-auto" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No tests found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {isFormateur
-                ? "Get started by creating your first test"
-                : isStagiaire
-                ? "No tests are currently available for you to take"
-                : "No tests are currently available"}
-            </p>
-            {isFormateur && (
-              <Link to="/tests/create">
-                <Button>Create Your First Test</Button>
               </Link>
             )}
+          </div>
+        </div>
+
+        {/* Bulk Actions Toolbar */}
+        {isFormateur && selectedTests.length > 0 && (
+          <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 shadow-lg rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">
+                        {selectedTests.length}
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                      test(s) selected
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedTests([])}
+                    className="border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800"
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportTests}
+                    disabled={selectedTests.length === 0}
+                    className="border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800"
+                  >
+                    <Download size={14} className="mr-1" />
+                    Export Selected
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting || isBulkDeleting}
+                    className="bg-red-500 hover:bg-red-600 text-white shadow-lg"
+                  >
+                    <Trash2 size={14} className="mr-1" />
+                    {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Filters */}
+        <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-6">
+              {isFormateur && tests.length > 0 && (
+                <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                  <Checkbox
+                    id="select-all"
+                    checked={selectedTests.length === tests.length}
+                    onCheckedChange={() => handleSelectAll(tests)}
+                    className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                  />
+                  <label
+                    htmlFor="select-all"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-700 dark:text-gray-300 cursor-pointer"
+                  >
+                    Select All Tests
+                  </label>
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                    size={18}
+                  />
+                  <Input
+                    placeholder="Search tests by title, description, or category..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 h-12 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  />
+                  {searchTerm !== debouncedSearchTerm && (
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Status filter - Only visible to formateurs and admins */}
+              {!isStagiaire && (
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-48 h-12 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 rounded-lg bg-white dark:bg-gray-700">
+                    <SelectValue placeholder="Filter by Status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full sm:w-48 h-12 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 rounded-lg bg-white dark:bg-gray-700">
+                  <SelectValue placeholder="Filter by Category" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="Test">Test</SelectItem>
+                  <SelectItem value="Exam">Exam</SelectItem>
+                  <SelectItem value="Rattrapage">Rattrapage</SelectItem>
+                  <SelectItem value="Exercice">Exercice</SelectItem>
+                  <SelectItem value="Quiz">Quiz</SelectItem>
+                  <SelectItem value="Pré-Test">Pré-Test</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tests.map((test) => (
-            <Card key={test._id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="flex items-start gap-3 flex-1">
-                    {isFormateur && (
-                      <Checkbox
-                        checked={selectedTests.includes(test._id)}
-                        onCheckedChange={() => handleTestSelect(test._id)}
-                        className="mt-1"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <CardTitle className="text-lg mb-2">
-                        {test.title}
-                      </CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {test.description}
-                      </CardDescription>
+
+        {/* Tests Grid */}
+        {tests.length === 0 ? (
+          <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl">
+            <CardContent className="text-center py-16">
+              <div className="text-gray-400 dark:text-gray-500 mb-6">
+                <CheckCircle size={64} className="mx-auto" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                No tests found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                {isFormateur
+                  ? "Get started by creating your first test to assess your students' knowledge and track their progress"
+                  : isStagiaire
+                  ? "No tests are currently available for you to take. Check back later or contact your instructor"
+                  : "No tests are currently available. Please check back later"}
+              </p>
+              {isFormateur && (
+                <Link to="/tests/create">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200">
+                    Create Your First Test
+                  </Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {tests.map((test) => (
+              <Card
+                key={test._id}
+                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group"
+              >
+                <CardHeader className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-start gap-4 flex-1">
+                      {isFormateur && (
+                        <Checkbox
+                          checked={selectedTests.includes(test._id)}
+                          onCheckedChange={() => handleTestSelect(test._id)}
+                          className="mt-1 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-semibold mb-3 text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {test.title}
+                        </CardTitle>
+                        <CardDescription className="line-clamp-2 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                          {test.description}
+                        </CardDescription>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(test.status)}
-                    {isFormateur && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(`/tests/${test._id}/view`, "_blank")
-                            }
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            Preview Test
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              navigator.clipboard.writeText(
-                                `${window.location.origin}/tests/${test._id}/view`
-                              );
-                              toast.success("Test link copied to clipboard!");
-                            }}
-                          >
-                            <Copy className="mr-2 h-4 w-4" />
-                            Copy Link
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {test.status === "archived" ? (
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(test.status)}
+                      {isFormateur && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
                             <DropdownMenuItem
                               onClick={() =>
-                                unarchiveTestMutation.mutate(test._id)
+                                window.open(`/tests/${test._id}/view`, "_blank")
                               }
-                              className="text-blue-600 focus:text-blue-600"
                             >
-                              <Archive className="mr-2 h-4 w-4" />
-                              Unarchive Test
+                              <Eye className="mr-2 h-4 w-4" />
+                              Preview Test
                             </DropdownMenuItem>
-                          ) : (
                             <DropdownMenuItem
-                              onClick={() => handleArchiveTest(test)}
-                              className="text-orange-600 focus:text-orange-600"
+                              onClick={() => {
+                                navigator.clipboard.writeText(
+                                  `${window.location.origin}/tests/${test._id}/view`
+                                );
+                                toast.success("Test link copied to clipboard!");
+                              }}
                             >
-                              <Archive className="mr-2 h-4 w-4" />
-                              Archive Test
+                              <Copy className="mr-2 h-4 w-4" />
+                              Copy Link
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteTest(test)}
-                            className="text-red-600 focus:text-red-600"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Test
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                    <div className="flex items-center gap-1">
-                      <Users size={14} />
-                      <span>{test.totalQuestions} questions</span>
+                            <DropdownMenuSeparator />
+                            {test.status === "archived" ? (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  unarchiveTestMutation.mutate(test._id)
+                                }
+                                className="text-blue-600 focus:text-blue-600"
+                              >
+                                <Archive className="mr-2 h-4 w-4" />
+                                Unarchive Test
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => handleArchiveTest(test)}
+                                className="text-orange-600 focus:text-orange-600"
+                              >
+                                <Archive className="mr-2 h-4 w-4" />
+                                Archive Test
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteTest(test)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Test
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock size={14} />
-                      <span>{test.duration} min</span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-1">
+                        <Users size={14} />
+                        <span>{test.totalQuestions} questions</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock size={14} />
+                        <span>{test.duration} min</span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    <p>Category: {test.category}</p>
-                    <p>Passing Score: {test.passingScore}%</p>
-                    <p>End Date: {formatDate(test.endDate)}</p>
-                  </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <p>Category: {test.category}</p>
+                      <p>Passing Score: {test.passingScore}%</p>
+                      <p>End Date: {formatDate(test.endDate)}</p>
+                    </div>
 
-                  <div className="flex gap-2 pt-2">
-                    {isFormateur ? (
-                      <>
-                        <Link to={`/tests/${test._id}/edit`} className="flex-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                          >
-                            <Edit size={14} className="mr-1" />
-                            Edit
-                          </Button>
-                        </Link>
-                        {test.status === "draft" && (
-                          <Button
-                            size="sm"
-                            onClick={() => handlePublishTest(test._id)}
-                            className="flex-1"
-                          >
-                            <Play size={14} className="mr-1" />
-                            Publish
-                          </Button>
-                        )}
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteTest(test)}
-                          disabled={isDeleting}
-                        >
-                          <Trash2 size={14} />
-                        </Button>
-                      </>
-                    ) : isStagiaire ? (
-                      <>
-                        {test.status === "archived" ? (
-                          <div className="flex-1 text-center py-2">
-                            <span className="text-sm text-gray-500 dark:text-gray-400 italic">
-                              Test is archived and not available
-                            </span>
-                          </div>
-                        ) : (
+                    <div className="flex gap-2 pt-2">
+                      {isFormateur ? (
+                        <>
                           <Link
-                            to={`/tests/${test._id}/take`}
+                            to={`/tests/${test._id}/edit`}
                             className="flex-1"
                           >
                             <Button
+                              variant="outline"
+                              size="sm"
                               className="w-full"
-                              disabled={test.status !== "published"}
                             >
-                              <Play size={14} className="mr-1" />
-                              Take Test
+                              <Edit size={14} className="mr-1" />
+                              Edit
                             </Button>
                           </Link>
-                        )}
-                        <Link to={`/tests/${test._id}/view`}>
-                          <Button variant="outline" size="sm">
-                            <Eye size={14} />
+                          {test.status === "draft" && (
+                            <Button
+                              size="sm"
+                              onClick={() => handlePublishTest(test._id)}
+                              className="flex-1"
+                            >
+                              <Play size={14} className="mr-1" />
+                              Publish
+                            </Button>
+                          )}
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteTest(test)}
+                            disabled={isDeleting}
+                          >
+                            <Trash2 size={14} />
                           </Button>
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <Link to={`/tests/${test._id}/view`} className="flex-1">
-                          <Button variant="outline" className="w-full">
-                            <Eye size={14} className="mr-1" />
-                            View Test
-                          </Button>
-                        </Link>
-                      </>
-                    )}
+                        </>
+                      ) : isStagiaire ? (
+                        <>
+                          {test.status === "archived" ? (
+                            <div className="flex-1 text-center py-2">
+                              <span className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                Test is archived and not available
+                              </span>
+                            </div>
+                          ) : (
+                            <Link
+                              to={`/tests/${test._id}/take`}
+                              className="flex-1"
+                            >
+                              <Button
+                                className="w-full"
+                                disabled={test.status !== "published"}
+                              >
+                                <Play size={14} className="mr-1" />
+                                Take Test
+                              </Button>
+                            </Link>
+                          )}
+                          <Link to={`/tests/${test._id}/view`}>
+                            <Button variant="outline" size="sm">
+                              <Eye size={14} />
+                            </Button>
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            to={`/tests/${test._id}/view`}
+                            className="flex-1"
+                          >
+                            <Button variant="outline" className="w-full">
+                              <Eye size={14} className="mr-1" />
+                              View Test
+                            </Button>
+                          </Link>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

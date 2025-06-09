@@ -182,253 +182,283 @@ const TestResultsDashboard = () => {
   const stats = resultsData?.data?.stats || {};
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Test Results Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Monitor student performance and test analytics
-          </p>
-        </div>
-        <Button onClick={exportResults} className="flex items-center gap-2">
-          <Download size={16} />
-          Export Results
-        </Button>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 dark:bg-main-dark-bg">
+      <div className="p-6 space-y-8">
+        {/* Header */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <BarChart3 className="text-white" size={24} />
+              </div>
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Attempts
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.totalAttempts || 0}
-                </p>
-              </div>
-              <Users className="w-8 h-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Pass Rate
-                </p>
-                <p className="text-2xl font-bold text-green-600">
-                  {stats.passRate || 0}%
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  Test Results Dashboard
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Monitor student performance, analyze test results, and track
+                  learning progress
                 </p>
               </div>
-              <Trophy className="w-8 h-8 text-green-600" />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Average Score
-                </p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {stats.averageScore || 0}%
-                </p>
-              </div>
-              <Target className="w-8 h-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Avg. Time
-                </p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {formatTime(stats.averageTime || 0)}
-                </p>
-              </div>
-              <Clock className="w-8 h-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={16}
-                />
-                <Input
-                  placeholder="Search by student name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <Select value={testFilter} onValueChange={setTestFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by test" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Tests</SelectItem>
-                {tests.map((test) => (
-                  <SelectItem key={test._id} value={test._id}>
-                    {test.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="passed">Passed</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Most Recent</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="score-high">Highest Score</SelectItem>
-                <SelectItem value="score-low">Lowest Score</SelectItem>
-                <SelectItem value="student">Student Name</SelectItem>
-              </SelectContent>
-            </Select>
+            <Button
+              onClick={exportResults}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <Download size={16} />
+              Export Results
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Results Table */}
-      {results.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <div className="text-gray-400 dark:text-gray-500 mb-4">
-              <BarChart3 size={48} className="mx-auto" />
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Total Attempts
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {stats.totalAttempts || 0}
+                  </p>
+                </div>
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                  <Users className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Pass Rate
+                  </p>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    {stats.passRate || 0}%
+                  </p>
+                </div>
+                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+                  <Trophy className="w-8 h-8 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Average Score
+                  </p>
+                  <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                    {stats.averageScore || 0}%
+                  </p>
+                </div>
+                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+                  <Target className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Avg. Time
+                  </p>
+                  <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+                    {formatTime(stats.averageTime || 0)}
+                  </p>
+                </div>
+                <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
+                  <Clock className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
+        <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-6">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                    size={18}
+                  />
+                  <Input
+                    placeholder="Search by student name or test title..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 h-12 border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400 rounded-lg bg-white dark:bg-gray-700"
+                  />
+                </div>
+              </div>
+
+              <Select value={testFilter} onValueChange={setTestFilter}>
+                <SelectTrigger className="w-full sm:w-56 h-12 border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400 rounded-lg bg-white dark:bg-gray-700">
+                  <SelectValue placeholder="Filter by test" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+                  <SelectItem value="all">All Tests</SelectItem>
+                  {tests.map((test) => (
+                    <SelectItem key={test._id} value={test._id}>
+                      {test.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48 h-12 border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400 rounded-lg bg-white dark:bg-gray-700">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="passed">Passed</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full sm:w-48 h-12 border-gray-300 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400 rounded-lg bg-white dark:bg-gray-700">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+                  <SelectItem value="recent">Most Recent</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="score-high">Highest Score</SelectItem>
+                  <SelectItem value="score-low">Lowest Score</SelectItem>
+                  <SelectItem value="student">Student Name</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No results found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              No test results match your current filters.
-            </p>
           </CardContent>
         </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Results ({results.length})</CardTitle>
-            <CardDescription>
-              Detailed view of all student test attempts
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {results.map((result) => (
-                <div
-                  key={result._id}
-                  className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        {getStatusIcon(result.passed)}
-                        <div>
-                          <h4 className="font-medium text-gray-900 dark:text-white">
-                            {result.user.username}
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {result.test.title}
-                          </p>
+
+        {/* Results Table */}
+        {results.length === 0 ? (
+          <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl">
+            <CardContent className="text-center py-16">
+              <div className="text-gray-400 dark:text-gray-500 mb-6">
+                <BarChart3 size={64} className="mx-auto" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                No results found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                No test results match your current filters. Try adjusting your
+                search criteria or check back later.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 border-b border-gray-200 dark:border-gray-600 p-6">
+              <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">
+                    {results.length}
+                  </span>
+                </div>
+                Test Results ({results.length})
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-300 mt-2">
+                Detailed view of all student test attempts with comprehensive
+                analytics
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                {results.map((result) => (
+                  <div
+                    key={result._id}
+                    className="border border-gray-200 dark:border-gray-600 rounded-xl p-6 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          {getStatusIcon(result.passed)}
+                          <div>
+                            <h4 className="font-medium text-gray-900 dark:text-white">
+                              {result.user.username}
+                            </h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {result.test.title}
+                            </p>
+                          </div>
+                          {getScoreBadge(
+                            result.score,
+                            result.test.passingScore,
+                            result.passed
+                          )}
                         </div>
-                        {getScoreBadge(
-                          result.score,
-                          result.test.passingScore,
-                          result.passed
-                        )}
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center gap-2">
+                            <Calendar size={14} />
+                            <span>{formatDate(result.endTime)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock size={14} />
+                            <span>{formatTime(result.timeSpent)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Target size={14} />
+                            <span>
+                              {result.answeredQuestions}/{result.totalQuestions}{" "}
+                              questions
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Trophy size={14} />
+                            <span>
+                              {result.earnedPoints}/{result.totalPoints} points
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span>Score Progress</span>
+                            <span>{result.score}%</span>
+                          </div>
+                          <Progress value={result.score} className="h-2" />
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center gap-2">
-                          <Calendar size={14} />
-                          <span>{formatDate(result.endTime)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock size={14} />
-                          <span>{formatTime(result.timeSpent)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Target size={14} />
-                          <span>
-                            {result.answeredQuestions}/{result.totalQuestions}{" "}
-                            questions
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Trophy size={14} />
-                          <span>
-                            {result.earnedPoints}/{result.totalPoints} points
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span>Score Progress</span>
-                          <span>{result.score}%</span>
-                        </div>
-                        <Progress value={result.score} className="h-2" />
-                      </div>
-                    </div>
-
-                    <div className="ml-4">
-                      <Link
-                        to={`/tests/${result.test._id}/results/${result._id}`}
-                      >
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-2"
+                      <div className="ml-4">
+                        <Link
+                          to={`/tests/${result.test._id}/results/${result._id}`}
                         >
-                          <Eye size={14} />
-                          View Details
-                        </Button>
-                      </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2"
+                          >
+                            <Eye size={14} />
+                            View Details
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };

@@ -11,6 +11,7 @@ import {
   XCircle,
   Filter,
   Search,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -124,236 +125,289 @@ const MyResults = () => {
   const results = resultsData?.data?.results || [];
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          My Test Results
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          View your test history and performance
-        </p>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={16}
-                />
-                <Input
-                  placeholder="Search tests..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-main-dark-bg">
+      <div className="p-6 space-y-8">
+        {/* Header */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <Trophy className="text-white" size={24} />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Results</SelectItem>
-                <SelectItem value="passed">Passed</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Most Recent</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="score-high">Highest Score</SelectItem>
-                <SelectItem value="score-low">Lowest Score</SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                My Test Results
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Track your progress, view detailed results, and monitor your
+                learning journey
+              </p>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Results List */}
-      {results.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <div className="text-gray-400 dark:text-gray-500 mb-4">
-              <Trophy size={48} className="mx-auto" />
+        {/* Filters */}
+        <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-6">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                    size={18}
+                  />
+                  <Input
+                    placeholder="Search tests by title or description..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 h-12 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 rounded-lg bg-white dark:bg-gray-700"
+                  />
+                </div>
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48 h-12 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 rounded-lg bg-white dark:bg-gray-700">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+                  <SelectItem value="all">All Results</SelectItem>
+                  <SelectItem value="passed">Passed</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full sm:w-48 h-12 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 rounded-lg bg-white dark:bg-gray-700">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+                  <SelectItem value="recent">Most Recent</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="score-high">Highest Score</SelectItem>
+                  <SelectItem value="score-low">Lowest Score</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No test results found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              You haven't taken any tests yet or no results match your filters.
-            </p>
-            <Link to="/tests">
-              <Button>Browse Available Tests</Button>
-            </Link>
           </CardContent>
         </Card>
-      ) : (
-        <div className="space-y-4">
-          {results.map((result) => (
-            <Card
-              key={result._id}
-              className="hover:shadow-lg transition-shadow"
-            >
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      {getStatusIcon(result.passed)}
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {result.test.title}
-                      </h3>
-                      {getScoreBadge(
-                        result.score,
-                        result.test.passingScore,
-                        result.passed
-                      )}
+
+        {/* Results List */}
+        {results.length === 0 ? (
+          <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl">
+            <CardContent className="text-center py-16">
+              <div className="text-gray-400 dark:text-gray-500 mb-6">
+                <Trophy size={64} className="mx-auto" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                No test results found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                You haven't taken any tests yet or no results match your current
+                filters. Start your learning journey today!
+              </p>
+              <Link to="/tests">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200">
+                  Browse Available Tests
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
+            {results.map((result) => (
+              <Card
+                key={result._id}
+                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden group"
+              >
+                <CardContent className="p-8">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div
+                          className={`p-2 rounded-full ${
+                            result.passed
+                              ? "bg-green-100 dark:bg-green-900/20"
+                              : "bg-red-100 dark:bg-red-900/20"
+                          }`}
+                        >
+                          {getStatusIcon(result.passed)}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {result.test.title}
+                          </h3>
+                          <div className="mt-2">
+                            {getScoreBadge(
+                              result.score,
+                              result.test.passingScore,
+                              result.passed
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-600 dark:text-gray-400 mb-6 line-clamp-2 text-lg">
+                        {result.test.description}
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Calendar
+                              size={16}
+                              className="text-blue-600 dark:text-blue-400"
+                            />
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                              Completed
+                            </span>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {formatDate(result.completedAt || result.endTime)}
+                          </span>
+                        </div>
+
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Clock
+                              size={16}
+                              className="text-green-600 dark:text-green-400"
+                            />
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                              Duration
+                            </span>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {formatTime(result.timeSpent)}
+                          </span>
+                        </div>
+
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Target
+                              size={16}
+                              className="text-purple-600 dark:text-purple-400"
+                            />
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                              Questions
+                            </span>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {result.answeredQuestions}/{result.totalQuestions}
+                          </span>
+                        </div>
+
+                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Trophy
+                              size={16}
+                              className="text-orange-600 dark:text-orange-400"
+                            />
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                              Points
+                            </span>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {result.earnedPoints}/{result.totalPoints}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    <p className="text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-                      {result.test.description}
-                    </p>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Calendar
-                          size={14}
-                          className="text-gray-500 dark:text-gray-400"
-                        />
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {formatDate(result.completedAt || result.endTime)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Clock
-                          size={14}
-                          className="text-gray-500 dark:text-gray-400"
-                        />
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {formatTime(result.timeSpent)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Target
-                          size={14}
-                          className="text-gray-500 dark:text-gray-400"
-                        />
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {result.answeredQuestions}/{result.totalQuestions}{" "}
-                          questions
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Trophy
-                          size={14}
-                          className="text-gray-500 dark:text-gray-400"
-                        />
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {result.earnedPoints}/{result.totalPoints} points
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2 ml-4">
-                    <Link
-                      to={`/tests/${result.test._id}/results/${result._id}`}
-                    >
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-2"
+                    <div className="flex flex-col gap-3 ml-6">
+                      <Link
+                        to={`/tests/${result.test._id}/results/${result._id}`}
                       >
-                        <Eye size={14} />
-                        View Details
-                      </Button>
-                    </Link>
-
-                    {result.test.allowRetake && !result.passed && (
-                      <Link to={`/tests/${result.test._id}/take`}>
-                        <Button size="sm" className="flex items-center gap-2">
-                          <Trophy size={14} />
-                          Retake
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          <Eye size={16} />
+                          View Details
                         </Button>
                       </Link>
-                    )}
+
+                      {result.test.allowRetake && !result.passed && (
+                        <Link to={`/tests/${result.test._id}/take`}>
+                          <Button
+                            size="sm"
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                          >
+                            <Trophy size={16} />
+                            Retake Test
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
-      {/* Summary Stats */}
-      {results.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Summary</CardTitle>
-            <CardDescription>
-              Your overall test performance statistics
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {results.length}
+        {/* Summary Stats */}
+        {results.length > 0 && (
+          <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-2xl">
+            <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-gray-700 dark:to-gray-600 border-b border-gray-200 dark:border-gray-600 p-6">
+              <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-3">
+                <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+                  <BarChart3 className="text-white" size={20} />
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Tests Taken
-                </p>
-              </div>
+                Performance Summary
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-300 mt-2">
+                Your overall test performance statistics and learning progress
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="text-center bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                    {results.length}
+                  </div>
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    Tests Taken
+                  </p>
+                </div>
 
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {results.filter((r) => r.passed).length}
+                <div className="text-center bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+                  <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+                    {results.filter((r) => r.passed).length}
+                  </div>
+                  <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                    Tests Passed
+                  </p>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Tests Passed
-                </p>
-              </div>
 
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {Math.round(
-                    results.reduce((sum, r) => sum + r.score, 0) /
-                      results.length
-                  )}
-                  %
+                <div className="text-center bg-purple-50 dark:bg-purple-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+                    {Math.round(
+                      results.reduce((sum, r) => sum + r.score, 0) /
+                        results.length
+                    )}
+                    %
+                  </div>
+                  <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                    Average Score
+                  </p>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Average Score
-                </p>
-              </div>
 
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {Math.round(
-                    (results.filter((r) => r.passed).length / results.length) *
-                      100
-                  )}
-                  %
+                <div className="text-center bg-orange-50 dark:bg-orange-900/20 rounded-xl p-6 border border-orange-200 dark:border-orange-800">
+                  <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">
+                    {Math.round(
+                      (results.filter((r) => r.passed).length /
+                        results.length) *
+                        100
+                    )}
+                    %
+                  </div>
+                  <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
+                    Pass Rate
+                  </p>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Pass Rate
-                </p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
