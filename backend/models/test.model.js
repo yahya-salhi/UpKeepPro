@@ -143,7 +143,10 @@ testSchema.methods.canUserTakeTest = function (userId) {
     this.status === "published" &&
     this.startDate <= now &&
     this.endDate >= now &&
-    (this.assignedTo.length === 0 || this.assignedTo.includes(userId))
+    (this.assignedTo.length === 0 ||
+      this.assignedTo.some(
+        (assignedUserId) => assignedUserId.toString() === userId.toString()
+      ))
   );
 };
 
