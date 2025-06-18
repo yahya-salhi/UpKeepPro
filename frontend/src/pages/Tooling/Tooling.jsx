@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -13,6 +13,7 @@ import {
 import ResponsibleModal from "./ResponsibleModal";
 import LocationModal from "./LocationModal";
 import PlacementModal from "./PlacementModal";
+import { useNavigate } from "react-router-dom";
 
 import {
   Form,
@@ -83,6 +84,13 @@ export default function ToolingAcquisitionForm() {
   const [activeTab, setActiveTab] = useState("entry");
   const queryClient = useQueryClient();
   const { currentColor } = useStateContext();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (activeTab === "exit") {
+      navigate("/ExitTooling");
+    }
+  }, [activeTab, navigate]);
 
   const form = useForm({
     defaultValues: {
@@ -938,7 +946,7 @@ export default function ToolingAcquisitionForm() {
                           </FormControl>
                           <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                             <SelectItem
-                              value="DEMRE"
+                              value="DGMRE"
                               className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                             >
                               <div className="flex items-center gap-2 w-full">
