@@ -59,7 +59,7 @@ const Dashboard = () => {
   const [weekOffset, setWeekOffset] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([
+  const [notifications] = useState([
     {
       id: 1,
       type: "success",
