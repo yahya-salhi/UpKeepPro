@@ -10,7 +10,7 @@ import { toast } from "react-hot-toast";
 import { useStateContext } from "../contexts/ContextProvider";
 import { Header } from "../components";
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -38,6 +38,13 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Shield,
+  Mail,
+  CheckCircle,
+  XCircle,
+  Download,
+  RefreshCw,
+  Eye,
 } from "lucide-react";
 
 // Fetch users with pagination
@@ -58,6 +65,7 @@ const deleteUser = async (id, role) => {
 
 const Employees = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -112,79 +120,107 @@ const Employees = () => {
   const columns = [
     {
       accessorKey: "username",
-      header: "Name",
+      header: "User",
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <div
-            className="size-8 rounded-full flex items-center justify-center"
-            style={{
-              background: `linear-gradient(135deg, ${currentColor}20, ${currentColor}40)`,
-              border: `1px solid ${currentColor}30`,
-            }}
-          >
-            <span
-              className="text-sm font-medium"
-              style={{ color: currentColor }}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div
+              className="size-10 rounded-full flex items-center justify-center shadow-lg"
+              style={{
+                background: `linear-gradient(135deg, ${currentColor}, ${currentColor}dd)`,
+              }}
             >
-              {row.original.username
-                ? row.original.username.charAt(0).toUpperCase()
-                : "?"}
-            </span>
+              <span className="text-sm font-bold text-white">
+                {row.original.username
+                  ? row.original.username.charAt(0).toUpperCase()
+                  : "?"}
+              </span>
+            </div>
+            <div
+              className={`absolute -bottom-1 -right-1 size-3 rounded-full border-2 border-white dark:border-gray-800 ${
+                row.original.availability ? "bg-green-500" : "bg-red-500"
+              }`}
+            ></div>
           </div>
-          <span className="font-medium">
-            {row.original.username || "Unknown"}
-          </span>
+          <div>
+            <div className="font-semibold text-gray-900 dark:text-white">
+              {row.original.username || "Unknown"}
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+              <Mail className="size-3" />
+              {row.original.email || "No email"}
+            </div>
+          </div>
         </div>
       ),
     },
     {
-      accessorKey: "email",
-      header: "Email",
-      cell: ({ row }) => row.original.email || "N/A",
-    },
-    {
       accessorKey: "role",
-      header: "Role",
+      header: "Role & Grade",
       cell: ({ row }) => (
-        <span
-          className="px-2 py-1 rounded-full text-xs font-medium"
-          style={{
-            backgroundColor: `${currentColor}15`,
-            color: currentColor,
-          }}
-        >
-          {row.original.role || "N/A"}
-        </span>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Shield className="size-4 text-gray-400" />
+            <span
+              className="px-3 py-1 rounded-full text-xs font-semibold"
+              style={{
+                backgroundColor: `${currentColor}15`,
+                color: currentColor,
+              }}
+            >
+              {row.original.role || "N/A"}
+            </span>
+          </div>
+          {row.original.grade && (
+            <div className="text-sm text-gray-600 dark:text-gray-400 ml-6">
+              {row.original.grade}
+            </div>
+          )}
+        </div>
       ),
     },
     {
-      accessorKey: "grade",
-      header: "Grade",
-      cell: ({ row }) => row.original.grade || "N/A",
-    },
-    {
-      accessorKey: "phoneUsersCount",
-      header: "Phone Users",
-      cell: ({ row }) => row.original.phoneUsersCount || "0",
-    },
-    {
-      accessorKey: "officeUsersCount",
-      header: "Office Users",
-      cell: ({ row }) => row.original.officeUsersCount || "0",
+      accessorKey: "usage",
+      header: "Usage Stats",
+      cell: ({ row }) => (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <span className="text-gray-600 dark:text-gray-400">Phone:</span>
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {row.original.phoneUsersCount || "0"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+            <span className="text-gray-600 dark:text-gray-400">Office:</span>
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {row.original.officeUsersCount || "0"}
+            </span>
+          </div>
+        </div>
+      ),
     },
     {
       accessorKey: "availability",
-      header: "Availability",
+      header: "Status",
       cell: ({ row }) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            row.original.availability
-              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-              : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-          }`}
-        >
-          {row.original.availability ? "Available" : "Unavailable"}
-        </span>
+        <div className="flex items-center gap-2">
+          {row.original.availability ? (
+            <CheckCircle className="size-5 text-green-500" />
+          ) : (
+            <XCircle className="size-5 text-red-500" />
+          )}
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              row.original.availability
+                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+            }`}
+          >
+            {row.original.availability ? "Available" : "Unavailable"}
+          </span>
+        </div>
       ),
     },
     {
@@ -195,16 +231,37 @@ const Employees = () => {
         const isProtected = user.role === "REPI" || user.role === "CC";
 
         return (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => confirmDelete(user._id, user.role)}
-            disabled={isProtected || deleteMutation.isLoading}
-            className="flex items-center gap-1"
-          >
-            <Trash2 className="size-4" />
-            {deleteMutation.isLoading ? "Deleting..." : "Delete"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/profile/${user.username}`)}
+              className="flex items-center gap-2 px-3 py-2 border-2 border-blue-200 dark:border-blue-600 hover:border-blue-300 dark:hover:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-300"
+            >
+              <Eye className="size-4" />
+              View Profile
+            </Button>
+
+            {!isProtected && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => confirmDelete(user._id, user.role)}
+                disabled={deleteMutation.isLoading}
+                className="flex items-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                <Trash2 className="size-4" />
+                {deleteMutation.isLoading ? "Deleting..." : "Delete"}
+              </Button>
+            )}
+
+            {isProtected && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg">
+                <Shield className="size-4" />
+                <span className="text-xs font-medium">Protected</span>
+              </div>
+            )}
+          </div>
         );
       },
     },
@@ -224,14 +281,29 @@ const Employees = () => {
 
   if (isLoading) {
     return (
-      <div className="m-2 md:m-10 mt-24 p-2 md:p-10 bg-white dark:bg-gray-800 rounded-3xl">
-        <Header category="Page" title="Users" />
-        <div className="p-4 space-y-4">
-          <Skeleton className="h-8 w-[200px]" />
-          <div className="space-y-2">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <Header category="Management" title="Employee Directory" />
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 mt-8">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+              <span className="text-lg font-medium text-gray-600 dark:text-gray-400">
+                Loading employees...
+              </span>
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-full rounded-xl" />
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-24 w-full rounded-xl" />
+                ))}
+              </div>
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -240,180 +312,356 @@ const Employees = () => {
 
   if (isError) {
     return (
-      <div className="m-2 md:m-10 mt-24 p-2 md:p-10 bg-white dark:bg-gray-800 rounded-3xl">
-        <Header category="Page" title="Users" />
-        <div className="p-4 text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800">
-          Error loading users. Please try again later.
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <Header category="Management" title="Employee Directory" />
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 mt-8">
+            <div className="text-center">
+              <div className="mx-auto mb-4 w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <XCircle className="size-8 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Failed to Load Employees
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                We encountered an error while loading the employee directory.
+                Please try again.
+              </p>
+              <Button
+                onClick={() => window.location.reload()}
+                className="flex items-center gap-2 mx-auto"
+                style={{ backgroundColor: currentColor }}
+              >
+                <RefreshCw className="size-4" />
+                Retry
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="m-2 md:m-10 mt-24 p-2 md:p-10 bg-white dark:bg-gray-800 rounded-3xl">
-      <Header category="Page" title="Users" />
-
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <h2 className="text-2xl font-bold dark:text-white flex items-center gap-2">
-            <Users className="size-6" style={{ color: currentColor }} />
-            <span>Users</span>
-            <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
-              ({userData.totalUsers} total)
-            </span>
-          </h2>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="relative flex-grow sm:max-w-xs">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="size-4 text-gray-400 dark:text-gray-500" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search users..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <Link to="/signup">
-            <Button
-              className="flex items-center gap-2"
-              style={{ backgroundColor: currentColor }}
-            >
-              <UserPlus className="size-4" />
-              Add User
-            </Button>
-          </Link>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/5 to-purple-400/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-indigo-400/5 to-pink-400/5 rounded-full blur-3xl"></div>
       </div>
 
-      {/* Table Section */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="bg-gray-50 dark:bg-gray-800/50"
-              >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="dark:text-white font-medium"
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {/* Enhanced Header */}
+        <div className="mb-8">
+          <Header category="Management" title="Employee Directory" />
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50">
+              <div className="flex items-center gap-4">
+                <div
+                  className="p-3 rounded-xl"
+                  style={{ backgroundColor: `${currentColor}15` }}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="dark:text-white">
+                  <Users className="size-6" style={{ color: currentColor }} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Total Users
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {userData.totalUsers}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900/30">
+                  <CheckCircle className="size-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Available
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {userData.users?.filter((user) => user.availability)
+                      .length || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Control Panel */}
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 mb-6">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className="p-2 rounded-xl"
+                  style={{ backgroundColor: `${currentColor}15` }}
+                >
+                  <Users className="size-5" style={{ color: currentColor }} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Employee Directory
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Manage and monitor all system users
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Enhanced Search and Actions */}
+            <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+              {/* Enhanced Search */}
+              <div className="relative flex-grow sm:max-w-sm">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="size-5 text-gray-400 dark:text-gray-500" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search by name, email, role..."
+                  className="block w-full pl-12 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white/50 dark:bg-gray-700/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <XCircle className="size-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 px-4 py-3 border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 rounded-xl transition-all duration-300"
+                >
+                  <RefreshCw className="size-4" />
+                  Refresh
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 px-4 py-3 border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 rounded-xl transition-all duration-300"
+                >
+                  <Download className="size-4" />
+                  Export
+                </Button>
+
+                <Link to="/signup">
+                  <Button
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    style={{
+                      background: `linear-gradient(135deg, ${currentColor}, ${currentColor}dd)`,
+                    }}
+                  >
+                    <UserPlus className="size-4" />
+                    Add User
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Table Section */}
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 overflow-hidden">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow
+                  key={headerGroup.id}
+                  className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600"
+                >
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className="text-gray-900 dark:text-white font-semibold py-4 px-6 text-sm uppercase tracking-wider"
+                    >
                       {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
+                        header.column.columnDef.header,
+                        header.getContext()
                       )}
-                    </TableCell>
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center dark:text-white"
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row, index) => (
+                  <TableRow
+                    key={row.id}
+                    className={`hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all duration-200 border-b border-gray-100 dark:border-gray-700/50 ${
+                      index % 2 === 0
+                        ? "bg-white/30 dark:bg-gray-800/30"
+                        : "bg-gray-50/30 dark:bg-gray-700/20"
+                    }`}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className="text-gray-900 dark:text-white py-4 px-6"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-32 text-center text-gray-500 dark:text-gray-400 py-12"
+                  >
+                    <div className="flex flex-col items-center gap-3">
+                      <Users className="size-12 text-gray-300 dark:text-gray-600" />
+                      <div>
+                        <p className="text-lg font-medium">
+                          {searchTerm ? "No users found" : "No users available"}
+                        </p>
+                        <p className="text-sm">
+                          {searchTerm
+                            ? "Try adjusting your search criteria"
+                            : "Add your first user to get started"}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Enhanced Pagination Controls */}
+        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl p-6 rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 mt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Showing{" "}
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {filteredUsers.length}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {userData.totalUsers}
+                </span>{" "}
+                results
+              </div>
+              {searchTerm && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                  <Search className="size-3 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                    Filtered
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                disabled={page === 1}
+                className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="size-4" />
+                Previous
+              </Button>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Page
+                </span>
+                <div
+                  className="px-3 py-1 rounded-lg font-semibold text-white"
+                  style={{ backgroundColor: currentColor }}
                 >
-                  {searchTerm
-                    ? "No users found matching your search."
-                    : "No users found."}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                  {page}
+                </div>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  of {userData.totalPages}
+                </span>
+              </div>
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-between mt-4">
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          Showing {filteredUsers.length} of {userData.totalUsers} results
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-            disabled={page === 1}
-            className="flex items-center gap-1 dark:text-white"
-          >
-            <ChevronLeft className="size-4" />
-            Previous
-          </Button>
-          <span className="text-sm text-gray-500 dark:text-gray-400 px-2">
-            Page {page} of {userData.totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setPage((prev) => Math.min(prev + 1, userData.totalPages))
-            }
-            disabled={page === userData.totalPages}
-            className="flex items-center gap-1 dark:text-white"
-          >
-            Next
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="max-w-md rounded-xl bg-white dark:bg-gray-800 p-6 shadow-xl border border-gray-200 dark:border-gray-700">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-              Are you absolutely sure?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium text-red-600 dark:text-red-400">
-                This action cannot be undone.
-              </span>{" "}
-              This will permanently delete the user from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="mt-4 flex justify-end space-x-3">
-            <AlertDialogCancel className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus-visible:ring-gray-500 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (userToDelete) {
-                  deleteMutation.mutate(userToDelete);
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setPage((prev) => Math.min(prev + 1, userData.totalPages))
                 }
-              }}
-              disabled={deleteMutation.isLoading}
-              className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white px-4 py-2 rounded-lg"
-            >
-              {deleteMutation.isLoading ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+                disabled={page === userData.totalPages}
+                className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+        {/* Enhanced Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent className="max-w-md rounded-2xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-8 shadow-2xl border border-white/20 dark:border-gray-700/50">
+            <AlertDialogHeader className="text-center">
+              <div className="mx-auto mb-4 w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <Trash2 className="size-8 text-red-600 dark:text-red-400" />
+              </div>
+              <AlertDialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                Delete User Account
+              </AlertDialogTitle>
+              <AlertDialogDescription className="mt-3 text-gray-600 dark:text-gray-400 leading-relaxed">
+                <span className="block font-semibold text-red-600 dark:text-red-400 mb-2">
+                  ⚠️ This action cannot be undone
+                </span>
+                This will permanently remove the user and all associated data
+                from the system.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-6 flex flex-col sm:flex-row gap-3">
+              <AlertDialogCancel className="flex-1 px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl border-0 transition-all duration-300">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (userToDelete) {
+                    deleteMutation.mutate(userToDelete);
+                  }
+                }}
+                disabled={deleteMutation.isLoading}
+                className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {deleteMutation.isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Deleting...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <Trash2 className="size-4" />
+                    Delete User
+                  </div>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 };
