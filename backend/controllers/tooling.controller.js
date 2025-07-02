@@ -531,10 +531,68 @@ export const getToolsByDirection = async (req, res) => {
 
 export const getToolsByType = async (req, res) => {
   try {
-    const tools = await Tooling.find({ type: req.params.type })
-      .select("designation mat direction currentQte")
-      .sort({ designation: 1 });
+    const { type } = req.params;
+    const tools = await Tooling.find({ type: type }).populate(
+      "responsible location placement"
+    );
     res.status(200).json(tools);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc    Delete a specific history entry from a tool
+// @route   DELETE /api/tooling/:toolId/history/:entryId
+export const deleteToolHistoryEntry = async (req, res) => {
+  try {
+    const { toolId, entryId } = req.params;
+
+    if (
+      !mongoose.Types.ObjectId.isValid(toolId) ||
+      !mongoose.Types.ObjectId.isValid(entryId)
+    ) {
+      return res.status(400).json({ error: "Invalid Tool ID or Entry ID" });
+    }
+
+    const tool = await Tooling.findById(toolId);
+
+    if (!tool) {
+      return res.status(404).json({ error: "Tool not found" });
+    }
+
+    const entryIndex = tool.history.findIndex(
+      (entry) => entry._id.toString() === entryId
+    );
+
+    if (entryIndex === -1) {
+      return res.status(404).json({ error: "History entry not found" });
+    }
+
+    const deletedEntry = tool.history.splice(entryIndex, 1)[0];
+
+    // Adjust currentQte based on the deleted entry's impact
+    if (deletedEntry.qteChange) {
+      if (deletedEntry.eventType === "entry") {
+        tool.currentQte -= deletedEntry.qteChange;
+      } else if (deletedEntry.eventType === "exit") {
+        tool.currentQte -= deletedEntry.qteChange; // qteChange for exit is negative, so subtracting a negative adds it back
+      }
+    }
+
+    // Recalculate situation based on updated currentQte
+    if (tool.currentQte <= 0) {
+      tool.situation = "unavailable";
+    } else if (tool.currentQte < tool.originalQte) {
+      tool.situation = "partial";
+    } else {
+      tool.situation = "available"; // If currentQte is back to original or more (shouldn't be more, but just in case)
+    }
+
+    await tool.save();
+
+    res
+      .status(200)
+      .json({ message: "History entry deleted successfully", tool });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

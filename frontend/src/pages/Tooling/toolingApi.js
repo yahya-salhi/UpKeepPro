@@ -36,7 +36,6 @@ export const fetchPlacements = async () =>
 export const addPlacement = async (placementData) =>
   handleRequest(() => axios.post("/api/placements", placementData));
 
-
 // ======================
 // ** Tooling API **
 // ======================
@@ -78,6 +77,11 @@ export const updateTooling = async (id, toolingData) =>
 
 export const deleteTooling = async (id) =>
   handleRequest(() => axios.delete(`/api/tooling/${id}`));
+
+export const deleteToolHistoryEntry = async (toolId, entryId) =>
+  handleRequest(() =>
+    axios.delete(`/api/tooling/${toolId}/history/${entryId}`)
+  );
 
 // ======================
 // ** Utility Functions **

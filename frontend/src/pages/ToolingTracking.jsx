@@ -835,50 +835,52 @@ export default function ToolingTracking() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="flex gap-2 mt-6">
-                  {/* Only show the Convert to M11 button if there are PV entries */}
-                  {historyData &&
-                    historyData.some(
-                      (entry) =>
-                        entry.eventType === "entry" &&
-                        entry.reference &&
-                        entry.reference.startsWith("pv-")
-                    ) && (
-                      <ConversionDialog
-                        tool={selectedTool}
-                        onConvert={(conversionData) =>
-                          handleConversion({
-                            id: selectedToolId,
-                            conversionData,
-                          })
-                        }
-                      >
-                        <Button variant="outline" className="gap-2">
-                          Convert to M11
-                        </Button>
-                      </ConversionDialog>
-                    )}
+                {historyData && historyData.length > 0 && (
+                  <div className="flex gap-2 mt-6">
+                    {/* Only show the Convert to M11 button if a PV history entry is selected */}
+                    {selectedHistoryEntry &&
+                      selectedHistoryEntry.eventType === "entry" &&
+                      selectedHistoryEntry.reference &&
+                      selectedHistoryEntry.reference.startsWith("pv-") && (
+                        <ConversionDialog
+                          tool={selectedTool}
+                          onConvert={(conversionData) =>
+                            handleConversion({
+                              id: selectedToolId,
+                              conversionData: {
+                                ...conversionData,
+                                pvReference: selectedHistoryEntry.reference,
+                              },
+                            })
+                          }
+                        >
+                          <Button variant="outline" className="gap-2">
+                            Convert to M11
+                          </Button>
+                        </ConversionDialog>
+                      )}
 
-                  {/* Edit Tool Button */}
-                  <Button
-                    variant="outline"
-                    className="gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20"
-                    onClick={() => setIsEditModalOpen(true)}
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit Tool
-                  </Button>
+                    {/* Edit Tool Button */}
+                    <Button
+                      variant="outline"
+                      className="gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20"
+                      onClick={() => setIsEditModalOpen(true)}
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit Tool
+                    </Button>
 
-                  {/* Delete Tool Button */}
-                  <Button
-                    variant="outline"
-                    className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-destructive/40 dark:text-destructive dark:hover:bg-destructive/20"
-                    onClick={() => setIsDeleteDialogOpen(true)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Tool
-                  </Button>
-                </div>
+                    {/* Delete Tool Button */}
+                    <Button
+                      variant="outline"
+                      className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive dark:border-destructive/40 dark:text-destructive dark:hover:bg-destructive/20"
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Tool
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* History Section */}
@@ -907,6 +909,7 @@ export default function ToolingTracking() {
             if (!selectedToolId) setSelectedToolId(null);
           }}
           tool={selectedTool}
+          historyEntry={selectedHistoryEntry}
         />
       )}
 
@@ -917,6 +920,7 @@ export default function ToolingTracking() {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           toolId={selectedToolId}
+          initialData={selectedHistoryEntry}
         />
       )}
     </div>

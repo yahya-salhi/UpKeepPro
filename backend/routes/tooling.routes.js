@@ -11,6 +11,7 @@ import {
   getToolHistory, // Get full history of a tool
   getToolsByDirection, // Filter by direction
   getToolsByType, // Filter by type
+  deleteToolHistoryEntry, // New controller function
 } from "../controllers/tooling.controller.js";
 
 const router = express.Router();
@@ -35,5 +36,6 @@ router.get("/type/:type", getToolsByType);
 // **Update & Delete**
 router.put("/:id", updateTooling);
 router.delete("/:id", deleteTooling);
+router.delete("/:toolId/history/:entryId", deleteToolHistoryEntry);
 
 export default router;

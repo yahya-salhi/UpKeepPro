@@ -34,17 +34,26 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Tag, MapPin, User, Building, Axe, NotebookPen, PlusCircle } from "lucide-react";
+import {
+  Loader2,
+  Tag,
+  MapPin,
+  User,
+  Building,
+  Axe,
+  NotebookPen,
+  PlusCircle,
+} from "lucide-react";
 import { useStateContext } from "../../contexts/ContextProvider";
 import ResponsibleModal from "./ResponsibleModal";
 import LocationModal from "./LocationModal";
 import PlacementModal from "./PlacementModal";
 
-const EditToolModal = ({ isOpen, onClose, toolId }) => {
+const EditToolModal = ({ isOpen, onClose, toolId, initialData }) => {
   const queryClient = useQueryClient();
   const { currentColor } = useStateContext();
   const [loading, setLoading] = useState(true);
-  
+
   // State for modals
   const [showResponsibleModal, setShowResponsibleModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -105,29 +114,41 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
     },
   });
 
-  // Update form values when tool data is loaded
+  // Update form values when tool data or initialData is loaded
   useEffect(() => {
-    if (tool && isOpen) {
-      form.reset({
-        designation: tool.designation || "",
-        responsible: tool.responsible?._id || "",
-        location: tool.location?._id || "",
-        placement: tool.placement?._id || "",
-        type: tool.type || "",
-        direction: tool.direction || "",
-        notes: tool.notes || "",
-      });
-      setLoading(false);
+    if (isOpen) {
+      if (initialData) {
+        form.reset({
+          designation: tool?.designation || "", // Keep tool designation if history entry doesn't have it
+          responsible: initialData.responsible?._id || "",
+          location: initialData.location?._id || "",
+          placement: initialData.placement?._id || "",
+          type: initialData.type || "",
+          direction: initialData.direction || "",
+          notes: initialData.notes || "",
+        });
+        setLoading(false);
+      } else if (tool && !isLoadingTool) {
+        form.reset({
+          designation: tool.designation || "",
+          responsible: tool.responsible?._id || "",
+          location: tool.location?._id || "",
+          placement: tool.placement?._id || "",
+          type: tool.type || "",
+          direction: tool.direction || "",
+          notes: tool.notes || "",
+        });
+        setLoading(false);
+      }
     }
-  }, [tool, form, isOpen]);
+  }, [tool, form, isOpen, initialData, isLoadingTool]);
 
-  // Reset loading state when modal opens
+  // Reset loading state when modal opens and form resets
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
     } else {
       setLoading(true); // Reset loading state when modal closes
-      // Reset form when modal closes to prevent stale data
       form.reset({
         designation: "",
         responsible: "",
@@ -137,7 +158,6 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
         direction: "",
         notes: "",
       });
-      // Clear the query cache for this specific tool to ensure fresh data on next open
       queryClient.removeQueries({ queryKey: ["tool", toolId] });
     }
   }, [isOpen, form, queryClient, toolId]);
@@ -147,7 +167,11 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
   };
 
   // Check if any required data is still loading
-  const isDataLoading = isLoadingTool || loadingResponsibles || loadingLocations || loadingPlacements;
+  const isDataLoading =
+    isLoadingTool ||
+    loadingResponsibles ||
+    loadingLocations ||
+    loadingPlacements;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -194,7 +218,10 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
                       <span>Responsible</span>
                     </FormLabel>
                     <div className="flex gap-2">
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700">
                             <SelectValue placeholder="Select responsible" />
@@ -237,11 +264,14 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
-                        <Building className="h-4 w-4 text-amber-500"/>
+                        <Building className="h-4 w-4 text-amber-500" />
                         <span>Location</span>
                       </FormLabel>
                       <div className="flex gap-2">
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
                               <SelectValue placeholder="Select location" />
@@ -286,7 +316,10 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
                         <span>Placement</span>
                       </FormLabel>
                       <div className="flex gap-2">
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
                               <SelectValue placeholder="Select placement" />
@@ -334,7 +367,10 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
                         <span>Type</span>
                       </FormLabel>
 
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
                             <SelectValue placeholder="Select type" />
@@ -381,37 +417,51 @@ const EditToolModal = ({ isOpen, onClose, toolId }) => {
                   rules={{ required: "Direction is required" }}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200" >
-                        <NotebookPen className='w-4 h-4 text-amber-500' />
+                      <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
+                        <NotebookPen className="w-4 h-4 text-amber-500" />
                         <span>Direction</span>
-  
- 
                       </FormLabel>
 
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
                             <SelectValue placeholder="Select direction" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
-                          <SelectItem value="DGTI" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                          <SelectItem
+                            value="DGTI"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
                             DGTI
                           </SelectItem>
-                          <SelectItem value="DGMRE" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                          <SelectItem
+                            value="DGMRE"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
                             DGMRE
                           </SelectItem>
-                          <SelectItem value="DGGM" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                          <SelectItem
+                            value="DGGM"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
                             DGGM
                           </SelectItem>
-                          <SelectItem value="DHS" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                          <SelectItem
+                            value="DHS"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
                             DHS
                           </SelectItem>
-                          <SelectItem value="DASIC" className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                          <SelectItem
+                            value="DASIC"
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
                             DASIC
                           </SelectItem>
-
-    
                         </SelectContent>
                       </Select>
 

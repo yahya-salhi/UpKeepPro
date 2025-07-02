@@ -16,7 +16,12 @@ import { fetchToolHistory } from "./toolingApi";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 
-export const ConversionDialog = ({ tool, onConvert, children }) => {
+export const ConversionDialog = ({
+  tool,
+  onConvert,
+  children,
+  pvReference: initialPvReference,
+}) => {
   const [pvEntries, setPvEntries] = useState([]);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -60,19 +65,24 @@ export const ConversionDialog = ({ tool, onConvert, children }) => {
 
       setPvEntries(entries);
 
-      // Auto-select the main acquisition entry
-      const mainEntry = entries.find((e) => e.isMainAcquisition);
-      if (mainEntry) {
-        setSelectedEntry(mainEntry.reference);
-      } else if (entries.length > 0) {
-        setSelectedEntry(entries[0].reference);
+      // Auto-select the main acquisition entry or the initialPvReference
+      if (initialPvReference) {
+        setSelectedEntry(initialPvReference);
+        setConversionMode("specific"); // Ensure specific mode if an initial PV reference is provided
+      } else {
+        const mainEntry = entries.find((e) => e.isMainAcquisition);
+        if (mainEntry) {
+          setSelectedEntry(mainEntry.reference);
+        } else if (entries.length > 0) {
+          setSelectedEntry(entries[0].reference);
+        }
       }
     }
-  }, [isOpen, tool, historyData]);
+  }, [isOpen, tool, historyData, initialPvReference]);
 
   const onSubmit = (data) => {
-    // Don't proceed if no PV entries are available
-    if (pvEntries.length === 0) return;
+    // Don't proceed if no PV entries are available and no initialPvReference
+    if (pvEntries.length === 0 && !initialPvReference) return;
 
     const conversionData = {
       m11Ref: data.reference,
@@ -80,9 +90,12 @@ export const ConversionDialog = ({ tool, onConvert, children }) => {
       notes: data.notes,
     };
 
-    // If converting a specific entry, add the PV reference
-    if (data.conversionMode === "specific" && selectedEntry) {
-      conversionData.pvReference = selectedEntry;
+    // If converting a specific entry (either via selection or initial prop), add the PV reference
+    if (
+      conversionMode === "specific" &&
+      (selectedEntry || initialPvReference)
+    ) {
+      conversionData.pvReference = initialPvReference || selectedEntry;
     }
 
     onConvert(conversionData);
@@ -116,7 +129,7 @@ export const ConversionDialog = ({ tool, onConvert, children }) => {
               Loading tool history...
             </p>
           </div>
-        ) : pvEntries.length === 0 ? (
+        ) : pvEntries.length === 0 && !initialPvReference ? (
           <div className="py-8 text-center" id="dialog-description">
             <div className="rounded-full bg-yellow-100 p-3 w-12 h-12 mx-auto flex items-center justify-center mb-4">
               <svg
@@ -150,8 +163,8 @@ export const ConversionDialog = ({ tool, onConvert, children }) => {
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-            {/* Simplified UI for single PV entry */}
-            {pvEntries.length === 1 ? (
+            {/* Simplified UI for single PV entry or when initialPvReference is provided */}
+            {pvEntries.length === 1 || initialPvReference ? (
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 mb-6">
                 <div className="flex items-start gap-3">
                   <div className="rounded-full bg-blue-100 dark:bg-blue-800 p-2 mt-1">
@@ -172,20 +185,36 @@ export const ConversionDialog = ({ tool, onConvert, children }) => {
                   </div>
                   <div>
                     <h3 className="font-medium text-blue-800 dark:text-blue-300">
-                      Single PV Entry Found
+                      {initialPvReference
+                        ? "Converting Selected PV Entry"
+                        : "Single PV Entry Found"}
                     </h3>
                     <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
                       Converting PV entry:{" "}
                       <span className="font-medium">
-                        {pvEntries[0].reference}
+                        {initialPvReference || pvEntries[0].reference}
                       </span>{" "}
-                      from {pvEntries[0].date}
+                      from{" "}
+                      {initialPvReference
+                        ? historyData?.find(
+                            (entry) => entry.reference === initialPvReference
+                          )?.date
+                        : pvEntries[0].date}
                     </p>
                     <div className="mt-2 flex items-center gap-2">
                       <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                        Quantity: +{pvEntries[0].quantity}
+                        Quantity: +
+                        {initialPvReference
+                          ? historyData?.find(
+                              (entry) => entry.reference === initialPvReference
+                            )?.qteChange
+                          : pvEntries[0].quantity}
                       </span>
-                      {pvEntries[0].isMainAcquisition && (
+                      {(initialPvReference
+                        ? historyData?.find(
+                            (entry) => entry.reference === initialPvReference
+                          )?.isMainAcquisition
+                        : pvEntries[0].isMainAcquisition) && (
                         <Badge
                           variant="outline"
                           className="text-xs bg-blue-100 text-blue-700 border-blue-200"
