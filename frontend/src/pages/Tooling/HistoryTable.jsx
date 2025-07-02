@@ -9,7 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
-export function HistoryTable({ data }) {
+export function HistoryTable({ data, onRowClick }) {
   // Final deduplication safeguard
   const uniqueData = data.filter(
     (item, index, self) =>
@@ -42,7 +42,11 @@ export function HistoryTable({ data }) {
             </TableRow>
           ) : (
             uniqueData.map((transaction, index) => (
-              <TableRow key={index} className="hover:bg-muted/50 transition-colors">
+              <TableRow
+                key={index}
+                className="hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => onRowClick(transaction)}
+              >
                 <TableCell className="font-medium">
                   {new Date(transaction.date).toLocaleDateString()}
                 </TableCell>
@@ -67,12 +71,16 @@ export function HistoryTable({ data }) {
                       {transaction.eventType === "exit" ? (
                         <>
                           <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
-                          <span className="text-red-600">-{transaction.qteChange}</span>
+                          <span className="text-red-600">
+                            -{transaction.qteChange}
+                          </span>
                         </>
                       ) : (
                         <>
                           <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
-                          <span className="text-green-600">+{transaction.qteChange}</span>
+                          <span className="text-green-600">
+                            +{transaction.qteChange}
+                          </span>
                         </>
                       )}
                     </div>

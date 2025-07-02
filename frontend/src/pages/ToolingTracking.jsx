@@ -176,6 +176,7 @@ export default function ToolingTracking() {
   const [selectedResponsible, setSelectedResponsible] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
   const [selectedDirection, setSelectedDirection] = useState(null);
+  const [selectedHistoryEntry, setSelectedHistoryEntry] = useState(null);
 
   // Reset selected responsible, type, and direction when filter changes
   useEffect(() => {
@@ -732,7 +733,9 @@ export default function ToolingTracking() {
                             Responsible
                           </p>
                           <p className="text-sm font-medium">
-                            {selectedTool.responsible
+                            {selectedHistoryEntry?.responsible
+                              ? selectedHistoryEntry.responsible.name
+                              : selectedTool.responsible
                               ? selectedTool.responsible.name
                               : "Not assigned"}
                           </p>
@@ -749,7 +752,9 @@ export default function ToolingTracking() {
                             Location
                           </p>
                           <p className="text-sm font-medium">
-                            {selectedTool.location
+                            {selectedHistoryEntry?.location
+                              ? selectedHistoryEntry.location.name
+                              : selectedTool.location
                               ? selectedTool.location.name
                               : "Not specified"}
                           </p>
@@ -766,12 +771,45 @@ export default function ToolingTracking() {
                             Placement
                           </p>
                           <p className="text-sm font-medium">
-                            {selectedTool.placement
+                            {selectedHistoryEntry?.placement
+                              ? selectedHistoryEntry.placement.name
+                              : selectedTool.placement
                               ? selectedTool.placement.name
                               : "Not specified"}
                           </p>
                         </div>
                       </div>
+                      {/* New: Direction and Type for selected history entry */}
+                      {selectedHistoryEntry && (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <div className="bg-purple-50 dark:bg-purple-900/20 p-1.5 rounded-full">
+                              <ArrowUpCircle className="h-4 w-4 text-purple-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Direction
+                              </p>
+                              <p className="text-sm font-medium">
+                                {selectedHistoryEntry.direction || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="bg-indigo-50 dark:bg-indigo-900/20 p-1.5 rounded-full">
+                              <Box className="h-4 w-4 text-indigo-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Type
+                              </p>
+                              <p className="text-sm font-medium">
+                                {selectedHistoryEntry.type || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="text-right space-y-4">
@@ -851,6 +889,7 @@ export default function ToolingTracking() {
                 <HistoryTable
                   data={historyData || []}
                   columns={historyColumns}
+                  onRowClick={setSelectedHistoryEntry}
                 />
               </div>
             </div>

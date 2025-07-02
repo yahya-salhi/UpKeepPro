@@ -58,6 +58,14 @@ export const acquireTooling = async (req, res) => {
           notes ||
           `Additional quantity for ${acquisitionType} ${acquisitionRef}`,
         performedBy: req.user?.id || "system",
+        responsible: responsible === "" ? undefined : responsible,
+        placement: placement === "" ? undefined : placement,
+        direction,
+        location: location === "" ? undefined : location,
+        type,
+        acquisitionType,
+        acquisitionRef,
+        acquisitionDate,
       });
       await existingTool.save();
       return res.status(200).json(existingTool);
@@ -94,8 +102,18 @@ export const acquireTooling = async (req, res) => {
               : `m11-${acquisitionRef}`,
           date: new Date(acquisitionDate),
           qteChange: originalQte,
-          notes: notes || `Initial ${acquisitionType} acquisition`,
+          notes:
+            notes ||
+            `Initial ${acquisitionType} - ${acquisitionRef} acquisition`,
           performedBy: req.user?.id || "system",
+          responsible: cleanedResponsible,
+          placement: cleanedPlacement,
+          direction,
+          location: cleanedLocation,
+          type,
+          acquisitionType,
+          acquisitionRef,
+          acquisitionDate,
         },
       ],
     });
@@ -359,31 +377,70 @@ export const getToolStock = async (req, res) => {
 export const getToolHistory = async (req, res) => {
   try {
     const tool = await Tooling.findById(req.params.id)
-      .select("history exits designation mat")
+      .populate({
+        path: "history.responsible",
+        select: "name position",
+      })
+      .populate({
+        path: "history.location",
+        select: "name code",
+      })
+      .populate({
+        path: "history.placement",
+        select: "name section",
+      })
+      .select("history exits designation mat direction type") // Include main tool direction and type
       .lean();
 
     if (!tool) {
       return res.status(404).json({ error: "Tool not found" });
     }
 
-    // Only transform exits that aren't already in history
-    const exitRecords = (tool.exits || [])
-      .filter((exit) => !tool.history.some((h) => h.reference === exit.exitRef))
-      .map((exit) => ({
-        _id: exit._id,
-        eventType: "exit",
-        reference: exit.exitRef,
-        date: exit.exitDate,
-        qteChange: -exit.exitQte,
-        notes: exit.exitReason,
-        isExitRecord: true, // Flag to identify transformed exits
-      }));
+    // Combine history entries and exit records
+    const combinedHistory = [];
 
-    const combined = [...(tool.history || []), ...exitRecords].sort(
-      (a, b) => new Date(b.date) - new Date(a.date)
-    );
+    // Add all history entries, ensuring responsible/location/placement are populated
+    (tool.history || []).forEach((h) => {
+      combinedHistory.push({
+        ...h,
+        responsible: h.responsible || null,
+        location: h.location || null,
+        placement: h.placement || null,
+        // Ensure direction and type are present, falling back to tool's main if not in history entry
+        direction: h.direction || tool.direction || null,
+        type: h.type || tool.type || null,
+      });
+    });
 
-    res.json(combined);
+    // Add exit records, ensuring they are not duplicates of existing history entries
+    (tool.exits || []).forEach((exit) => {
+      // Check if an equivalent exit record already exists in history
+      const isDuplicate = combinedHistory.some(
+        (h) => h.eventType === "exit" && h.reference === exit.exitRef
+      );
+
+      if (!isDuplicate) {
+        combinedHistory.push({
+          _id: exit._id,
+          eventType: "exit",
+          reference: exit.exitRef,
+          date: exit.exitDate,
+          qteChange: -exit.exitQte,
+          notes: exit.exitReason,
+          performedBy: "system", // Or actual user if tracked for exits
+          responsible: null, // Exits don't have these fields directly
+          location: null,
+          placement: null,
+          direction: tool.direction || null, // Use tool's main direction
+          type: tool.type || null, // Use tool's main type
+        });
+      }
+    });
+
+    // Sort combined history by date, newest first
+    combinedHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json(combinedHistory);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

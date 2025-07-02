@@ -123,6 +123,45 @@ const toolingSchema = new mongoose.Schema(
         qteChange: Number,
         notes: String,
         performedBy: String,
+        // Additional fields for full traceability
+        responsible: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Responsible",
+          required: false,
+        },
+        placement: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Placement",
+          required: false,
+        },
+        direction: {
+          type: String,
+          enum: ["DGMRE", "DGTI", "DGGM", "DHS", "DASIC"],
+          required: false,
+        },
+        location: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Location",
+          required: false,
+        },
+        type: {
+          type: String,
+          enum: ["calibration", "maintenance", "common", "didactic"],
+          required: false,
+        },
+        acquisitionType: {
+          type: String,
+          enum: ["PV", "M11"],
+          required: false,
+        },
+        acquisitionRef: {
+          type: String,
+          required: false,
+        },
+        acquisitionDate: {
+          type: Date,
+          required: false,
+        },
       },
     ],
   },
