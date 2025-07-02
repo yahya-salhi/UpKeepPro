@@ -8,7 +8,7 @@ const toolingSchema = new mongoose.Schema(
       required: [true, "Designation is required"],
       trim: true,
       uppercase: true,
-      maxlength: [50, "Designation cannot exceed 50 characters"],
+      maxlength: [70, "Designation cannot exceed 70 characters"],
     },
     mat: {
       type: String,
