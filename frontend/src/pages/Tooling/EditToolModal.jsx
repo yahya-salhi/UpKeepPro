@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { enhancedToast, toolingToast } from "./enhancedToast.jsx";
 import {
   fetchResponsibles,
   fetchLocations,
@@ -101,16 +101,22 @@ const EditToolModal = ({ isOpen, onClose, toolId, initialData }) => {
   // Mutation for updating tool
   const mutation = useMutation({
     mutationFn: ({ id, data }) => updateTooling(id, data),
-    onSuccess: () => {
-      toast.success("Tool updated successfully!");
+    onSuccess: (data) => {
+      // Enhanced toast with action button
+      toolingToast.toolUpdated(data.designation || "Tool", data._id);
       queryClient.invalidateQueries({ queryKey: ["toolings"] });
       queryClient.invalidateQueries({ queryKey: ["tool", toolId] });
       onClose();
     },
     onError: (error) => {
-      toast.error(
-        error.response?.data?.error || error.message || "Failed to update tool"
-      );
+      enhancedToast.error("Failed to update tool", {
+        details: error.response?.data?.error || error.message,
+        actionLabel: "Retry",
+        onAction: () => {
+          // Could retry the form submission
+          console.log("Retry tool update");
+        },
+      });
     },
   });
 

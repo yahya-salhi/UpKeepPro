@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { enhancedToast } from "./enhancedToast.jsx";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,20 +18,39 @@ const ResponsibleModal = ({ isOpen, onClose }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["responsibles"] });
-      toast.success("Responsible added successfully");
+      enhancedToast.success("Responsible added successfully", {
+        actionLabel: "View All",
+        onAction: () => {
+          // Could navigate to responsibles list
+          console.log("View all responsibles");
+        },
+      });
       setName("");
       setGrade("");
       onClose();
     },
     onError: (error) => {
-      toast.error(error.response?.data?.error || "Failed to add responsible");
+      enhancedToast.error("Failed to add responsible", {
+        details: error.response?.data?.error || error.message,
+        actionLabel: "Retry",
+        onAction: () => {
+          // Could retry the form submission
+          console.log("Retry adding responsible");
+        },
+      });
     },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name || !grade) {
-      toast.error("All fields are required");
+      enhancedToast.warning("All fields are required", {
+        actionLabel: "Review Form",
+        onAction: () => {
+          // Could focus on the first empty field
+          console.log("Focus on empty field");
+        },
+      });
       return;
     }
     mutation.mutate({ name, grade });

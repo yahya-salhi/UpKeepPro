@@ -28,6 +28,13 @@ import {
   Edit,
   ChevronDown,
   Download,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Activity,
+  Menu,
+  Grid3X3,
+  List,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ConversionDialog } from "./Tooling/ConversionDialog";
@@ -44,32 +51,117 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// 1. Enhanced Metric Card Component
-const MetricCard = ({ title, value, icon, trend, className }) => (
-  <Card
-    className={`p-6 transition-all duration-200 hover:shadow-md ${className}`}
-  >
-    <div className="flex justify-between items-start">
-      <div className="space-y-1">
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <div className="flex items-baseline gap-2">
-          <h3 className="text-3xl font-bold">{value || 0}</h3>
-          {trend && (
-            <span
-              className={`text-sm ${
-                trend > 0 ? "text-green-500" : "text-red-500"
-              }`}
-            >
-              {trend > 0 ? "+" : ""}
-              {trend}%
-            </span>
+// 1. Enhanced Metric Card Component with Animations and Better Trends
+const MetricCard = ({
+  title,
+  value,
+  icon,
+  trend,
+  className,
+  subtitle,
+  loading = false,
+  onClick,
+}) => {
+  const getTrendIcon = () => {
+    if (!trend || trend === 0) return <Minus className="w-3 h-3" />;
+    return trend > 0 ? (
+      <TrendingUp className="w-3 h-3" />
+    ) : (
+      <TrendingDown className="w-3 h-3" />
+    );
+  };
+
+  const getTrendColor = () => {
+    if (!trend || trend === 0) return "text-gray-500";
+    return trend > 0 ? "text-green-500" : "text-red-500";
+  };
+
+  const getTrendBgColor = () => {
+    if (!trend || trend === 0) return "bg-gray-100 dark:bg-gray-800";
+    return trend > 0
+      ? "bg-green-100 dark:bg-green-900/20"
+      : "bg-red-100 dark:bg-red-900/20";
+  };
+
+  return (
+    <Card
+      className={`group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 ${className}`}
+      onClick={onClick}
+    >
+      {/* Animated background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+      <div className="relative p-6">
+        <div className="flex justify-between items-start mb-4">
+          <div className="space-y-1 flex-1">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
+              {title}
+            </p>
+            {subtitle && (
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {subtitle}
+              </p>
+            )}
+          </div>
+
+          {/* Enhanced icon with animation */}
+          <div className="relative">
+            <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary/20 transition-all duration-300 group-hover:scale-110">
+              {loading ? <Activity className="w-5 h-5 animate-pulse" /> : icon}
+            </div>
+            {/* Pulse effect on hover */}
+            <div className="absolute inset-0 rounded-xl bg-primary/20 scale-0 group-hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse" />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {/* Value with loading animation */}
+          <div className="flex items-baseline gap-3">
+            {loading ? (
+              <div className="h-9 w-20 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+            ) : (
+              <h3 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors duration-300">
+                {value || 0}
+              </h3>
+            )}
+
+            {/* Enhanced trend indicator */}
+            {trend !== undefined && !loading && (
+              <div
+                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getTrendBgColor()} ${getTrendColor()}`}
+              >
+                {getTrendIcon()}
+                <span>
+                  {trend > 0 ? "+" : ""}
+                  {trend}%
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Progress bar for visual appeal */}
+          {!loading && (
+            <div className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-1000 ease-out"
+                style={{
+                  width: `${Math.min(
+                    Math.max(((value || 0) / 100) * 100, 10),
+                    100
+                  )}%`,
+                  animationDelay: "300ms",
+                }}
+              />
+            </div>
           )}
         </div>
+
+        {/* Hover effect indicator */}
+        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
       </div>
-      <div className="p-3 rounded-xl bg-primary/10 text-primary">{icon}</div>
-    </div>
-  </Card>
-);
+    </Card>
+  );
+};
 
 // 2. Enhanced Stock Level Indicator Component
 const StockBar = ({ current, max }) => {
@@ -94,6 +186,76 @@ const StockBar = ({ current, max }) => {
         {current}/{max}
       </span>
     </div>
+  );
+};
+
+// 3. Mobile Tool Card Component
+const MobileToolCard = ({ tool, onClick }) => {
+  const stockPercentage = Math.round(
+    (tool.currentQte / tool.originalQte) * 100
+  );
+  const getStatusColor = (situation) => {
+    switch (situation) {
+      case "available":
+        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      case "partial":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
+      case "unavailable":
+        return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
+    }
+  };
+
+  return (
+    <Card
+      className="p-4 cursor-pointer hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/20 hover:border-l-primary border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+      onClick={() => onClick(tool)}
+    >
+      <div className="space-y-3">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-sm truncate text-gray-900 dark:text-gray-100">
+              {tool.designation}
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              MAT: {tool.mat}
+            </p>
+          </div>
+          <Badge className={`text-xs ${getStatusColor(tool.situation)}`}>
+            {tool.situation === "partial" ? "available" : tool.situation}
+          </Badge>
+        </div>
+
+        {/* Stock Info */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-600 dark:text-gray-400">Stock</span>
+            <span className="font-medium text-gray-900 dark:text-gray-100">
+              {tool.currentQte}/{tool.originalQte}
+            </span>
+          </div>
+          <StockBar current={tool.currentQte} max={tool.originalQte} />
+        </div>
+
+        {/* Details */}
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span className="text-gray-600 dark:text-gray-400">Type:</span>
+            <p className="font-medium capitalize text-gray-900 dark:text-gray-100">
+              {tool.type}
+            </p>
+          </div>
+          <div>
+            <span className="text-gray-600 dark:text-gray-400">Direction:</span>
+            <p className="font-medium text-gray-900 dark:text-gray-100">
+              {tool.direction}
+            </p>
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 };
 
@@ -177,6 +339,26 @@ export default function ToolingTracking() {
   const [selectedType, setSelectedType] = useState(null);
   const [selectedDirection, setSelectedDirection] = useState(null);
   const [selectedHistoryEntry, setSelectedHistoryEntry] = useState(null);
+
+  // Mobile-specific states
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      // Auto-close mobile menu on desktop
+      if (window.innerWidth >= 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Reset selected responsible, type, and direction when filter changes
   useEffect(() => {
@@ -367,27 +549,43 @@ export default function ToolingTracking() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       <Card className="border-none shadow-lg">
         <CardHeader className="pb-4">
           <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-center">
-              <div className="space-y-4">
-                <CardTitle className="text-2xl font-bold">
+            {/* Mobile-friendly header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="space-y-2 flex-1">
+                <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {selectedTool ? (
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setSelectedToolId(null)}
-                        className="hover:bg-primary/10"
+                        className="hover:bg-primary/10 h-8 w-8 sm:h-10 sm:w-10"
                       >
-                        <ChevronLeft className="h-5 w-5" />
+                        <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                       </Button>
-                      <span>{selectedTool.designation}</span>
+                      <span className="truncate">
+                        {selectedTool.designation}
+                      </span>
                     </div>
                   ) : (
-                    "Tool Inventory"
+                    <div className="flex items-center justify-between">
+                      <span>Tool Inventory</span>
+                      {/* Mobile menu toggle */}
+                      {isMobile && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                          className="h-8 w-8"
+                        >
+                          <Menu className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </CardTitle>
 
@@ -656,47 +854,122 @@ export default function ToolingTracking() {
         <CardContent>
           {!selectedTool ? (
             <>
-              {/* Dashboard Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              {/* Dashboard Summary - Mobile Responsive */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 <MetricCard
                   title="Total Tools"
+                  subtitle="All registered tools"
                   value={toolingData?.summary.total}
                   icon={<Box className="w-5 h-5" />}
                   trend={5}
-                  className="bg-card"
+                  className="bg-card border-l-4 border-l-blue-500"
+                  loading={isLoading}
+                  onClick={() => console.log("Navigate to all tools")}
                 />
                 <MetricCard
                   title="Available"
+                  subtitle="Ready for use"
                   value={toolingData?.summary.available}
                   icon={<ClipboardList className="w-5 h-5" />}
                   trend={2}
-                  className="bg-green-50 dark:bg-green-950/20"
+                  className="bg-green-50 dark:bg-green-950/20 border-l-4 border-l-green-500"
+                  loading={isLoading}
+                  onClick={() => console.log("Navigate to available tools")}
                 />
                 <MetricCard
                   title="Maintenance"
+                  subtitle="Under maintenance"
                   value={toolingData?.summary.maintenance}
                   icon={<Briefcase className="w-5 h-5" />}
                   trend={3}
-                  className="bg-blue-50 dark:bg-blue-950/20"
+                  className="bg-blue-50 dark:bg-blue-950/20 border-l-4 border-l-blue-500"
+                  loading={isLoading}
+                  onClick={() => console.log("Navigate to maintenance tools")}
                 />
                 <MetricCard
                   title="Unavailable"
+                  subtitle="Out of stock"
                   value={
                     toolingData?.summary.total - toolingData?.summary.available
                   }
                   icon={<AlertTriangle className="w-5 h-5" />}
                   trend={-3}
-                  className="bg-red-50 dark:bg-red-950/20"
+                  className="bg-red-50 dark:bg-red-950/20 border-l-4 border-l-red-500"
+                  loading={isLoading}
+                  onClick={() => console.log("Navigate to unavailable tools")}
                 />
               </div>
 
-              {/* Tools Table */}
-              <DataTable
-                columns={enhancedColumns}
-                data={toolingData?.tools || []}
-                onRowClick={(tool) => setSelectedToolId(tool._id)}
-                isLoading={isLoading}
-              />
+              {/* Tools Display - Responsive */}
+              <div className="space-y-4">
+                {/* View Toggle for Mobile */}
+                {isMobile && (
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Tools</h3>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant={viewMode === "grid" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setViewMode("grid")}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Grid3X3 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant={viewMode === "list" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setViewMode("list")}
+                        className="h-8 w-8 p-0"
+                      >
+                        <List className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mobile Card View */}
+                {isMobile && viewMode === "grid" ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {isLoading
+                      ? // Loading skeleton for mobile cards
+                        Array.from({ length: 6 }).map((_, index) => (
+                          <Card key={index} className="p-4">
+                            <div className="space-y-3 animate-pulse">
+                              <div className="flex justify-between">
+                                <div className="space-y-1">
+                                  <div className="h-4 bg-muted rounded w-24"></div>
+                                  <div className="h-3 bg-muted rounded w-16"></div>
+                                </div>
+                                <div className="h-5 bg-muted rounded w-16"></div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="h-2 bg-muted rounded"></div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="h-8 bg-muted rounded"></div>
+                                  <div className="h-8 bg-muted rounded"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ))
+                      : (toolingData?.tools || []).map((tool) => (
+                          <MobileToolCard
+                            key={tool._id}
+                            tool={tool}
+                            onClick={(tool) => setSelectedToolId(tool._id)}
+                          />
+                        ))}
+                  </div>
+                ) : (
+                  // Desktop Table View or Mobile List View
+                  <DataTable
+                    columns={enhancedColumns}
+                    data={toolingData?.tools || []}
+                    onRowClick={(tool) => setSelectedToolId(tool._id)}
+                    isLoading={isLoading}
+                  />
+                )}
+              </div>
             </>
           ) : (
             <div className="space-y-8">
@@ -705,10 +978,10 @@ export default function ToolingTracking() {
                 <div className="flex justify-between items-start">
                   <div className="space-y-4">
                     <div>
-                      <h2 className="text-2xl font-bold">
+                      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {selectedTool.designation}
                       </h2>
-                      <p className="text-muted-foreground">
+                      <p className="text-gray-600 dark:text-gray-400">
                         MAT: {selectedTool.mat}
                       </p>
                     </div>

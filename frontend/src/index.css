@@ -41,6 +41,37 @@ body {
   border-color: rgba(55, 65, 81, 0.5);
 }
 
+/* Enhanced Toast Animations */
+.animate-enter {
+  animation: toastEnter 0.3s ease-out;
+}
+
+.animate-leave {
+  animation: toastLeave 0.2s ease-in forwards;
+}
+
+@keyframes toastEnter {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toastLeave {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+}
+
 /* Scrollbar hiding for carousel */
 .scrollbar-hide {
   -ms-overflow-style: none;

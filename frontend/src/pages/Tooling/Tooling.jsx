@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { enhancedToast, toolingToast } from "./enhancedToast.jsx";
 import {
   fetchResponsibles,
   fetchLocations,
@@ -131,15 +131,21 @@ export default function ToolingAcquisitionForm() {
   // Mutation for acquiring new tool
   const mutation = useMutation({
     mutationFn: acquireTooling,
-    onSuccess: () => {
-      toast.success("Tool acquired successfully!");
+    onSuccess: (data) => {
+      // Enhanced toast with action button
+      toolingToast.toolCreated(data.designation || "Tool", data._id);
       queryClient.invalidateQueries({ queryKey: ["toolings"] });
       form.reset();
     },
     onError: (error) => {
-      toast.error(
-        error.response?.data?.error || error.message || "Failed to acquire tool"
-      );
+      enhancedToast.error("Failed to acquire tool", {
+        details: error.response?.data?.error || error.message,
+        actionLabel: "Retry",
+        onAction: () => {
+          // Could retry the form submission
+          console.log("Retry tool acquisition");
+        },
+      });
     },
   });
 
@@ -159,7 +165,7 @@ export default function ToolingAcquisitionForm() {
 
   return (
     <div className="container mx-auto max-w-4xl p-6">
-      <Card className="border-none shadow-xl bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      <Card className="border border-gray-200 dark:border-gray-700 shadow-xl bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
         {/* Enhanced Header with Background Pattern */}
         <div className="relative bg-primary/10 dark:bg-primary/5 border-b border-primary/20 dark:border-primary/10 overflow-hidden">
           <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
@@ -174,10 +180,10 @@ export default function ToolingAcquisitionForm() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <CardTitle className="  text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text">
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
                   Tool Management
                 </CardTitle>
-                <p className="text-muted-foreground mt-1">
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
                   {activeTab === "entry"
                     ? "Add a new tool to your inventory"
                     : "Record tool exit from inventory"}
@@ -219,8 +225,10 @@ export default function ToolingAcquisitionForm() {
                     <Package className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">Tool Information</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Tool Information
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Basic details about the tool
                     </p>
                   </div>
@@ -403,10 +411,10 @@ export default function ToolingAcquisitionForm() {
                     <FileText className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       Acquisition Details
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Information about how this tool was acquired
                     </p>
                   </div>
@@ -615,8 +623,10 @@ export default function ToolingAcquisitionForm() {
                     <MapPin className="h-5 w-5 text-green-500 dark:text-green-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">Tool Details</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Tool Details
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Classification and location information
                     </p>
                   </div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { enhancedToast, toolingToast } from "./enhancedToast.jsx";
 import { deleteTooling, deleteToolHistoryEntry } from "./toolingApi";
 
 import {
@@ -27,16 +27,25 @@ const DeleteToolDialog = ({ isOpen, onClose, tool, historyEntry }) => {
   const deleteToolMutation = useMutation({
     mutationFn: (id) => deleteTooling(id),
     onSuccess: () => {
-      toast.success("Tool deleted successfully");
+      // Enhanced toast with undo functionality
+      toolingToast.toolDeleted(tool?.designation || "Tool", () => {
+        // Implement undo functionality here
+        enhancedToast.info("Undo functionality would restore the tool here");
+      });
       queryClient.invalidateQueries({ queryKey: ["toolings"] });
       onClose();
       setConfirmText("");
       setError("");
     },
     onError: (error) => {
-      toast.error(
-        error.response?.data?.error || error.message || "Failed to delete tool"
-      );
+      enhancedToast.error("Failed to delete tool", {
+        details: error.response?.data?.error || error.message,
+        actionLabel: "Contact Support",
+        onAction: () => {
+          // Could open support modal or navigate to help
+          console.log("Contact support");
+        },
+      });
     },
   });
 

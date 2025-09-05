@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { enhancedToast } from "./enhancedToast.jsx";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,20 +18,39 @@ const PlacementModal = ({ isOpen, onClose }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["placements"] });
-      toast.success("Placement added successfully");
+      enhancedToast.success("Placement added successfully", {
+        actionLabel: "View All",
+        onAction: () => {
+          // Could navigate to placements list
+          console.log("View all placements");
+        },
+      });
       setName("");
       setDescription("");
       onClose();
     },
     onError: (error) => {
-      toast.error(error.response?.data?.error || "Failed to add placement");
+      enhancedToast.error("Failed to add placement", {
+        details: error.response?.data?.error || error.message,
+        actionLabel: "Retry",
+        onAction: () => {
+          // Could retry the form submission
+          console.log("Retry adding placement");
+        },
+      });
     },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name || !description) {
-      toast.error("All fields are required");
+      enhancedToast.warning("All fields are required", {
+        actionLabel: "Review Form",
+        onAction: () => {
+          // Could focus on the first empty field
+          console.log("Focus on empty field");
+        },
+      });
       return;
     }
     mutation.mutate({ name, description });
