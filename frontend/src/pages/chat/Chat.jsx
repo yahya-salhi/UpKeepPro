@@ -1,5 +1,5 @@
 import { useThemeStore } from "../../store/useThemeStore.js";
-import SidebarChat from "./SidebarChat";
+import SidebarChat from "./SideBarChat";
 import NoChatSelected from "./NoChatSelected";
 import ChatContainer from "./ChatContainer";
 import { useChatStore } from "../../store/useChatStore.js";

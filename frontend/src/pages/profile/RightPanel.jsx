@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import RightPanelSkeleton from "../../pages/profile/RightPanelSkeleton";
 import { useQuery } from "@tanstack/react-query";
-import useFollow from "../../hooks/UseFollow";
+import useFollow from "../../hooks/useFollow";
 import { Loader2, UserPlus } from "lucide-react";
 import avatar from "../../data/avatar.jpg";
 import { useStateContext } from "../../contexts/ContextProvider";

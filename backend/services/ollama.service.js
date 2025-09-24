@@ -1,7 +1,8 @@
 import axios from "axios";
 import ISO21001Service from "./iso21001.service.js";
 
-const OLLAMA_API_URL = "http://localhost:11434/api";
+const OLLAMA_API_URL =
+  process.env.OLLAMA_API_URL || "http://localhost:11434/api";
 const MAX_RETRIES = 2;
 const TIMEOUT_MS = 15000;
 const RETRY_DELAY_MS = 1000;

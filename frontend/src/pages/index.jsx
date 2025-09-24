@@ -19,5 +19,5 @@ export { default as AIChat } from "./AIChat";
 export { default as Login } from "../pages/auth/login/Login";
 export { default as SingUp } from "./SignUp";
 export { default as Profile } from "../pages/profile/Profile";
-export { default as EditProfileModal } from "../pages/profile/EditeProfileModal";
+export { default as EditProfileModal } from "../pages/profile/EditProfileModal";
 export { default as UserKanban } from "../pages/kanban/UserKanban";
